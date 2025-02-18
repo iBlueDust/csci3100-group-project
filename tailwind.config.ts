@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss"
 
 export default {
   content: [
@@ -9,10 +9,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: {
+          dark: "rgb(var(--background-dark) / <alpha-value>)",
+          DEFAULT: "rgb(var(--background) / <alpha-value>)",
+          light: "rgb(var(--background-light) / <alpha-value>)",
+        },
+        foreground: {
+          dark: "rgb(var(--foreground-dark) / <alpha-value>)",
+          DEFAULT: "rgb(var(--foreground) / <alpha-value>)",
+          light: "rgb(var(--foreground-light) / <alpha-value>)",
+        },
       },
+      borderOpacity: ({ theme }) => theme("opacity"),
     },
   },
   plugins: [],
-} satisfies Config;
+} satisfies Config
