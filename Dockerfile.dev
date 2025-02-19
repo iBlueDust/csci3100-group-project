@@ -1,0 +1,23 @@
+# Next.JS run next dev --turbopack
+
+FROM node:16-alpine
+
+WORKDIR /app
+
+COPY package.json /app/package.json
+COPY package-lock.json /app/package-lock.json
+
+RUN npm install
+
+# all *config.mjs *config.js *config.ts *config.json
+COPY *config.mjs /app/
+COPY *config.js /app/
+COPY *config.ts /app/
+COPY *config.json /app/
+
+COPY public /app/public
+COPY src /app/src
+
+
+CMD ["next", "dev", "--turbopack"]
+
