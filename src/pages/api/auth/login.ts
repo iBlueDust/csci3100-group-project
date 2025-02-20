@@ -1,8 +1,12 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next"
 import Joi from 'joi'
+
+import dbConnect from "@/data/db/mongo"
+import User from "@/data/db/mongo/models/user"
 import { sessionStore } from "@/data/session"
 import { UserRole } from "@/data/types/auth"
+import { sleep } from "@/utils"
 
 type Data = {
 	token: string
@@ -20,13 +24,22 @@ async function POST(
 ) {
 	const schema = Joi.object({
 		username: Joi.string().pattern(/^[a-zA-Z0-9.-]{1,64}$/).required(),
-		password: Joi.string().pattern(/^[ -~]{8,128}$/).required(), // all ascii printables
+		password: Joi.string().pattern(/^[!-~]{8,128}$/).required(), // all ascii printables
 	})
 
 	const { value: body, error } = schema.validate(req.body)
 
 	if (error) {
 		res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
+	}
+
+	await dbConnect()
+	const user = await User.findOne({ username: body.username })
+	if (!user || !user.verifyPassword(body.password)) {
+		// delay response to prevent timing attacks
+		await sleep(Math.random() * 2000)
+		res.status(401).json({ code: 'INVALID_CREDENTIALS' })
+		return
 	}
 
 	const session = await sessionStore.createSession(body.username, [UserRole.USER])
