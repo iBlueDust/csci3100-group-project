@@ -3,28 +3,20 @@
 
 # https://github.com/docker-library/mongo/issues/399
 
-mongosh -- "$MONGO_INITDB_DATABASE" <<EOF
-db.createUser(
-  {
-    user: '$MONGO_INITDB_ROOT_USERNAME',
-    pwd: '$MONGO_INITDB_ROOT_PASSWORD',
-    roles: [ "root" ]
-  }
-)
+create_user() {
+	local user=$1
+	local pwd=$2
+	local roles=$3
+
+	mongosh -- "$MONGO_INITDB_DATABASE" <<EOF
+db.createUser({
+	user: '$user',
+	pwd: '$pwd',
+	roles: $roles
+})
 EOF
-echo "User \"$MONGO_INITDB_ROOT_USERNAME\" successfully created"
+	echo "User \"$user\" successfully created"
+}
 
-
-
-mongosh -- "$MONGO_INITDB_DATABASE" <<EOF
-use '$MONGO_INITDB_DATABASE'
-
-db.createUser(
-	{
-		user: '$MONGO_INITDB_USERNAME',
-		pwd: '$MONGO_INITDB_PASSWORD',
-		roles: [ { role: 'readWrite', db: '$MONGO_INITDB_DATABASE' } ]
-	}
-)
-EOF
-echo "User \"$MONGO_INITDB_USERNAME\" successfully created"
+create_user "$MONGO_INITDB_ROOT_USERNAME" "$MONGO_INITDB_ROOT_PASSWORD" '[ "root" ]'
+create_user "$MONGO_INITDB_USERNAME" "$MONGO_INITDB_PASSWORD" '[ { role: "readWrite", db: "'"$MONGO_INITDB_DATABASE"'" } ]'
