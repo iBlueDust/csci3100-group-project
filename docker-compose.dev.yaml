@@ -7,7 +7,7 @@ services:
       - "${MONGO_PORT:-27017}:27017"
     volumes:
       - "./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro"
-      - "./db-data:/data/db"
+      - "./data/db:/data/db"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=$MONGO_ROOT_USERNAME
       - MONGO_INITDB_ROOT_PASSWORD=$MONGO_ROOT_PASSWORD
@@ -43,8 +43,7 @@ services:
       - "${MINIO_PORT:-9000}:9000"
       - "${MINIO_DASHBOARD_PORT:-9001}:9001"
     volumes:
-      - "./minio-init.sh:/docker-entrypoint-initdb.d/minio-init.sh:ro"
-      - "./obj-data:/data"
+      - "./data/obj:/data"
     command: server /data --console-address ":9001"
 
   minio-setup:
@@ -59,3 +58,5 @@ services:
     volumes:
       - "./minio-init.sh:/minio-init.sh:ro"
     entrypoint: /bin/sh /minio-init.sh
+
+  
