@@ -41,5 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 
-# MongoDB
+# MongoDB data
 /db-data
+
+# MinIO Data
+/obj-data
