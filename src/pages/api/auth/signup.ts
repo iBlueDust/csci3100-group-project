@@ -5,12 +5,11 @@ import { MongoServerError } from "mongodb"
 
 import dbConnect from "@/data/db/mongo"
 import User from "@/data/db/mongo/models/user"
-import { sessionStore } from "@/data/session"
+import { sessionStore, sessionToCookie } from "@/data/session"
 import { UserRole } from "@/data/types/auth"
 
 type Data = {
-	token: string
-	refreshToken: string
+	id: string
 }
 
 type Error = {
@@ -45,12 +44,10 @@ async function POST(
 		return res.status(500).json({ code: 'INTERNAL_SERVER_ERROR', message: 'An unexpected error occurred' })
 	}
 
-	const session = await sessionStore.createSession(body.username, user.roles)
+	const session = await sessionStore.createSession(user.id, user.roles)
 
-	res.status(200).json({
-		token: session.token,
-		refreshToken: session.refreshToken,
-	})
+	res.setHeader('Set-Cookie', sessionToCookie(session))
+	res.status(200).send({ id: user.id })
 }
 
 export default async function handler(

@@ -1,4 +1,8 @@
 import crypto from 'crypto'
+import mongoose from 'mongoose'
+import type { NextApiRequest, NextApiResponse } from "next"
+
+import type { SessionStore, TokenData } from '@/data/session'
 
 const TOKEN_SECRET = process.env.AUTH_TOKEN_SECRET ?? crypto.randomBytes(32)
 const REFRESH_TOKEN_SECRET = process.env.AUTH_REFRESH_TOKEN_SECRET ?? crypto.randomBytes(32)
@@ -31,4 +35,52 @@ export const verifyRefreshToken = (token: string) => {
 	const payload = Buffer.from(encodedPayload, 'base64')
 	const expectedSignature = hash(payload, REFRESH_TOKEN_SECRET)
 	return signature === expectedSignature
+}
+
+export type AuthData = {
+	token: string,
+	refreshToken: string,
+	data: TokenData<mongoose.Types.ObjectId>
+}
+
+export const validateSession = async (
+	sessionStore: SessionStore,
+	token: string | undefined,
+	refreshToken: string | undefined,
+): Promise<TokenData<mongoose.Types.ObjectId> | false> => {
+	if (!token || !refreshToken)
+		return false
+
+	const tokenData = await sessionStore.checkToken(token)
+	if (!tokenData)
+		return false
+
+	let userId: mongoose.Types.ObjectId
+	try {
+		userId = new mongoose.Types.ObjectId(tokenData.userId)
+	} catch {
+		return false
+	}
+
+	return { ...tokenData, userId }
+}
+
+export const protectedRoute = <T>(
+	handler: (req: NextApiRequest, res: NextApiResponse, auth: AuthData) => T,
+	sessionStore: SessionStore,
+) => {
+	return async (req: NextApiRequest, res: NextApiResponse) => {
+		const token = req.cookies['token']
+		const refreshToken = req.cookies['refreshToken']
+		const data = await validateSession(sessionStore, token, refreshToken)
+		if (!data) {
+			return res.status(401).json({ code: 'UNAUTHORIZED' })
+		}
+
+		return await handler(
+			req,
+			res,
+			{ token: token!, refreshToken: refreshToken!, data }
+		)
+	}
 }

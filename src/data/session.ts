@@ -3,32 +3,32 @@ import { createClient as createRedisClient } from "redis"
 import { UserRole } from "./types/auth"
 import { generateRefreshToken, generateToken, verifyRefreshToken, verifyToken } from "@/utils/api/auth"
 
-interface TokenData {
-	userId: string
+export interface TokenData<TId = string> {
+	userId: TId
 	roles: string[]
 	token: string
 	issuedAt: Date
 	expiresAt: Date
 }
 
-interface RefreshTokenData {
-	userId: string
+export interface RefreshTokenData<TId = string> {
+	userId: TId
 	refreshToken: string
 	issuedAt: Date
 	expiresAt: Date
 }
 
-interface Session {
+export interface Session {
 	token: string
 	refreshToken: string
 	issuedAt: Date
 }
 
-const AUTH_TOKEN_EXPIRATION_SECONDS =
+export const AUTH_TOKEN_EXPIRATION_SECONDS =
 	!Number.isNaN(parseInt(process.env.AUTH_TOKEN_EXPIRATION_SECONDS ?? '')) ?
 		parseInt(process.env.AUTH_TOKEN_EXPIRATION_SECONDS ?? '') :
 		60 * 5 // 5 minutes
-const AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS =
+export const AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS =
 	!Number.isNaN(parseInt(process.env.AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS ?? '')) ?
 		parseInt(process.env.AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS ?? '') :
 		60 * 60 * 6 // 6 hours
@@ -361,6 +361,13 @@ export class RedisSessionStore extends SessionStore {
 			this.client.set(`refresh/userId/${data.userId}`, data.refreshToken, { EX }),
 		])
 	}
+}
+
+export function sessionToCookie(session: Session): readonly string[] {
+	return [
+		`token=${session.token}; HttpOnly; Path=/; Max-Age=${AUTH_TOKEN_EXPIRATION_SECONDS}`,
+		`refreshToken=${session.refreshToken}; HttpOnly; Path=/; Max-Age=${AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS}`,
+	]
 }
 
 // export const sessionStore = new InMemorySessionStore()
