@@ -24,7 +24,7 @@ async function POST(
 ) {
 	const schema = Joi.object({
 		username: Joi.string().pattern(/^[a-zA-Z0-9.-]{1,64}$/).required(),
-		password: Joi.string().pattern(/^[!-~]{8,128}$/).required(), // all ascii printables
+		passkey: Joi.string().base64().required(), // all ascii printables
 	})
 
 	const { value: body, error } = schema.validate(req.body)
@@ -35,9 +35,9 @@ async function POST(
 
 	await dbConnect()
 
-	let user: Awaited<ReturnType<typeof User.createWithPassword>>
+	let user: Awaited<ReturnType<typeof User.createWithPasskey>>
 	try {
-		user = await User.createWithPassword(body.username, body.password, [UserRole.USER])
+		user = await User.createWithPasskey(body.username, body.passkey, [UserRole.USER])
 	} catch (error) {
 		if (error instanceof MongoServerError && (error as MongoServerError).code === 11000) { // Duplicate key error code
 			return res.status(409).json({ code: 'USERNAME_TAKEN', message: 'Username is already taken' })

@@ -24,7 +24,7 @@ async function POST(
 ) {
 	const schema = Joi.object({
 		username: Joi.string().pattern(/^[a-zA-Z0-9.-]{1,64}$/).required(),
-		password: Joi.string().pattern(/^[!-~]{8,128}$/).required(), // all ascii printables
+		passkey: Joi.string().base64().required(), // hash of the user password
 	})
 
 	const { value: body, error } = schema.validate(req.body)
@@ -35,7 +35,7 @@ async function POST(
 
 	await dbConnect()
 	const user = await User.findOne({ username: body.username })
-	if (!user || !user.verifyPassword(body.password)) {
+	if (!user || !user.verifyPasskey(body.passkey)) {
 		// delay response to prevent timing attacks
 		await sleep(Math.random() * 2000)
 		res.status(401).json({ code: 'INVALID_CREDENTIALS' })

@@ -14,11 +14,11 @@ const UserSchema = new mongoose.Schema({
 		index: true
 	},
 
-	passwordHash: {
+	passkeyHash: {
 		type: Buffer,
 		required: true,
 	},
-	passwordSalt: {
+	passkeySalt: {
 		type: Buffer,
 		required: true,
 	},
@@ -30,15 +30,15 @@ const UserSchema = new mongoose.Schema({
 },
 	{
 		methods: {
-			verifyPassword(password: string) {
-				return hash(password, this.passwordSalt).equals(this.passwordHash)
+			verifyPasskey(passkey: string) {
+				return hash(passkey, this.passkeySalt).equals(this.passkeyHash)
 			},
 		},
 		statics: {
-			createWithPassword(username: string, password: string, roles: string[] = [UserRole.USER]) {
-				const passwordSalt = crypto.randomBytes(32)
-				const passwordHash = hash(password, passwordSalt)
-				return this.create({ username, passwordSalt, passwordHash, roles })
+			createWithPasskey(username: string, passkey: string, roles: string[] = [UserRole.USER]) {
+				const passkeySalt = crypto.randomBytes(32)
+				const passkeyHash = hash(passkey, passkeySalt)
+				return this.create({ username, passkeySalt, passkeyHash, roles })
 			}
 		}
 	})
