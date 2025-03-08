@@ -1,3 +1,5 @@
+import { createClient as createRedisClient } from "redis"
+
 import { UserRole } from "./types/auth"
 import { generateRefreshToken, generateToken, verifyRefreshToken, verifyToken } from "@/utils/api/auth"
 
@@ -36,17 +38,17 @@ export type Awaitable<T> = T | Promise<T>
 export abstract class SessionStore {
 	abstract createSession(userId: string, roles: string[]): Awaitable<Session>
 
-	abstract getSession(userId: string): Awaitable<TokenData>
+	abstract getSession(userId: string): Awaitable<TokenData | null>
 
 	abstract checkToken(token: string): Awaitable<
-		TokenData & { isExpired: boolean } | null
+		TokenData | null
 	>
 	abstract checkToken(token: string, roles: UserRole[]): Awaitable<
-		TokenData & { isExpired: boolean, isAuthorized: boolean } | null
+		TokenData & { isAuthorized: boolean } | null
 	>
 
 	abstract checkRefreshToken(refreshToken: string): Awaitable<
-		RefreshTokenData & { isExpired: boolean } | null
+		RefreshTokenData | null
 	>
 
 	abstract reissueToken(userId: string, roles: string[]): Awaitable<string>
@@ -62,13 +64,13 @@ export class InMemorySessionStore extends SessionStore {
 	private refreshTokens: Record<string, RefreshTokenData> = {}
 
 	checkToken(token: string): Awaitable<
-		TokenData & { isExpired: boolean } | null
+		TokenData | null
 	>
 	checkToken(token: string, roles: UserRole[]): Awaitable<
-		TokenData & { isExpired: boolean, isAuthorized: boolean } | null
+		TokenData & { isAuthorized: boolean } | null
 	>
 	checkToken(token: string, roles?: UserRole[]): Awaitable<
-		TokenData & { isExpired: boolean, isAuthorized?: boolean } | null
+		TokenData & { isAuthorized?: boolean } | null
 	> {
 		const session = this.tokens[token]
 		if (!session) {
@@ -86,12 +88,12 @@ export class InMemorySessionStore extends SessionStore {
 
 		if (roles) {
 			const isAuthorized = roles.some(role => session.roles.includes(role))
-			return { ...session, isExpired, isAuthorized }
+			return { ...session, isAuthorized }
 		}
-		return { ...session, isExpired }
+		return { ...session }
 	}
 
-	getSession(userId: string): Awaitable<TokenData> {
+	getSession(userId: string): Awaitable<TokenData | null> {
 		return this.tokensByUserId[userId]
 	}
 
@@ -200,4 +202,166 @@ export class InMemorySessionStore extends SessionStore {
 	}
 }
 
-export const sessionStore = new InMemorySessionStore()
+type RedisClient = ReturnType<typeof createRedisClient>
+export class RedisSessionStore extends SessionStore {
+	private client: RedisClient
+	private redisConnect: Promise<unknown>
+
+	constructor() {
+		super()
+		this.client = createRedisClient()
+		this.redisConnect = this.client.connect()
+	}
+
+	async createSession(userId: string, roles: string[]): Promise<Session> {
+		await this.revokeUserSessions(userId)
+
+		let token: string
+		let refreshToken: string
+		// Ensure tokens are unique
+		do {
+			token = generateToken()
+		} while (await this.checkToken(token))
+		do {
+			refreshToken = generateRefreshToken()
+		} while (await this.checkRefreshToken(refreshToken))
+
+		const issuedAt = new Date()
+
+		const tokenData: TokenData = {
+			userId,
+			roles,
+			token,
+			issuedAt,
+			expiresAt: new Date(Date.now() + 1000 * AUTH_TOKEN_EXPIRATION_SECONDS), // 30 days
+		}
+		await this.insertToken(tokenData)
+
+		const refreshTokenData: RefreshTokenData = {
+			userId,
+			refreshToken,
+			issuedAt,
+			expiresAt: new Date(Date.now() + 1000 * AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS), // 30 days
+		}
+		await this.insertRefreshToken(refreshTokenData)
+
+		return { token, refreshToken, issuedAt }
+	}
+
+	async getSession(userId: string): Promise<TokenData | null> {
+		await this.redisConnect
+
+		const token = await this.client.get(`session/userId/${userId}`)
+		if (!token) {
+			return null
+		}
+
+		const data = await this.client.get(`session/token/${token}`)
+		if (!data) {
+			return null
+		}
+
+		return JSON.parse(data)
+	}
+
+	async checkToken(token: string): Promise<
+		TokenData | null
+	>
+	async checkToken(token: string, roles: UserRole[]): Promise<
+		TokenData & { isAuthorized: boolean } | null
+	>
+	async checkToken(token: string, roles?: UserRole[]): Promise<
+		TokenData & { isAuthorized?: boolean } | null
+	> {
+		await this.redisConnect
+
+		const data = await this.client.get(`session/token/${token}`)
+		if (!data) {
+			return null
+		}
+
+		const session = JSON.parse(data) as TokenData
+
+		if (roles) {
+			const isAuthorized = roles.some(role => session.roles.includes(role))
+			return { ...session, isAuthorized }
+		}
+		return session
+	}
+
+	async checkRefreshToken(refreshToken: string): Promise<
+		RefreshTokenData | null
+	> {
+		await this.redisConnect
+
+		const data = await this.client.get(`refresh/token/${refreshToken}`)
+		if (!data) {
+			return null
+		}
+
+		return JSON.parse(data)
+	}
+
+	async reissueToken(userId: string, roles: UserRole[]): Promise<string> {
+		await this.redisConnect
+
+		const token = await this.client.get(`session/userId/${userId}`)
+		if (!token) {
+			return ''
+		}
+
+		const newToken = {
+			userId,
+			roles,
+			token: generateToken(),
+			issuedAt: new Date(),
+			expiresAt: new Date(Date.now() + 1000 * AUTH_TOKEN_EXPIRATION_SECONDS),
+		}
+		const data = await this.client.get(`session/token/${token}`)
+		if (!data) {
+			return ''
+		}
+
+		await this.insertToken(newToken)
+
+		return newToken.token
+	}
+
+	async revokeUserSessions(userId: string): Promise<void> {
+		await this.redisConnect
+
+		const token = await this.client.get(`session/userId/${userId}`)
+		const refreshToken = await this.client.get(`refresh/userId/${userId}`)
+		if (token) {
+			await this.client.del(`session/token/${token}`)
+			await this.client.del(`session/userId/${userId}`)
+		}
+		if (refreshToken) {
+			await this.client.del(`refresh/token/${refreshToken}`)
+			await this.client.del(`refresh/userId/${userId}`)
+		}
+	}
+
+	private async insertToken(data: TokenData): Promise<void> {
+		await this.redisConnect
+
+		const EX = AUTH_TOKEN_EXPIRATION_SECONDS
+		await Promise.all([
+			this.client.set(`session/token/${data.token}`, JSON.stringify(data), { EX }),
+			this.client.set(`session/userId/${data.userId}`, data.token, { EX }),
+		])
+	}
+
+	private async insertRefreshToken(data: RefreshTokenData): Promise<void> {
+		await this.redisConnect
+
+		const EX = AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS
+		await Promise.all([
+			this.client.set(`refresh/token/${data.refreshToken}`, JSON.stringify(data), { EX }),
+			this.client.set(`refresh/userId/${data.userId}`, data.refreshToken, { EX }),
+		])
+	}
+}
+
+// export const sessionStore = new InMemorySessionStore()
+export const sessionStore = new RedisSessionStore()
