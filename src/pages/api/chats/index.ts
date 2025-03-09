@@ -4,8 +4,9 @@ import Joi from 'joi'
 
 import dbConnect from '@/data/db/mongo'
 import { PaginatedResult, Error } from '@/data/types/common'
-import { ChatWithPopulatedFields, getRecentChats } from '@/data/db/mongo/queries/chats/getRecentChats'
+import { getRecentChats } from '@/data/db/mongo/queries/chats/getRecentChats'
 import { sessionStore } from '@/data/session'
+import { ChatWithPopulatedFields } from '@/data/types/chats'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 
 type Data = PaginatedResult<ChatWithPopulatedFields>

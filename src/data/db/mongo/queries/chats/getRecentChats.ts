@@ -1,40 +1,27 @@
-import { Types } from 'mongoose'
+import mongoose, { Types } from 'mongoose'
 
 import type { PaginatedResult, PaginationOptions } from '@/data/types/common'
 import dbConnect from '@/data/db/mongo'
 import Chat from '@/data/db/mongo/models/chat'
 import ChatMessage from '@/data/db/mongo/models/chat-message'
 import User from '@/data/db/mongo/models/user'
-
-export interface ChatWithPopulatedFields {
-  id: string
-  participants: {
-    id: string
-    username: string
-  }[]
-  lastMessage: {
-    id: string
-    sender: {
-      id: string
-      username: string
-    }
-    type: 'text' | 'image'
-    content: string
-  }
-  wasRequestedToDelete: boolean
-}
+import { ChatWithPopulatedFields } from '@/data/types/chats'
+import { mergeObjects } from '@/utils'
 
 export const getRecentChats = async (
   userId: Types.ObjectId,
-  options: PaginationOptions<{ query?: string }>,
+  options: PaginationOptions<{ query?: string, id?: mongoose.Types.ObjectId }>,
 ): Promise<PaginatedResult<ChatWithPopulatedFields>> => {
   await dbConnect()
   const [result] = await Chat.aggregate([
     {
-      $match: {
-        participants: userId,
-        deleteRequesters: { $ne: userId },
-      },
+      $match: mergeObjects(
+        options.id && { _id: options.id },
+        {
+          participants: userId,
+          deleteRequesters: { $ne: userId },
+        }
+      ),
     },
     {
       $addFields: {
