@@ -1,0 +1,235 @@
+import type { NextApiRequest, NextApiResponse } from 'next'
+import Joi from 'joi'
+import mongoose from 'mongoose'
+import { v4 as uuid } from 'uuid'
+
+import dbConnect from '@/data/db/mongo'
+import { Error, PaginatedResult } from '@/data/types/common'
+import Chat from '@/data/db/mongo/models/chat'
+import ChatMessage from '@/data/db/mongo/models/chat-message'
+import { sessionStore } from '@/data/session'
+import { AuthData, protectedRoute } from '@/utils/api/auth'
+import { parseFormDataBody, toObjectId } from '@/utils/api'
+import { ChatMessageType } from '@/data/types/chats'
+import minioClient from '@/data/db/minio'
+
+const TEXT_MESSAGE_SIZE_LIMIT = 1024 * 1024 // 1 MB
+const ATTACHMENT_SIZE_LIMIT = 25 * 1024 * 1024 // 25 MB
+
+type GetData = PaginatedResult<typeof ChatMessage>
+type PostData = { id: string }
+
+async function GET(
+	req: NextApiRequest,
+	res: NextApiResponse<GetData | Error>,
+	auth: AuthData,
+) {
+	const schema = Joi.object({
+		id: Joi.string().required(),
+		skip: Joi.number().min(0).default(0),
+		limit: Joi.number().min(1).max(100).default(10),
+	})
+
+	const { value: options, error } = schema.validate(req.query)
+
+	if (error) {
+		res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
+		return
+	}
+
+	let chatId: mongoose.Types.ObjectId
+	try {
+		chatId = new mongoose.Types.ObjectId(options.id as string)
+	} catch {
+		return res
+			.status(400)
+			.json({ code: 'INVALID_REQUEST', message: 'Invalid chat ID' })
+	}
+
+	await dbConnect()
+	const isAuthorized = await Chat.exists({
+		_id: chatId,
+		participants: auth.data.userId,
+	})
+	if (!isAuthorized) {
+		return res.status(403).json({ code: 'FORBIDDEN', message: 'You are not authorized to view this chat' })
+	}
+
+	const results = await ChatMessage.aggregate([
+		{ $match: { chatId } },
+		{ $project: { chatId: 0, __v: 0 } },
+		{
+			$facet: {
+				meta: [{ $count: 'total' }],
+				data: [
+					{ $sort: { sentAt: -1 } },
+					{ $skip: options.skip },
+					{ $limit: options.limit }
+				]
+			},
+		},
+	]).exec()
+
+	const result = results[0] ?? { meta: [{ total: 0 }], data: [] }
+	result.meta = result.meta[0] ?? { total: 0 }
+
+	for (const message of result.data) {
+		message.id = message._id
+		delete message._id
+
+		if (message.type === ChatMessageType.Text) {
+			if (message.content instanceof Buffer)
+				message.content = (message.content as Buffer).toString('base64')
+		} else if (message.type === ChatMessageType.Attachment) {
+			message.content = `${process.env.MINIO_PUBLIC_ENDPOINT || 'localhost:9000'}/${process.env.MINIO_BUCKET_CHAT_ATTACHMENTS || 'chat-attachments'}/${message.content}`
+		}
+	}
+
+	res.status(200).json(result as PaginatedResult<typeof ChatMessage>)
+}
+
+async function POST(
+	req: NextApiRequest,
+	res: NextApiResponse<PostData | Error>,
+	auth: AuthData,
+) {
+	// Validate message content
+	const { fields, files, error } = await parseFormDataBody(
+		req,
+		{ maxFileSize: Math.max(TEXT_MESSAGE_SIZE_LIMIT, ATTACHMENT_SIZE_LIMIT) }
+	)
+
+	if (error) {
+		return res.status(400).json({ code: 'INVALID_REQUEST', message: 'Invalid form data' })
+	}
+
+	const schema = Joi.object({
+		content: Joi.when('type', {
+			is: ChatMessageType.Text,
+			then: Joi.alternatives().try(
+				Joi.string().max(TEXT_MESSAGE_SIZE_LIMIT).required(),
+				Joi.object({
+					data: Joi.binary().max(TEXT_MESSAGE_SIZE_LIMIT).required(),
+					info: Joi
+						.custom(value =>
+							typeof value.toJSON === 'function'
+							&& value.toJSON().size <= TEXT_MESSAGE_SIZE_LIMIT
+						)
+						.required(),
+				})
+			),
+			otherwise: Joi.object({
+				data: Joi.binary().max(ATTACHMENT_SIZE_LIMIT).required(),
+				info: Joi
+					.custom(value =>
+						typeof value.toJSON === 'function'
+						&& value.toJSON().size <= ATTACHMENT_SIZE_LIMIT
+					)
+					.required(),
+			})
+		}),
+
+		type: Joi.string().valid(
+			ChatMessageType.Text,
+			ChatMessageType.Attachment
+		).required(),
+
+		e2e: Joi.alternatives().try(Joi.object(), Joi.allow(null)).optional()
+	})
+
+	const { value: body, error: validationError } = schema.validate(
+		{
+			content: fields?.content?.[0] ?? files?.content?.[0],
+			type: fields?.type?.[0],
+			e2e: fields?.e2e?.[0] ? JSON.parse(fields?.e2e?.[0]) : null,
+		},
+	)
+	if (validationError) {
+		return res.status(400).json({
+			code: 'INVALID_REQUEST',
+			message: validationError.message
+		})
+	}
+
+	// Validate chat ID
+	if (typeof req.query.id !== 'string') {
+		return res.status(400).json({
+			code: 'INVALID_REQUEST',
+			message: 'Invalid chat ID'
+		})
+	}
+	const [chatId, parseError] = toObjectId(req.query.id)
+	if (parseError) {
+		return res.status(400).json({
+			code: 'INVALID_REQUEST',
+			message: 'Invalid chat ID'
+		})
+	}
+
+	// Upload to databases
+	await dbConnect()
+
+	if (body.type === ChatMessageType.Text) {
+		const doc = await ChatMessage.create({
+			chatId,
+			sender: auth.data.userId,
+			content: body.content,
+			type: body.type,
+			e2e: body.e2e,
+		})
+
+		return res.status(200).send({ id: doc.id })
+	} else if (body.type === ChatMessageType.Attachment) {
+		const attachment = files?.content?.[0]
+		if (!attachment) {
+			return res.status(400).json({
+				code: 'INVALID_REQUEST',
+				message: 'Attachment is required'
+			})
+		}
+
+		const objectName = uuid() + '.png'
+		await minioClient.putObject(
+			process.env.MINIO_BUCKET_CHAT_ATTACHMENTS || 'chat-attachments',
+			objectName,
+			attachment.data,
+			Math.min(attachment.data.length, ATTACHMENT_SIZE_LIMIT),
+			{ 'Content-Type': 'image/png' } // Binary data
+		)
+
+		const doc = await ChatMessage.create({
+			chatId,
+			sender: auth.data.userId,
+			content: objectName,
+			type: body.type,
+			e2e: body.e2e,
+		})
+
+		return res.status(200).send({ id: doc.id })
+	} else {
+		return res.status(400).json({
+			code: 'INVALID_REQUEST',
+			message: 'Invalid message type'
+		})
+	}
+}
+
+export default async function handler(
+	req: NextApiRequest,
+	res: NextApiResponse<GetData | PostData | Error>,
+) {
+	switch (req.method) {
+		case 'GET':
+			return await protectedRoute(GET, sessionStore)(req, res)
+		case 'POST':
+			return await protectedRoute(POST, sessionStore)(req, res)
+		default:
+			res.status(405).end() // Method Not Allowed
+	}
+}
+
+export const config = {
+	api: {
+		bodyParser: false, // for Formidable
+	}
+}

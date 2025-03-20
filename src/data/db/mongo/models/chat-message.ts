@@ -1,6 +1,14 @@
 import mongoose from "mongoose"
 
+import { ChatMessageType } from "@/data/types/chats"
+
 const ChatMessageSchema = new mongoose.Schema({
+	chatId: {
+		type: mongoose.Types.ObjectId,
+		ref: 'Chat',
+		required: true,
+	},
+
 	sender: {
 		type: mongoose.Types.ObjectId,
 		ref: 'User',
@@ -13,9 +21,18 @@ const ChatMessageSchema = new mongoose.Schema({
 	},
 
 	content: {
-		type: Buffer,
+		// string or buffer
+		type: mongoose.Schema.Types.Mixed,
 		required: true
 	},
+
+	e2e: { type: Object },
+
+	type: {
+		type: String,
+		enum: [ChatMessageType.Text, ChatMessageType.Attachment],
+		default: ChatMessageType.Text
+	}
 })
 
 function generateModel() {

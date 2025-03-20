@@ -5,7 +5,7 @@ import dbConnect from '@/data/db/mongo'
 import Chat from '@/data/db/mongo/models/chat'
 import ChatMessage from '@/data/db/mongo/models/chat-message'
 import User from '@/data/db/mongo/models/user'
-import { ChatWithPopulatedFields } from '@/data/types/chats'
+import { ChatMessageType, ChatWithPopulatedFields } from '@/data/types/chats'
 import { mergeObjects } from '@/utils'
 
 export const getRecentChats = async (
@@ -52,7 +52,7 @@ export const getRecentChats = async (
                 { $match: { $expr: { $eq: ['$chatId', '$$chatId'] } } },
                 { $sort: { sentAt: -1 } },
                 { $limit: 1 },
-                { $project: { _id: 1, sender: 1, type: 1, content: 1 } },
+                { $project: { _id: 1, sender: 1, type: 1, content: 1, sentAt: 1 } },
               ],
               as: 'lastMessage',
             },
@@ -83,8 +83,11 @@ export const getRecentChats = async (
       chat.lastMessage.id = chat.lastMessage._id
       delete chat.lastMessage._id
 
-      chat.lastMessage.sender.id = chat.lastMessage.sender._id
-      delete chat.lastMessage.sender._id
+      chat.lastMessage.sender = chat.lastMessage.sender
+
+      if (chat.lastMessage.type === ChatMessageType.Text && Buffer.isBuffer(chat.lastMessage.content)) {
+        chat.lastMessage.content = chat.lastMessage.content.toString('base64')
+      }
     }
   }
 

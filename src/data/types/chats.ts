@@ -1,3 +1,8 @@
+export enum ChatMessageType {
+	Text = 'text',
+	Attachment = 'attachment',
+}
+
 export interface ChatWithPopulatedFields {
 	id: string
 	participants: {
@@ -10,7 +15,7 @@ export interface ChatWithPopulatedFields {
 			id: string
 			username: string
 		}
-		type: 'text' | 'image'
+		type: ChatMessageType
 		content: string
 	}
 	wasRequestedToDelete: boolean
