@@ -4,6 +4,7 @@ import classNames from 'classnames'
 import { geistMono, geistSans } from '@/styles/fonts'
 import { FiHome, FiPackage, FiUser, FiMessageSquare, FiSettings, FiLogOut } from 'react-icons/fi'
 import Messages from '@/components/messages'
+import Marketplace from '@/components/marketplace'
 
 export default function Dashboard() {
   const [activePage, setActivePage] = useState('home')
@@ -192,10 +193,7 @@ export default function Dashboard() {
           )}
 
           {activePage === 'marketplace' && (
-            <div>
-              <h2>Marketplace Content Here</h2>
-              {/* Add your marketplace component or content here */}
-            </div>
+            <Marketplace />
           )}
 
           {activePage === 'settings' && (
