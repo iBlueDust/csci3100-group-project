@@ -5,6 +5,7 @@ import { geistMono, geistSans } from '@/styles/fonts'
 import { FiHome, FiPackage, FiUser, FiMessageSquare, FiSettings, FiLogOut } from 'react-icons/fi'
 import Messages from '@/components/messages'
 import Marketplace from '@/components/marketplace'
+import Settings from '@/components/settings'
 
 export default function Dashboard() {
   const [activePage, setActivePage] = useState('home')
@@ -197,10 +198,7 @@ export default function Dashboard() {
           )}
 
           {activePage === 'settings' && (
-            <div>
-              <h2>Settings Content Here</h2>
-              {/* Add your settings component or content here */}
-            </div>
+            <Settings />
           )}
         </main>
       </div>
