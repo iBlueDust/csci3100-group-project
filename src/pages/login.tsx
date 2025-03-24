@@ -18,8 +18,15 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Add your login logic here
+    // In a real app, you would validate credentials here
     console.log('Login form submitted:', formData)
+    
+    // Redirect to dashboard after successful login
+    window.location.href = '/dashboard'
+    
+    // Or using Next.js router (import { useRouter } from 'next/router' first)
+    // const router = useRouter()
+    // router.push('/dashboard')
   }
 
   return (
