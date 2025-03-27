@@ -46,7 +46,8 @@ async function POST(
   const schema = Joi.object({
     recipient: Joi.string().required()
   })
-  const { value: recipientId, error } = schema.validate(req.body)
+  const { value: body, error } = schema.validate(req.body)
+  const recipientId = body.recipient
 
   if (error) {
     res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
@@ -60,7 +61,24 @@ async function POST(
     return res.status(400).json({ code: 'INVALID_REQUEST', message: 'Invalid recipient ID' })
   }
 
+  if (recipient.equals(auth.data.userId)) {
+    return res.status(400).json({ code: 'INVALID_REQUEST', message: 'Cannot create chat with self' })
+  }
+
   await dbConnect()
+
+  const chatExists = await Chat.exists({
+    participants: { $all: [auth.data.userId, recipient], $size: 2 }
+  })
+  if (chatExists) {
+    return res.status(400).json({ code: 'CHAT_ALREADY_EXISTS', message: 'Chat already exists' })
+  }
+
+  const recipientExists = await Chat.exists({ _id: recipient })
+  if (!recipientExists) {
+    return res.status(404).json({ code: 'NOT_FOUND', message: 'Recipient not found' })
+  }
+
   const chat = await Chat.create({ participants: [auth.data.userId, recipient] })
 
   res.status(200).json({ id: chat.id })
