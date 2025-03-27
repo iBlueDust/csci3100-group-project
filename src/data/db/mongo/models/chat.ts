@@ -4,7 +4,8 @@ const ChatSchema = new mongoose.Schema({
 	participants: [{
 		type: mongoose.Types.ObjectId,
 		ref: 'User',
-		required: true
+		required: true,
+		index: true,
 	}],
 
 	// If one party deletes the chat, the chat will still be available until
