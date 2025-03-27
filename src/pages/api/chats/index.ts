@@ -5,6 +5,7 @@ import mongoose from 'mongoose'
 
 import dbConnect from '@/data/db/mongo'
 import Chat from '@/data/db/mongo/models/chat'
+import User from '@/data/db/mongo/models/user'
 import { PaginatedResult, Error } from '@/data/types/common'
 import { getRecentChats } from '@/data/db/mongo/queries/chats/getRecentChats'
 import { sessionStore } from '@/data/session'
@@ -74,7 +75,7 @@ async function POST(
     return res.status(400).json({ code: 'CHAT_ALREADY_EXISTS', message: 'Chat already exists' })
   }
 
-  const recipientExists = await Chat.exists({ _id: recipient })
+  const recipientExists = await User.exists({ _id: recipient })
   if (!recipientExists) {
     return res.status(404).json({ code: 'NOT_FOUND', message: 'Recipient not found' })
   }
