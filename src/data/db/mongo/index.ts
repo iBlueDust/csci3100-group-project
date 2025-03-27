@@ -29,7 +29,6 @@ if (!MONGO_USERNAME || !MONGO_PASSWORD) {
 
 let cached = globalThis.mongoose
 
-
 async function dbConnect() {
 	if (!cached) {
 		cached = global.mongoose = { conn: null, promise: null }

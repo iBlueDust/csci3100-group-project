@@ -12,7 +12,7 @@ echo "Running minio-init.sh"
 mc alias set $MINIO_ALIAS http://minio:${MINIO_PORT:-9000} "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
 
 # Create a bucket
-mc mb $MINIO_ALIAS/media
+mc mb $MINIO_ALIAS/${MINIO_BUCKET_CHAT_ATTACHMENTS:-chat-attachments}
 
 # Create a user
 mc admin user add $MINIO_ALIAS "$MINIO_BACKEND_USER" "$MINIO_BACKEND_PASSWORD"
@@ -26,6 +26,6 @@ mc admin user svcacct add $MINIO_ALIAS $MINIO_BACKEND_USER \
 echo "Access keys for user \"$MINIO_BACKEND_USER\" successfully created"
 
 # Allow the public to download files in the bucket
-mc anonymous set download $MINIO_ALIAS/media
+mc anonymous set download $MINIO_ALIAS/${MINIO_BUCKET_CHAT_ATTACHMENTS:-chat-attachments}
 
 exit 0
