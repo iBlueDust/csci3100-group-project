@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "bash dev.sh",
+    "dev": "next dev --turbopack",
+    "dev:full": "bash dev.sh",
     "dev:start": "docker compose -f docker-compose.dev.yaml up --build -d && next dev --turbopack",
     "dev:stop": "docker compose -f docker-compose.dev.yaml down",
     "build": "next build",
