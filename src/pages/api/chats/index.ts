@@ -1,19 +1,22 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next'
 import Joi from 'joi'
+import mongoose from 'mongoose'
 
 import dbConnect from '@/data/db/mongo'
+import Chat from '@/data/db/mongo/models/chat'
 import { PaginatedResult, Error } from '@/data/types/common'
 import { getRecentChats } from '@/data/db/mongo/queries/chats/getRecentChats'
 import { sessionStore } from '@/data/session'
 import { ChatWithPopulatedFields } from '@/data/types/chats'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 
-type Data = PaginatedResult<ChatWithPopulatedFields>
+type GetData = PaginatedResult<ChatWithPopulatedFields>
+type PostData = { id: string }
 
 async function GET(
   req: NextApiRequest,
-  res: NextApiResponse<Data | Error>,
+  res: NextApiResponse<GetData | Error>,
   auth: AuthData,
 ) {
   const schema = Joi.object({
@@ -35,13 +38,43 @@ async function GET(
   res.status(200).json(payload)
 }
 
+async function POST(
+  req: NextApiRequest,
+  res: NextApiResponse<PostData | Error>,
+  auth: AuthData,
+) {
+  const schema = Joi.object({
+    recipient: Joi.string().required()
+  })
+  const { value: recipientId, error } = schema.validate(req.body)
+
+  if (error) {
+    res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
+    return
+  }
+
+  let recipient: mongoose.Types.ObjectId
+  try {
+    recipient = new mongoose.Types.ObjectId(recipientId)
+  } catch {
+    return res.status(400).json({ code: 'INVALID_REQUEST', message: 'Invalid recipient ID' })
+  }
+
+  await dbConnect()
+  const chat = await Chat.create({ participants: [auth.data.userId, recipient] })
+
+  res.status(200).json({ id: chat.id })
+}
+
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Data | Error>,
+  res: NextApiResponse<GetData | PostData | Error>,
 ) {
   switch (req.method) {
     case 'GET':
       return await protectedRoute(GET, sessionStore)(req, res)
+    case 'POST':
+      return await protectedRoute(POST, sessionStore)(req, res)
     default:
       res.status(405).end() // Method Not Allowed
   }
