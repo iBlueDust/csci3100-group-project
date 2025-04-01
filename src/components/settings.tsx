@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { FiUser, FiLock, FiBell, FiCreditCard, FiEye, FiEyeOff, FiGlobe, FiShield } from 'react-icons/fi'
+import { FiUser, FiLock, FiCreditCard, FiEye, FiEyeOff, FiGlobe, FiShield } from 'react-icons/fi'
 
-// Tab interfaces
-type SettingsTab = 'profile' | 'security' | 'notifications' | 'payment' | 'privacy'
+// Tab interfaces - removed 'notifications'
+type SettingsTab = 'profile' | 'security' | 'payment' | 'privacy'
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
@@ -21,16 +21,6 @@ export default function Settings() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  
-  // Notification state
-  const [notificationSettings, setNotificationSettings] = useState({
-    messages: true,
-    trades: true,
-    marketUpdates: false,
-    newsletter: false,
-    email: true,
-    browser: true
-  })
   
   // Payment methods state
   const [paymentMethods, setPaymentMethods] = useState([
@@ -51,13 +41,6 @@ export default function Settings() {
     setProfileForm({
       ...profileForm,
       [e.target.name]: e.target.value
-    })
-  }
-
-  const handleNotificationChange = (setting: keyof typeof notificationSettings) => {
-    setNotificationSettings({
-      ...notificationSettings,
-      [setting]: !notificationSettings[setting]
     })
   }
 
@@ -296,167 +279,6 @@ export default function Settings() {
                   Enable 2FA
                 </button>
               </div>
-            </div>
-          </div>
-        )
-        
-      case 'notifications':
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold mb-4">Notification Preferences</h3>
-            
-            <div className="grid gap-4">
-              <div className="flex items-center justify-between py-3 border-b border-foreground/10">
-                <div>
-                  <p className="font-medium">Messages</p>
-                  <p className="text-sm text-foreground/70">Get notified when you receive a message</p>
-                </div>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input 
-                    type="checkbox" 
-                    id="messages" 
-                    checked={notificationSettings.messages}
-                    onChange={() => handleNotificationChange('messages')}
-                    className="sr-only"
-                  />
-                  <label 
-                    htmlFor="messages"
-                    className={`block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer ${notificationSettings.messages ? 'bg-blue-500' : ''}`}
-                  >
-                    <span 
-                      className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform ${notificationSettings.messages ? 'translate-x-4' : 'translate-x-0'}`}
-                    ></span>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between py-3 border-b border-foreground/10">
-                <div>
-                  <p className="font-medium">Trade Updates</p>
-                  <p className="text-sm text-foreground/70">Get notified about your trade activity</p>
-                </div>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input 
-                    type="checkbox" 
-                    id="trades" 
-                    checked={notificationSettings.trades}
-                    onChange={() => handleNotificationChange('trades')}
-                    className="sr-only"
-                  />
-                  <label 
-                    htmlFor="trades"
-                    className={`block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer ${notificationSettings.trades ? 'bg-blue-500' : ''}`}
-                  >
-                    <span 
-                      className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform ${notificationSettings.trades ? 'translate-x-4' : 'translate-x-0'}`}
-                    ></span>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between py-3 border-b border-foreground/10">
-                <div>
-                  <p className="font-medium">Market Updates</p>
-                  <p className="text-sm text-foreground/70">Receive market trend updates and alerts</p>
-                </div>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input 
-                    type="checkbox" 
-                    id="marketUpdates" 
-                    checked={notificationSettings.marketUpdates}
-                    onChange={() => handleNotificationChange('marketUpdates')}
-                    className="sr-only"
-                  />
-                  <label 
-                    htmlFor="marketUpdates"
-                    className={`block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer ${notificationSettings.marketUpdates ? 'bg-blue-500' : ''}`}
-                  >
-                    <span 
-                      className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform ${notificationSettings.marketUpdates ? 'translate-x-4' : 'translate-x-0'}`}
-                    ></span>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between py-3 border-b border-foreground/10">
-                <div>
-                  <p className="font-medium">Newsletter</p>
-                  <p className="text-sm text-foreground/70">Receive our weekly newsletter with tips and updates</p>
-                </div>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input 
-                    type="checkbox" 
-                    id="newsletter" 
-                    checked={notificationSettings.newsletter}
-                    onChange={() => handleNotificationChange('newsletter')}
-                    className="sr-only"
-                  />
-                  <label 
-                    htmlFor="newsletter"
-                    className={`block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer ${notificationSettings.newsletter ? 'bg-blue-500' : ''}`}
-                  >
-                    <span 
-                      className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform ${notificationSettings.newsletter ? 'translate-x-4' : 'translate-x-0'}`}
-                    ></span>
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            <h3 className="text-xl font-bold mt-8 mb-4">Notification Methods</h3>
-            
-            <div className="grid gap-4">
-              <div className="flex items-center justify-between py-3 border-b border-foreground/10">
-                <div>
-                  <p className="font-medium">Email Notifications</p>
-                  <p className="text-sm text-foreground/70">Receive notifications via email</p>
-                </div>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input 
-                    type="checkbox" 
-                    id="email" 
-                    checked={notificationSettings.email}
-                    onChange={() => handleNotificationChange('email')}
-                    className="sr-only"
-                  />
-                  <label 
-                    htmlFor="email"
-                    className={`block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer ${notificationSettings.email ? 'bg-blue-500' : ''}`}
-                  >
-                    <span 
-                      className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform ${notificationSettings.email ? 'translate-x-4' : 'translate-x-0'}`}
-                    ></span>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between py-3 border-b border-foreground/10">
-                <div>
-                  <p className="font-medium">Browser Notifications</p>
-                  <p className="text-sm text-foreground/70">Show desktop notifications in your browser</p>
-                </div>
-                <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                  <input 
-                    type="checkbox" 
-                    id="browser" 
-                    checked={notificationSettings.browser}
-                    onChange={() => handleNotificationChange('browser')}
-                    className="sr-only"
-                  />
-                  <label 
-                    htmlFor="browser"
-                    className={`block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer ${notificationSettings.browser ? 'bg-blue-500' : ''}`}
-                  >
-                    <span 
-                      className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform ${notificationSettings.browser ? 'translate-x-4' : 'translate-x-0'}`}
-                    ></span>
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-6 flex justify-end">
-              <button className="button-primary px-4 py-2">Save Preferences</button>
             </div>
           </div>
         )
@@ -714,7 +536,7 @@ export default function Settings() {
     <div className="h-full">
       <h2 className="text-3xl font-bold mb-6">Settings</h2>
       
-      {/* Tabs Navigation */}
+      {/* Tabs Navigation - removed the notifications tab */}
       <div className="flex border-b border-foreground/10 mb-6 overflow-x-auto hide-scrollbar">
         <button
           onClick={() => setActiveTab('profile')}
@@ -734,16 +556,6 @@ export default function Settings() {
         >
           <FiLock className="w-4 h-4" />
           <span>Security</span>
-        </button>
-        
-        <button
-          onClick={() => setActiveTab('notifications')}
-          className={`flex items-center gap-1 px-4 py-2 border-b-2 font-medium transition-colors ${
-            activeTab === 'notifications' ? 'border-foreground text-foreground' : 'border-transparent text-foreground/50 hover:text-foreground/80'
-          }`}
-        >
-          <FiBell className="w-4 h-4" />
-          <span>Notifications</span>
         </button>
         
         <button
