@@ -30,6 +30,10 @@ const MarketListingSchema = new mongoose.Schema({
 		index: true,
 	},
 
+	editedAt: {
+		type: Date,
+	},
+
 	priceInCents: {
 		type: Number,
 		required: true,

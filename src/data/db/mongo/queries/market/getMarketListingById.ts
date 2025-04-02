@@ -22,6 +22,9 @@ export const getMarketListingById = async (
 	listing.author.id = listing.author._id.toString()
 	delete listing.author._id
 
-	listing.listedAt = listing.listedAt.toISOString()
+	listing.listedAt = (listing.listedAt as Date).toISOString()
+	if (listing.editedAt)
+		listing.editedAt = (listing.editedAt as Date).toISOString()
+
 	return listing as MarketListingSearchResult
 }

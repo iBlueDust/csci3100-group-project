@@ -121,6 +121,9 @@ export const searchMarketListings = async (
 			}
 
 			listing.listedAt = (listing.listedAt as Date).toISOString()
+			if (listing.editedAt)
+				listing.editedAt = (listing.editedAt as Date).toISOString()
+
 			return listing
 		}
 	) || []
