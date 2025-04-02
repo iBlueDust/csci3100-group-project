@@ -3,10 +3,14 @@ import Joi from 'joi'
 import mongoose from 'mongoose'
 
 import dbConnect from '@/data/db/mongo'
+import MarketListing from '@/data/db/mongo/models/market-listing'
 import { Error } from '@/data/types/common'
+import { sessionStore } from '@/data/session'
+import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { getMarketListingById } from '@/data/db/mongo/queries/market/getMarketListingById'
 
 type GetData = { id: string }
+type DeleteData = { success: boolean }
 
 async function GET(
 	req: NextApiRequest,
@@ -46,70 +50,41 @@ async function GET(
 	res.status(200).json(listing)
 }
 
-// async function DELETE(
-// 	req: NextApiRequest,
-// 	res: NextApiResponse<DeleteData | Error>,
-// 	auth: AuthData,
-// ) {
-// 	const { value: id, error } = Joi.string().required().validate(req.query.id)
+async function DELETE(
+	req: NextApiRequest,
+	res: NextApiResponse<DeleteData | Error>,
+	auth: AuthData,
+) {
+	const { value: id, error } = Joi.string().required().validate(req.query.id)
 
-// 	if (error) {
-// 		res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
-// 		return
-// 	}
+	if (error) {
+		res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
+		return
+	}
 
-// 	let listingId: mongoose.Types.ObjectId
-// 	try {
-// 		listingId = new mongoose.Types.ObjectId(id)
-// 	} catch {
-// 		return res
-// 			.status(400)
-// 			.json({ code: 'INVALID_REQUEST', message: 'Invalid market listing ID' })
-// 	}
+	let listingId: mongoose.Types.ObjectId
+	try {
+		listingId = new mongoose.Types.ObjectId(id)
+	} catch {
+		return res
+			.status(400)
+			.json({ code: 'INVALID_REQUEST', message: 'Invalid market listing ID' })
+	}
 
-// 	await dbConnect()
+	await dbConnect()
 
-// 	const chat = await MarketListing.findOne({
-// 		_id: listingId,
-// 		author: auth.data.userId,
-// 	})
+	const result = await MarketListing.deleteOne({
+		_id: listingId,
+		author: auth.data.userId,
+	})
+	if (result.deletedCount === 0) {
+		return res
+			.status(404)
+			.json({ code: 'NOT_FOUND', message: 'Market listing not found' })
+	}
 
-// 	if (!chat) {
-// 		return res
-// 			.status(404)
-// 			.json({ code: 'NOT_FOUND', message: 'Chat not found' })
-// 	}
-
-// 	if (chat.deleteRequesters.length >= chat.participants.length - 1) {
-// 		await chat.deleteOne()
-// 		console.log(`Deleted chat ${listingId}`)
-
-// 		// In case this chat was deleted by the other party between the time we checked
-// 		// and now (race condition), let's clean up all chats that should be deleted
-// 		// delete all chats where deleteRequesters.length >= participants.length - 1
-// 		const results = await Chat.deleteMany({
-// 			$expr: {
-// 				$gte: [
-// 					{ $size: "$deleteRequesters" },
-// 					{ $subtract: [{ $size: "$participants" }, 1] }
-// 				]
-// 			}
-// 		}).catch(() => null)
-
-// 		if (results) {
-// 			console.log(`Deleted ${results.deletedCount ?? 0} empty chats`)
-// 		} else {
-// 			console.error('Failed to delete empty chats')
-// 		}
-
-// 		return res.status(200).json({ success: true })
-// 	}
-
-// 	chat.deleteRequesters.push(auth.data.userId)
-// 	await chat.save()
-
-// 	return res.status(200).json({ success: true })
-// }
+	return res.status(200).json({ success: result.deletedCount > 0 })
+}
 
 export default async function handler(
 	req: NextApiRequest,
@@ -118,8 +93,8 @@ export default async function handler(
 	switch (req.method) {
 		case 'GET':
 			return await GET(req, res)
-		// case 'DELETE':
-		// 	return await protectedRoute(DELETE, sessionStore)(req, res)
+		case 'DELETE':
+			return await protectedRoute(DELETE, sessionStore)(req, res)
 		default:
 			res.status(405).end() // Method Not Allowed
 	}
