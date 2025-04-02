@@ -120,13 +120,6 @@ export const searchMarketListings = async (
 				listing.author = { id: listing.author.toString() }
 			}
 
-			listing.pictures = listing.pictures.map(
-				(picture: string) =>
-					`${process.env.MINIO_PUBLIC_ENDPOINT || 'localhost:9000'}/`
-					+ `${process.env.MINIO_BUCKET_CHAT_ATTACHMENTS || 'chat-attachments'}/`
-					+ `${picture.toString()}`
-			)
-
 			listing.listedAt = (listing.listedAt as Date).toISOString()
 			return listing
 		}
