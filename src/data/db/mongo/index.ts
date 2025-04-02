@@ -24,9 +24,7 @@ if (!MONGO_USERNAME || !MONGO_PASSWORD) {
 	throw new Error("MONGO_USERNAME and MONGO_PASSWORD are required")
 }
 
-
 // Cached mongoose connection
-
 let cached = globalThis.mongoose
 
 async function dbConnect() {
