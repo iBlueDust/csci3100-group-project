@@ -92,7 +92,7 @@ export const searchMarketListings = async (
 				},
 				{ $project: { authorLookup: 0, __v: 0 } },
 			],
-			total: [
+			meta: [
 				{ $count: 'total' }
 			],
 		}
