@@ -4,17 +4,18 @@ import mongoose from 'mongoose'
 
 import dbConnect from '@/data/db/mongo'
 import MarketListing from '@/data/db/mongo/models/market-listing'
-import { Error } from '@/data/types/common'
+import { Error as ApiError } from '@/data/types/common'
 import { sessionStore } from '@/data/session'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { getMarketListingById } from '@/data/db/mongo/queries/market/getMarketListingById'
+
 
 type GetData = { id: string }
 type DeleteData = { success: boolean }
 
 async function GET(
 	req: NextApiRequest,
-	res: NextApiResponse<GetData | Error>,
+	res: NextApiResponse<GetData | ApiError>,
 ) {
 	const { value: id, error } = Joi.string().required().validate(req.query.id)
 
@@ -52,7 +53,7 @@ async function GET(
 
 async function DELETE(
 	req: NextApiRequest,
-	res: NextApiResponse<DeleteData | Error>,
+	res: NextApiResponse<DeleteData | ApiError>,
 	auth: AuthData,
 ) {
 	const { value: id, error } = Joi.string().required().validate(req.query.id)
@@ -88,7 +89,7 @@ async function DELETE(
 
 export default async function handler(
 	req: NextApiRequest,
-	res: NextApiResponse<GetData | Error>,
+	res: NextApiResponse<GetData | ApiError>,
 ) {
 	switch (req.method) {
 		case 'GET':
@@ -98,4 +99,10 @@ export default async function handler(
 		default:
 			res.status(405).end() // Method Not Allowed
 	}
+}
+
+export const config = {
+	api: {
+		bodyParser: false,
+	},
 }

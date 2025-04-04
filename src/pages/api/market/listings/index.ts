@@ -11,13 +11,7 @@ import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { sessionStore } from '@/data/session'
 import minioClient from '@/data/db/minio'
 import { parseFormDataBody } from '@/utils/api'
-
-const TITLE_CHAR_LIMIT = 200
-const DESCRIPTION_CHAR_LIMIT = 1200
-const PICTURE_SIZE_LIMIT = 5 * 1024 * 1024 // 5 MiB
-const PICTURE_COUNT_LIMIT = 10 // 10 pictures per listing
-
-const BUCKET_NAME = process.env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS || 'market-listing-attachments'
+import env from '@/env'
 
 type GetData = PaginatedResult<MarketListingSearchResult>
 
@@ -58,8 +52,8 @@ async function GET(
 	for (const listing of listings.data) {
 		listing.pictures = listing.pictures.map(
 			(pictureObjectName: string) =>
-				`${process.env.MINIO_PUBLIC_ENDPOINT || 'localhost:9000'}/`
-				+ `${BUCKET_NAME}/`
+				`${env.MINIO_PUBLIC_ENDPOINT || 'localhost:9000'}/`
+				+ `${env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS}/`
 				+ `${pictureObjectName.toString()}`
 		)
 	}
@@ -67,13 +61,15 @@ async function GET(
 	res.status(200).json(listings)
 }
 
-const mimeTypeToExtension = {
+export const mimeTypeToExtension = {
 	'image/jpeg': 'jpg',
 	'image/png': 'png',
 	'image/gif': 'gif',
 	'image/webp': 'webp',
 } as Record<string, string>
-const isSupportedMimeType = (mimeType: string) => !!mimeTypeToExtension[mimeType]
+
+export const isSupportedMimeType = (mimeType: string) =>
+	!!mimeTypeToExtension[mimeType]
 
 
 type PostData = { id: string }
@@ -85,7 +81,7 @@ async function POST(
 ) {
 	const { fields, files, error } = await parseFormDataBody(
 		req,
-		{ maxFileSize: PICTURE_SIZE_LIMIT },
+		{ maxFileSize: env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT },
 	)
 
 	if (error) {
@@ -108,24 +104,37 @@ async function POST(
 		// title must contain at least one non-whitespace character and be at most 
 		// 200 characters long (after trimming)
 		title: Joi.string()
-			.pattern(new RegExp(`^\\s*\\S.{0,${TITLE_CHAR_LIMIT - 1}}\\s*$`))
+			.pattern(
+				new RegExp(
+					`^\\s*\\S.{0,${env.MARKET_LISTING_TITLE_MAX_LENGTH - 1}}\\s*$`
+				)
+			)
 			.required(),
 		description: Joi.string()
-			.pattern(new RegExp(`^\\s*\\S.{0,${DESCRIPTION_CHAR_LIMIT - 1}}\\s*$`))
+			.pattern(
+				new RegExp(
+					`^\\s*\\S.{0,${env.MARKET_LISTING_DESCRIPTION_MAX_LENGTH - 1}}\\s*$`
+				)
+			)
 			.required(),
 		pictures: Joi.array()
 			.items(
 				Joi.object({
-					data: Joi.binary().max(PICTURE_SIZE_LIMIT).required(),
+					data: Joi.binary()
+						.max(env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT)
+						.required(),
 					info: Joi
 						.custom(value => {
 							if (typeof value.toJSON !== 'function') return false
 
 							const info = (value as formidable.File).toJSON()
-							if (info.size > PICTURE_SIZE_LIMIT)
-								throw new Error(`File size exceeds ${PICTURE_SIZE_LIMIT / 1024} KiB`)
-							if (!info.mimetype || !isSupportedMimeType(info.mimetype))
+							if (info.size > env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT) {
+								const limitInKib = env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT / 1024
+								throw new Error(`File size exceeds ${limitInKib} KiB`)
+							}
+							if (!info.mimetype || !isSupportedMimeType(info.mimetype)) {
 								throw new Error(`Unsupported file type: ${info.mimetype}`)
+							}
 
 							return value
 						}
@@ -133,7 +142,7 @@ async function POST(
 						.required(),
 				})
 			)
-			.max(PICTURE_COUNT_LIMIT)
+			.max(env.MARKET_LISTING_ATTACHMENT_LIMIT)
 			.default([]),
 		priceInCents: Joi.number().min(0).integer().required(),
 		countries: Joi.array().items(Joi.string().pattern(/^[a-zA-Z]{2}$/)).default([]),
@@ -157,12 +166,13 @@ async function POST(
 
 	const uploadResults = await Promise.allSettled(
 		filesToUpload
-			.map(async ({ data, objectName }) => minioClient.putObject(
-				BUCKET_NAME,
-				objectName,
-				data,
-				PICTURE_SIZE_LIMIT,
-			)
+			.map(async ({ data, objectName }) =>
+				minioClient.putObject(
+					env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS,
+					objectName,
+					data,
+					env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT,
+				)
 			)
 	)
 
@@ -174,9 +184,11 @@ async function POST(
 			if (result.status !== 'fulfilled') return
 
 			const [filename,] = body.pictures[index]
-			minioClient.removeObject(BUCKET_NAME, filename).catch(err => {
-				console.warn('POST /market/listings | (Upload failure cleanup) Error deleting picture:', err)
-			})
+			minioClient
+				.removeObject(env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS, filename)
+				.catch(err => {
+					console.warn('POST /market/listings | (Upload failure cleanup) Error deleting picture:', err)
+				})
 		})
 
 		return res.status(500).json({ code: 'SERVER_ERROR', message: 'Error uploading pictures' })
