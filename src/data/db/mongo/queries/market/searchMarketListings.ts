@@ -23,6 +23,7 @@ export interface MarketListingSearchResult {
 		username?: string,
 	},
 	listedAt: string,
+	editedAt: string,
 	priceInCents: number,
 	countries: string[],
 }

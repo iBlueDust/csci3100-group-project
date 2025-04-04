@@ -21,7 +21,10 @@ export async function parseJsonBody<T>(
 
 export async function parseFormDataBody(
 	req: NextApiRequest,
-	options: { maxFileSize?: number },
+	options: {
+		maxFileSize?: number,
+		filter?: (part: formidable.Part) => boolean,
+	},
 ): Promise<
 	{
 		fields: formidable.Fields,
@@ -37,6 +40,7 @@ export async function parseFormDataBody(
 	const form = formidable({
 		maxFileSize: options.maxFileSize,
 		keepExtensions: true,
+		filter: options.filter,
 		fileWriteStreamHandler: (file) => {
 			if (!file) return new Writable()
 
@@ -81,6 +85,17 @@ export async function parseFormDataBody(
 			] as const)
 		)
 	}
+}
+
+export function assertIsObjectId(
+	id: unknown
+): mongoose.Types.ObjectId {
+	if (typeof id !== 'string') {
+		throw new Error('Invalid ObjectId')
+	}
+
+	const objectId = new mongoose.Types.ObjectId(id)
+	return objectId
 }
 
 export function toObjectId(
