@@ -19,6 +19,11 @@ export async function parseJsonBody<T>(
 	}
 }
 
+export interface File {
+	info: formidable.File
+	data: Buffer
+}
+
 export async function parseFormDataBody(
 	req: NextApiRequest,
 	options: {
@@ -28,19 +33,17 @@ export async function parseFormDataBody(
 ): Promise<
 	{
 		fields: formidable.Fields,
-		files: Record<string, { info: formidable.File, data: Buffer }[]>,
+		files: Record<string, File[]>,
 		error?: never,
 	}
 	| { error: unknown, fields?: never, files?: never }
 > {
 
-
 	const fileContents = new Map<string, Buffer[]>()
 
-	const form = formidable({
+	const formidableOptions: formidable.Options = {
 		maxFileSize: options.maxFileSize,
 		keepExtensions: true,
-		filter: options.filter,
 		fileWriteStreamHandler: (file) => {
 			if (!file) return new Writable()
 
@@ -63,7 +66,12 @@ export async function parseFormDataBody(
 			}
 			return stream
 		}
-	})
+	}
+	if (options.filter) {
+		formidableOptions.filter = options.filter
+	}
+
+	const form = formidable(formidableOptions)
 
 	let fields: formidable.Fields
 	let files: formidable.Files

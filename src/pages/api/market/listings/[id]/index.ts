@@ -2,20 +2,26 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import Joi from 'joi'
 import mongoose from 'mongoose'
 import type formidable from 'formidable'
-import { v4 as uuid } from 'uuid'
 
+import minioClient, { putManyObjects } from '@/data/db/minio'
 import dbConnect from '@/data/db/mongo'
 import MarketListing from '@/data/db/mongo/models/market-listing'
+import { getMarketListingById } from '@/data/db/mongo/queries/market/getMarketListingById'
+import { MarketListingSearchResult } from '@/data/db/mongo/queries/market/searchMarketListings'
 import { Error as ApiError } from '@/data/types/common'
 import { sessionStore } from '@/data/session'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
-import { getMarketListingById } from '@/data/db/mongo/queries/market/getMarketListingById'
-import { MarketListingSearchResult } from '@/data/db/mongo/queries/market/searchMarketListings'
 import { assertIsObjectId, parseFormDataBody } from '@/utils/api'
 import env from '@/env'
+import {
+	generatePictureObjectName,
+	isSupportedMimeType,
+	patchPictureArrayAllUnique,
+	patchPictureArrayUnusedPictures,
+	patchPictureArrayUsesAllNewPictures,
+	patchPictureArrayWithinBounds
+} from '@/utils/api/market'
 
-import { isSupportedMimeType, mimeTypeToExtension } from '..'
-import minioClient from '@/data/db/minio'
 
 type GetData = { id: string }
 type PatchData = MarketListingSearchResult
@@ -136,6 +142,7 @@ async function PATCH(
 		return
 	}
 
+
 	const listing = await MarketListing.findOne({
 		_id: listingId,
 		author: auth.data.userId,
@@ -146,60 +153,21 @@ async function PATCH(
 		return
 	}
 
-	let newPictureObjectNames: (typeof body)['pictures'] extends object
-		? string[] : never
 
 	// validate `pictures`
 	if (body.pictures) {
-		// To check that all new pictures are used, and all pictures (existing and
-		// new) are unique
-		const newPicturesUsedVector = new Array(body.newPictures?.length ?? 0).fill(false)
-		const existingPicturesUsedVector = new Array(listing.pictures.length).fill(false)
+		const numOldPics = listing.pictures.length
+		const numNewPics = body.newPictures?.length ?? 0
 
-		for (const index of body.pictures) {
-			if (index < 0) { // new picture
-				const newIndex = -index - 1
-
-				if (newIndex >= body.newPictures.length) {
-					res.status(400).json({
-						code: 'INVALID_REQUEST',
-						message: 'Invalid picture index',
-					})
-					return
-				}
-
-				if (newPicturesUsedVector[newIndex]) {
-					res.status(400).json({
-						code: 'INVALID_REQUEST',
-						message: 'Duplicate picture index',
-					})
-					return
-				}
-
-				newPicturesUsedVector[newIndex] = true
-
-			} else { // existing picture
-				if (index >= listing.pictures.length) {
-					res.status(400).json({
-						code: 'INVALID_REQUEST',
-						message: 'Invalid picture index',
-					})
-					return
-				}
-
-				if (existingPicturesUsedVector[index]) {
-					res.status(400).json({
-						code: 'INVALID_REQUEST',
-						message: 'Duplicate picture index',
-					})
-					return
-				}
-
-				existingPicturesUsedVector[index] = true
-			}
+		if (!patchPictureArrayWithinBounds(body.pictures, numOldPics, numNewPics)) {
+			res.status(400).json({
+				code: 'INVALID_REQUEST',
+				message: 'Picture index out of bounds',
+			})
+			return
 		}
 
-		if (newPicturesUsedVector.some((used) => !used)) {
+		if (!patchPictureArrayUsesAllNewPictures(body.pictures, numNewPics)) {
 			res.status(400).json({
 				code: 'INVALID_REQUEST',
 				message: 'Not all new pictures are used',
@@ -207,47 +175,39 @@ async function PATCH(
 			return
 		}
 
+		if (!patchPictureArrayAllUnique(body.pictures, numOldPics, numNewPics)) {
+			res.status(400)
+				.json({ code: 'INVALID_REQUEST', message: 'Duplicate picture index' })
+			return
+		}
+
 		const newPictures: { data: Buffer, info: formidable.File }[] | undefined =
 			body.newPictures
-		newPictureObjectNames = newPictures?.map((file) => {
-			const extension = mimeTypeToExtension[file.info.mimetype!]
-			return `${uuid()}.${extension}`
-		}) ?? []
+		const newPictureObjectNames = newPictures?.map(generatePictureObjectName) ?? []
 
-		const results = await Promise.allSettled(
-			newPictures?.map(
-				({ data, info }, index: number) => {
-					const objectName = newPictureObjectNames[index]
-					return minioClient.putObject(
-						env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS,
-						objectName,
-						data,
-						env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT,
-						{
-							originalFilename: info.originalFilename,
-							mimetype: info.mimetype,
-							listingId: listingId.toString(),
-						}
-					)
+		const uploadedAt = new Date().toISOString()
+		const uploadResults = await putManyObjects(
+			minioClient,
+			env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS,
+			newPictures?.map(({ data, info }, index: number) => {
+				const objectName = newPictureObjectNames[index]
+				return {
+					name: objectName,
+					data,
+					maxSize: env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT,
+					metadata: {
+						originalFilename: info.originalFilename,
+						mimetype: info.mimetype,
+						listingId: listingId.toString(),
+						uploadedAt,
+						uploadedBy: auth.data.userId,
+					},
 				}
-			) ?? []
+			}) ?? [],
 		)
 
-		if (results.some((result) => result.status === 'rejected')) {
-			// delete all successfully uploaded pictures in **background**
-			results.forEach((result, index) => {
-				if (result.status !== 'fulfilled') return
-
-				const objectName = newPictureObjectNames[index]
-				minioClient
-					.removeObject(
-						env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS,
-						objectName,
-					)
-					.catch((err) => {
-						console.warn('PATCH /market/listings | (Upload failure cleanup) Error deleting picture:', err)
-					})
-			})
+		if (!uploadResults.success) {
+			console.warn(`PATCH /market/listings/${listingId} | Error uploading pictures:`, uploadResults.failedObjects)
 
 			res.status(500).json({
 				code: 'SERVER_ERROR',
@@ -256,16 +216,19 @@ async function PATCH(
 			return
 		}
 
-		const picturesToDelete = listing.pictures
-			.filter((_, index) => !existingPicturesUsedVector[index])
-
+		// Delete pictures that are now unused
+		const picturesToDelete = patchPictureArrayUnusedPictures(
+			body.pictures, numOldPics, numNewPics
+		).filter(index => index >= 0)
+			.map((index) => listing.pictures[index])
+		console.log(`PATCH /market/listings/${listingId} | Deleting unused pictures:`, picturesToDelete)
 		await Promise.all(
-			picturesToDelete.map((filename) =>
+			picturesToDelete.map((objectName) =>
 				minioClient
-					.removeObject(env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS, filename)
+					.removeObject(env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS, objectName)
 			)
 		).catch((err) => {
-			console.warn('PATCH /market/listings | Error deleting pictures:', err)
+			console.error('PATCH /market/listings | Error deleting pictures:', err)
 		})
 
 		listing.pictures = body.pictures.map((index: number) => {

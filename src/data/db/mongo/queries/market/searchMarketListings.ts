@@ -2,6 +2,7 @@ import MarketListing from '@/data/db/mongo/models/market-listing'
 import User from '@/data/db/mongo/models/user'
 import type { PaginatedResult } from '@/data/types/common'
 import type { PipelineStage } from 'mongoose'
+import { makeMarketListingClientFriendly } from './getMarketListingById'
 
 
 export interface SearchMarketListingsOptions {
@@ -23,7 +24,7 @@ export interface MarketListingSearchResult {
 		username?: string,
 	},
 	listedAt: string,
-	editedAt: string,
+	editedAt?: string,
 	priceInCents: number,
 	countries: string[],
 }
@@ -108,26 +109,8 @@ export const searchMarketListings = async (
 		}
 	}
 
-	const listings: MarketListingSearchResult[] = results.data?.map(
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		(listing: any) => {
-			listing.id = listing._id.toString()
-			delete listing._id
-
-			if (typeof listing.author === 'object') {
-				listing.author.id = listing.author._id.toString()
-				delete listing.author._id
-			} else {
-				listing.author = { id: listing.author.toString() }
-			}
-
-			listing.listedAt = (listing.listedAt as Date).toISOString()
-			if (listing.editedAt)
-				listing.editedAt = (listing.editedAt as Date).toISOString()
-
-			return listing
-		}
-	) || []
+	const listings: MarketListingSearchResult[] =
+		results.data?.map(makeMarketListingClientFriendly) || []
 
 	return {
 		data: listings,
