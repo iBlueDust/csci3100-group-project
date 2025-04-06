@@ -19,22 +19,29 @@ export async function parseJsonBody<T>(
 	}
 }
 
+export interface File {
+	info: formidable.File
+	data: Buffer
+}
+
 export async function parseFormDataBody(
 	req: NextApiRequest,
-	options: { maxFileSize?: number },
+	options: {
+		maxFileSize?: number,
+		filter?: (part: formidable.Part) => boolean,
+	},
 ): Promise<
 	{
 		fields: formidable.Fields,
-		files: Record<string, { info: formidable.File, data: Buffer }[]>,
+		files: Record<string, File[]>,
 		error?: never,
 	}
 	| { error: unknown, fields?: never, files?: never }
 > {
 
-
 	const fileContents = new Map<string, Buffer[]>()
 
-	const form = formidable({
+	const formidableOptions: formidable.Options = {
 		maxFileSize: options.maxFileSize,
 		keepExtensions: true,
 		fileWriteStreamHandler: (file) => {
@@ -59,7 +66,12 @@ export async function parseFormDataBody(
 			}
 			return stream
 		}
-	})
+	}
+	if (options.filter) {
+		formidableOptions.filter = options.filter
+	}
+
+	const form = formidable(formidableOptions)
 
 	let fields: formidable.Fields
 	let files: formidable.Files
@@ -81,6 +93,17 @@ export async function parseFormDataBody(
 			] as const)
 		)
 	}
+}
+
+export function assertIsObjectId(
+	id: unknown
+): mongoose.Types.ObjectId {
+	if (typeof id !== 'string') {
+		throw new Error('Invalid ObjectId')
+	}
+
+	const objectId = new mongoose.Types.ObjectId(id)
+	return objectId
 }
 
 export function toObjectId(
