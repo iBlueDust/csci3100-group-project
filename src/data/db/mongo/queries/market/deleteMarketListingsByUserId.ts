@@ -1,6 +1,8 @@
 import type mongoose from 'mongoose'
 
+import env from '@/env'
 import MarketListing from '@/data/db/mongo/models/market-listing'
+import minioClient from '@/data/db/minio'
 
 /**
  * Deletes all market listings by authored by a given user
@@ -10,9 +12,20 @@ import MarketListing from '@/data/db/mongo/models/market-listing'
 export const deleteAllMarketListingsByUserId = async (
 	userId: mongoose.Types.ObjectId,
 ): Promise<number> => {
+
+	const listingPictures = await MarketListing
+		.find({ author: userId })
+		.select('pictures')
+	const allPictures = listingPictures.flatMap((listing) => listing.pictures)
+
 	const result = await MarketListing.deleteMany({
 		author: userId,
 	})
+
+	await minioClient.removeObjects(
+		env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS,
+		allPictures,
+	)
 
 	return result.deletedCount ?? 0
 }

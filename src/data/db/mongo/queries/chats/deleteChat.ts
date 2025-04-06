@@ -3,6 +3,7 @@ import type mongoose from "mongoose"
 import dbConnect from '@/data/db/mongo'
 import Chat from '@/data/db/mongo/models/chat'
 import ChatMessage from '@/data/db/mongo/models/chat-message'
+import { deleteOrphanedChatMessages } from "./deleteOrphanedChatMessages"
 
 
 /**
@@ -52,32 +53,12 @@ export const deleteChat = async (
 		} else {
 			console.error('Failed to delete empty chats')
 		}
-
-		// Also delete all messages that are not in any chat
-		const messageIds = await ChatMessage.aggregate([
-			{
-				$lookup: {
-					from: Chat.collection.name,
-					localField: 'chatId',
-					foreignField: '_id',
-					as: 'chat',
-				},
-			},
-			{
-				$match: {
-					chat: { $eq: [] },
-				},
-			},
-			{ $project: { _id: 1 } }
-		])
-		if (messageIds.length > 0) {
-			await ChatMessage.deleteMany({ _id: { $in: messageIds } })
-			console.log(`Deleted ${messageIds.length} messages not in any chat`)
-		}
 	} else {
 		chat.deleteRequesters.push(userId)
 		await chat.save()
 	}
+
+	await deleteOrphanedChatMessages()
 
 	return true
 }

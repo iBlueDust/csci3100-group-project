@@ -2,7 +2,7 @@ import type mongoose from "mongoose"
 
 import dbConnect from '@/data/db/mongo'
 import Chat from '@/data/db/mongo/models/chat'
-import ChatMessage from '@/data/db/mongo/models/chat-message'
+import { deleteOrphanedChatMessages } from "./deleteOrphanedChatMessages"
 
 
 /**
@@ -38,7 +38,7 @@ export const deleteAllChatsByUserId = async (
 
 	if (chatsToDelete.length > 0) {
 		const chatDeleteResult = await Chat.deleteMany({
-			_id: { $in: chatsToDelete.map(chat => chat._id) }
+			_id: { $in: chatsToDelete.map(chat => chat.id) }
 		})
 
 		if (chatDeleteResult.deletedCount === chatsToDelete.length) {
@@ -64,29 +64,14 @@ export const deleteAllChatsByUserId = async (
 		} else {
 			console.error('Failed to delete empty chats')
 		}
-
-		// Also delete all messages that are not in any chat
-		const messageIds = await ChatMessage.aggregate([
-			{
-				$lookup: {
-					from: Chat.collection.name,
-					localField: 'chatId',
-					foreignField: '_id',
-					as: 'chat',
-				},
-			},
-			{
-				$match: {
-					chat: { $eq: [] },
-				},
-			},
-			{ $project: { _id: 1 } }
-		])
-		if (messageIds.length > 0) {
-			await ChatMessage.deleteMany({ _id: { $in: messageIds } })
-			console.log(`Deleted ${messageIds.length} messages not in any chat`)
-		}
 	}
 
-	await Promise.all(chatsToSave.map(chat => chat.save()))
+	await deleteOrphanedChatMessages()
+
+	if (chatsToSave.length > 0) {
+		await Chat.updateMany(
+			{ _id: { $in: chatsToSave.map(chat => chat.id) } },
+			{ $addToSet: { deleteRequesters: userId } }
+		)
+	}
 }
