@@ -1,19 +1,32 @@
+import type mongoose from 'mongoose'
+
 export enum ChatMessageType {
 	Text = 'text',
 	Attachment = 'attachment',
 }
 
 export interface ChatWithPopulatedFields {
-	id: string
+	id: mongoose.Types.ObjectId
 	participants: {
-		id: string
+		id: mongoose.Types.ObjectId
 		username: string
 	}[]
-	lastMessage: {
-		id: string
+	lastMessage?: {
+		id: mongoose.Types.ObjectId
 		sender: string
-		type: ChatMessageType
 		content: string
+		sentAt: string
+		e2e: unknown
 	}
+	& (
+		{
+			type: ChatMessageType.Text
+			contentFilename?: never
+		}
+		| {
+			type: ChatMessageType.Attachment
+			contentFilename: string
+		}
+	)
 	wasRequestedToDelete: boolean
 }

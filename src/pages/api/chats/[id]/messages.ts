@@ -105,7 +105,7 @@ async function POST(
 
 	const unvalidatedBody = {
 		content: fields?.content?.[0] ?? files?.content?.[0],
-		contentFilename: fields?.contentFilename?.[0],
+		contentFilename: files?.contentFilename?.[0],
 		type: fields?.type?.[0],
 		e2e: fields?.e2e?.[0] ? JSON.parse(fields?.e2e?.[0]) : null,
 	}
