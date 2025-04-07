@@ -47,12 +47,12 @@ export async function parseFormDataBody(
 		fileWriteStreamHandler: (file) => {
 			if (!file) return new Writable()
 
-			const filepath = file.toJSON().originalFilename!
+			const filename = file.toJSON().originalFilename!
 
-			if (!fileContents.has(filepath)) {
-				fileContents.set(filepath, [])
+			if (!fileContents.has(filename)) {
+				fileContents.set(filename, [])
 			}
-			const buffers = fileContents.get(filepath)!
+			const buffers = fileContents.get(filename)!
 
 			const stream = new Writable({
 				write(chunk: Buffer, _, callback) {
