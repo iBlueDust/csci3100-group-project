@@ -179,7 +179,7 @@ async function POST(
 
 		e2e: Joi.alternatives().try(Joi.object(), Joi.allow(null)).optional()
 	})
-	console.log('unvalidated body', unvalidatedBody.contentFilename)
+
 	const { value: body, error: validationError } = schema.validate(unvalidatedBody)
 	if (validationError) {
 		return res.status(400).json({
