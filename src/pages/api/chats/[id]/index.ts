@@ -3,18 +3,19 @@ import Joi from 'joi'
 import mongoose from 'mongoose'
 
 import dbConnect from '@/data/db/mongo'
-import { Error } from '@/data/types/common'
+import type { Error as ApiError } from '@/data/types/common'
 import { sessionStore } from '@/data/session'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { getChatById } from '@/data/db/mongo/queries/chats/getChatById'
 import { deleteChat } from '@/data/db/mongo/queries/chats/deleteChat'
+import type { ChatWithPopulatedFields } from '@/data/types/chats'
 
-type GetData = { id: string }
+type GetData = ChatWithPopulatedFields
 type DeleteData = { success: boolean }
 
 async function GET(
 	req: NextApiRequest,
-	res: NextApiResponse<GetData | Error>,
+	res: NextApiResponse<GetData | ApiError>,
 	auth: AuthData,
 ) {
 	const { value: id, error } = Joi.string().required().validate(req.query.id)
@@ -46,7 +47,7 @@ async function GET(
 
 async function DELETE(
 	req: NextApiRequest,
-	res: NextApiResponse<DeleteData | Error>,
+	res: NextApiResponse<DeleteData | ApiError>,
 	auth: AuthData,
 ) {
 	const { value: id, error } = Joi.string().required().validate(req.query.id)
@@ -79,7 +80,7 @@ async function DELETE(
 
 export default async function handler(
 	req: NextApiRequest,
-	res: NextApiResponse<GetData | Error>,
+	res: NextApiResponse<GetData | ApiError>,
 ) {
 	switch (req.method) {
 		case 'GET':
