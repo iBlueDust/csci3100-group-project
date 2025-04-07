@@ -70,7 +70,7 @@ export const deleteAllChatsByUserId = async (
 
 	if (chatsToSave.length > 0) {
 		await Chat.updateMany(
-			{ _id: { $in: chatsToSave.map(chat => chat.id) } },
+			{ _id: { $in: chatsToSave.map(chat => chat._id) } },
 			{ $addToSet: { deleteRequesters: userId } }
 		)
 	}
