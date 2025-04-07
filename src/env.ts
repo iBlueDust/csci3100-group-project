@@ -26,6 +26,9 @@ const schema = Joi.object({
 
 	REDIS_PASSWORD: Joi.string().min(1).required(),
 
+	CHAT_TEXT_MESSAGE_MAX_SIZE: Joi.number().default(1024 * 1024),
+	CHAT_ATTACHMENT_MAX_SIZE: Joi.number().default(25 * 1024 * 1024),
+	CHAT_ATTACHMENT_FILENAME_MAX_SIZE: Joi.number().default(10 * 1024),
 	MARKET_LISTING_ATTACHMENT_LIMIT: Joi.number().default(10),
 	MARKET_LISTING_ATTACHMENT_SIZE_LIMIT: Joi.number().default(5 * 1024 * 1024), // 5 MiB
 	MARKET_LISTING_TITLE_MAX_LENGTH: Joi.number().default(200),

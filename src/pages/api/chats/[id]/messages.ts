@@ -4,24 +4,23 @@ import mongoose from 'mongoose'
 import { v4 as uuid } from 'uuid'
 
 import dbConnect from '@/data/db/mongo'
-import { Error, PaginatedResult } from '@/data/types/common'
+import type { Error as ApiError, PaginatedResult } from '@/data/types/common'
 import Chat from '@/data/db/mongo/models/chat'
 import ChatMessage from '@/data/db/mongo/models/chat-message'
 import { sessionStore } from '@/data/session'
+import { ChatMessageType, ClientChatMessage } from '@/data/types/chats'
+import minioClient from '@/data/db/minio'
+import env from '@/env'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { parseFormDataBody, toObjectId } from '@/utils/api'
-import { ChatMessageType } from '@/data/types/chats'
-import minioClient from '@/data/db/minio'
+import { makeChatMessageClientFriendly } from '@/data/db/mongo/queries/chats'
 
-const TEXT_MESSAGE_SIZE_LIMIT = 1024 * 1024 // 1 MB
-const ATTACHMENT_SIZE_LIMIT = 25 * 1024 * 1024 // 25 MB
-
-type GetData = PaginatedResult<typeof ChatMessage>
+type GetData = PaginatedResult<ClientChatMessage>
 type PostData = { id: string }
 
 async function GET(
 	req: NextApiRequest,
-	res: NextApiResponse<GetData | Error>,
+	res: NextApiResponse<GetData | ApiError>,
 	auth: AuthData,
 ) {
 	const schema = Joi.object({
@@ -73,60 +72,104 @@ async function GET(
 	const result = results[0] ?? { meta: [{ total: 0 }], data: [] }
 	result.meta = result.meta[0] ?? { total: 0 }
 
-	for (const message of result.data) {
-		message.id = message._id
-		delete message._id
+	result.data = result.data.map(makeChatMessageClientFriendly)
 
-		if (message.type === ChatMessageType.Text) {
-			if (message.content instanceof Buffer)
-				message.content = (message.content as Buffer).toString('base64')
-		} else if (message.type === ChatMessageType.Attachment) {
-			message.content = `${process.env.MINIO_PUBLIC_ENDPOINT || 'localhost:9000'}/${process.env.MINIO_BUCKET_CHAT_ATTACHMENTS || 'chat-attachments'}/${message.content}`
+	for (const message of result.data) {
+		if (message.type === ChatMessageType.Attachment) {
+			message.content =
+				`${env.MINIO_PUBLIC_ENDPOINT}/`
+				+ `${env.MINIO_BUCKET_CHAT_ATTACHMENTS}/`
+				+ `${message.content}`
 		}
 	}
 
-	res.status(200).json(result as PaginatedResult<typeof ChatMessage>)
+	res.status(200).json(result as PaginatedResult<ClientChatMessage>)
 }
 
 async function POST(
 	req: NextApiRequest,
-	res: NextApiResponse<PostData | Error>,
+	res: NextApiResponse<PostData | ApiError>,
 	auth: AuthData,
 ) {
+
 	// Validate message content
 	const { fields, files, error } = await parseFormDataBody(
 		req,
-		{ maxFileSize: Math.max(TEXT_MESSAGE_SIZE_LIMIT, ATTACHMENT_SIZE_LIMIT) }
+		{
+			maxFileSize: Math.max(
+				env.CHAT_TEXT_MESSAGE_MAX_SIZE,
+				env.CHAT_ATTACHMENT_MAX_SIZE,
+			)
+		}
 	)
 
 	if (error) {
 		return res.status(400).json({ code: 'INVALID_REQUEST', message: 'Invalid form data' })
 	}
 
+	const unvalidatedBody = {
+		content: fields?.content?.[0] ?? files?.content?.[0],
+		contentFilename: files?.contentFilename?.[0],
+		type: fields?.type?.[0],
+		e2e: fields?.e2e?.[0] ? JSON.parse(fields?.e2e?.[0]) : null,
+	}
+
 	const schema = Joi.object({
 		content: Joi.when('type', {
 			is: ChatMessageType.Text,
 			then: Joi.alternatives().try(
-				Joi.string().max(TEXT_MESSAGE_SIZE_LIMIT).required(),
+				Joi.string().max(env.CHAT_TEXT_MESSAGE_MAX_SIZE).required(),
 				Joi.object({
-					data: Joi.binary().max(TEXT_MESSAGE_SIZE_LIMIT).required(),
+					data: Joi.binary().max(env.CHAT_TEXT_MESSAGE_MAX_SIZE).required(),
 					info: Joi
-						.custom(value =>
-							typeof value.toJSON === 'function'
-							&& value.toJSON().size <= TEXT_MESSAGE_SIZE_LIMIT
-						)
+						.custom((value, helper) => {
+							if (typeof value.toJSON !== 'function')
+								throw new Error('Invalid file metadata')
+							if (value.toJSON().size > env.CHAT_TEXT_MESSAGE_MAX_SIZE)
+								return helper.error('any.max')
+
+							return value
+						})
 						.required(),
 				})
 			),
 			otherwise: Joi.object({
-				data: Joi.binary().max(ATTACHMENT_SIZE_LIMIT).required(),
+				data: Joi.binary().max(env.CHAT_ATTACHMENT_MAX_SIZE).required(),
 				info: Joi
-					.custom(value =>
-						typeof value.toJSON === 'function'
-						&& value.toJSON().size <= ATTACHMENT_SIZE_LIMIT
-					)
+					.custom((value, helper) => {
+						if (typeof value.toJSON !== 'function')
+							throw new Error('Invalid file metadata')
+						if (value.toJSON().size > env.CHAT_ATTACHMENT_MAX_SIZE)
+							return helper.error('any.max')
+
+						return value
+					})
 					.required(),
 			})
+		}),
+
+		contentFilename: Joi.when('type', {
+			is: ChatMessageType.Attachment,
+			then: Joi.object({
+				data: Joi
+					.binary()
+					.max(env.CHAT_ATTACHMENT_FILENAME_MAX_SIZE)
+					.required(),
+				info: Joi
+					.custom((value, helpers) => {
+						if (typeof value !== 'object') {
+							return helpers.error('any.invalid')
+						}
+						if (value.size > env.CHAT_ATTACHMENT_FILENAME_MAX_SIZE) {
+							const sizeInKib = env.CHAT_ATTACHMENT_FILENAME_MAX_SIZE / 1024
+							throw new Error(`Content filename exceeds ${sizeInKib} KiB`)
+						}
+
+						return value
+					})
+					.required(),
+			}),
+			otherwise: Joi.forbidden(),
 		}),
 
 		type: Joi.string().valid(
@@ -137,13 +180,7 @@ async function POST(
 		e2e: Joi.alternatives().try(Joi.object(), Joi.allow(null)).optional()
 	})
 
-	const { value: body, error: validationError } = schema.validate(
-		{
-			content: fields?.content?.[0] ?? files?.content?.[0],
-			type: fields?.type?.[0],
-			e2e: fields?.e2e?.[0] ? JSON.parse(fields?.e2e?.[0]) : null,
-		},
-	)
+	const { value: body, error: validationError } = schema.validate(unvalidatedBody)
 	if (validationError) {
 		return res.status(400).json({
 			code: 'INVALID_REQUEST',
@@ -188,19 +225,20 @@ async function POST(
 			})
 		}
 
-		const objectName = uuid() + '.png'
+		const objectName = uuid()
 		await minioClient.putObject(
-			process.env.MINIO_BUCKET_CHAT_ATTACHMENTS || 'chat-attachments',
+			env.MINIO_BUCKET_CHAT_ATTACHMENTS,
 			objectName,
 			attachment.data,
-			Math.min(attachment.data.length, ATTACHMENT_SIZE_LIMIT),
-			{ 'Content-Type': 'image/png' } // Binary data
+			Math.min(attachment.data.length, env.CHAT_ATTACHMENT_MAX_SIZE),
+			{ 'Content-Type': 'application/octet-stream' } // binary
 		)
 
 		const doc = await ChatMessage.create({
 			chatId,
 			sender: auth.data.userId,
 			content: objectName,
+			contentFilename: body.contentFilename.data,
 			type: body.type,
 			e2e: body.e2e,
 		})
@@ -216,7 +254,7 @@ async function POST(
 
 export default async function handler(
 	req: NextApiRequest,
-	res: NextApiResponse<GetData | PostData | Error>,
+	res: NextApiResponse<GetData | PostData | ApiError>,
 ) {
 	switch (req.method) {
 		case 'GET':

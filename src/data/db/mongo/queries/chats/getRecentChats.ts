@@ -54,7 +54,17 @@ export const getRecentChats = async (
                 { $match: { $expr: { $eq: ['$chatId', '$$chatId'] } } },
                 { $sort: { sentAt: -1 } },
                 { $limit: 1 },
-                { $project: { _id: 1, sender: 1, type: 1, content: 1, sentAt: 1 } },
+                {
+                  $project: {
+                    _id: 1,
+                    sender: 1,
+                    type: 1,
+                    content: 1,
+                    contentFilename: 1,
+                    sentAt: 1,
+                    e2e: 1,
+                  },
+                },
               ],
               as: 'lastMessage',
             },
@@ -79,7 +89,7 @@ export const getRecentChats = async (
     result.data = []
   }
 
-  result.data.forEach(makeChatClientFriendly)
+  result.data = result.data.map(makeChatClientFriendly)
 
   // Copy options to meta object
   result.meta = { ...options, ...result.meta[0] }
