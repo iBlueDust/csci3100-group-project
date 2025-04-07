@@ -4,6 +4,8 @@ import Chat from '@/data/db/mongo/models/chat'
 import ChatMessage from '@/data/db/mongo/models/chat-message'
 import User from '@/data/db/mongo/models/user'
 import { ChatWithPopulatedFields } from '@/data/types/chats'
+import { makeChatClientFriendly } from '.'
+
 
 export const getChatById = async (
 	chatId: mongoose.Types.ObjectId,
@@ -31,7 +33,7 @@ export const getChatById = async (
 				from: User.collection.name,
 				localField: 'participants',
 				foreignField: '_id',
-				as: 'participants',
+				as: 'participantLookups',
 				pipeline: [{ $project: { _id: 1, username: 1 } }],
 			},
 		},
@@ -58,21 +60,5 @@ export const getChatById = async (
 
 	const result = results[0]
 
-	result.id = result._id
-	delete result._id
-
-	for (const participant of result.participants) {
-		participant.id = participant._id
-		delete participant._id
-	}
-
-	if (result.lastMessage) {
-		result.lastMessage.id = result.lastMessage._id
-		delete result.lastMessage._id
-
-		result.lastMessage.sender.id = result.lastMessage.sender._id
-		delete result.lastMessage.sender._id
-	}
-
-	return result as ChatWithPopulatedFields
+	return makeChatClientFriendly(result)
 }
