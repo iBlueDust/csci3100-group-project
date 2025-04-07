@@ -47,7 +47,7 @@ export async function parseFormDataBody(
 		fileWriteStreamHandler: (file) => {
 			if (!file) return new Writable()
 
-			const filepath = file.toJSON().filepath
+			const filepath = file.toJSON().originalFilename!
 
 			if (!fileContents.has(filepath)) {
 				fileContents.set(filepath, [])
@@ -61,9 +61,6 @@ export async function parseFormDataBody(
 				}
 			})
 
-			if (file) {
-				stream.write(file.toString())
-			}
 			return stream
 		}
 	}
@@ -88,7 +85,9 @@ export async function parseFormDataBody(
 				field,
 				files?.map(file => ({
 					info: file,
-					data: Buffer.concat(fileContents.get(file.toJSON().filepath)?.slice(1) ?? [])
+					data: Buffer.concat(
+						fileContents.get(file.toJSON().originalFilename!) ?? []
+					)
 				})) ?? []
 			] as const)
 		)

@@ -17,17 +17,25 @@ export const makeChatClientFriendly = (chat: any): ChatWithPopulatedFields => {
 					).username,
 			}
 		}),
-		lastMessage: chat.lastMessage ? {
-			id: chat.lastMessage._id ?? chat.lastMessage.id,
-			sender: chat.lastMessage.sender,
-			type: chat.lastMessage.type,
-			content: chat.lastMessage.type === ChatMessageType.Text
-				&& Buffer.isBuffer(chat.lastMessage.content)
-				? chat.lastMessage.content.toString('base64')
-				: chat.lastMessage.content,
-			contentFilename: chat.lastMessage.contentFilename,
-			e2e: chat.lastMessage.e2e,
-			sentAt: chat.lastMessage.sentAt.toISOString(),
-		} : undefined,
+		lastMessage: chat.lastMessage
+			? makeChatMessageClientFriendly(chat.lastMessage)
+			: undefined,
+	}
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const makeChatMessageClientFriendly = (message: any) => {
+	return {
+		id: message._id ?? message.id,
+		// chatId: message.chatId, // client already knows
+		sender: message.sender,
+		type: message.type,
+		content: message.type === ChatMessageType.Text
+			&& Buffer.isBuffer(message.content)
+			? message.content.toString('base64')
+			: message.content,
+		contentFilename: message.contentFilename,
+		e2e: message.e2e,
+		sentAt: message.sentAt.toISOString(),
 	}
 }

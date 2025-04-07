@@ -30,3 +30,14 @@ export interface ChatWithPopulatedFields {
 	)
 	wasRequestedToDelete: boolean
 }
+
+export interface ClientChatMessage {
+	id: mongoose.Types.ObjectId
+	// chatId: mongoose.Types.ObjectId // client already knows
+	sender: mongoose.Types.ObjectId
+	type: ChatMessageType
+	content: string | Buffer
+	contentFilename?: string
+	e2e: unknown
+	sentAt: string
+}
