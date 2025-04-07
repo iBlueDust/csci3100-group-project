@@ -1,10 +1,12 @@
+import type mongoose from 'mongoose'
+
 export interface MarketListingSearchResult {
-	id: string,
+	id: mongoose.Types.ObjectId,
 	title: string,
 	description: string,
 	pictures: string[],
 	author: {
-		id: string,
+		id: mongoose.Types.ObjectId,
 		username?: string,
 	},
 	listedAt: string,
@@ -15,19 +17,20 @@ export interface MarketListingSearchResult {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const makeMarketListingClientFriendly = (listing: any) => {
-	listing.id = listing._id
-	delete listing._id
-
-	if (typeof listing.author === 'object') {
-		listing.author.id = listing.author._id
-		delete listing.author._id
-	} else {
-		listing.author = { id: listing.author }
-	}
-
-	listing.listedAt = (listing.listedAt as Date).toISOString()
-	if (listing.editedAt)
-		listing.editedAt = (listing.editedAt as Date).toISOString()
-
-	return listing as MarketListingSearchResult
+	return {
+		id: listing.id || listing._id,
+		title: listing.title,
+		description: listing.description,
+		pictures: listing.pictures,
+		author: typeof listing.author === 'object' && listing.author !== null
+			? {
+				id: listing.author.id || listing.author._id,
+				username: listing.author.username,
+			}
+			: { id: listing.author },
+		priceInCents: listing.priceInCents,
+		countries: listing.countries,
+		listedAt: listing.listedAt.toISOString(),
+		editedAt: listing.editedAt?.toISOString(),
+	} as MarketListingSearchResult
 }

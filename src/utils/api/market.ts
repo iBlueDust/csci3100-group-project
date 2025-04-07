@@ -85,7 +85,6 @@ export const patchPictureArrayUnusedPictures = (
 	numExistingPictures: number,
 	numNewPictures: number = 0,
 ) => {
-	console.log({ pictures, numExistingPictures, numNewPictures })
 	const usedVector = new Array(numExistingPictures + numNewPictures).fill(false)
 	for (const picture of pictures) {
 		const index = picture + numNewPictures
