@@ -3,16 +3,16 @@ import Joi from 'joi'
 import mongoose from 'mongoose'
 import type formidable from 'formidable'
 
+import env from '@/env'
 import minioClient, { putManyObjects } from '@/data/db/minio'
 import dbConnect from '@/data/db/mongo'
 import MarketListing from '@/data/db/mongo/models/market-listing'
+import { makeMarketListingClientFriendly, type MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { getMarketListingById } from '@/data/db/mongo/queries/market/getMarketListingById'
-import { MarketListingSearchResult } from '@/data/db/mongo/queries/market/searchMarketListings'
-import { Error as ApiError } from '@/data/types/common'
+import type { Error as ApiError } from '@/data/types/common'
 import { sessionStore } from '@/data/session'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { assertIsObjectId, parseFormDataBody } from '@/utils/api'
-import env from '@/env'
 import {
 	generatePictureObjectName,
 	isSupportedMimeType,
@@ -23,7 +23,7 @@ import {
 } from '@/utils/api/market'
 
 
-type GetData = { id: string }
+type GetData = MarketListingSearchResult
 type PatchData = MarketListingSearchResult
 type DeleteData = { success: boolean }
 
@@ -240,32 +240,22 @@ async function PATCH(
 			}
 		})
 	}
-	if (body.title) listing.title = body.title
-	if (body.description) listing.description = body.description
+	if (body.title) listing.title = body.title.trim()
+	if (body.description) listing.description = body.description.trim()
 	if (body.priceInCents) listing.priceInCents = body.priceInCents
 	if (body.countries) listing.countries = body.countries
 	listing.editedAt = new Date()
 
 	await listing.save()
 
-	res.status(200).json({
-		id: listing.id,
-		title: listing.title,
-		description: listing.description,
-		pictures: listing.pictures.map((picture: string) =>
-			`${env.MINIO_PUBLIC_ENDPOINT}/`
-			+ `${env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS}/`
-			+ `${picture.toString()}`
-		),
-		author: {
-			id: (listing.author as { id: mongoose.Types.ObjectId }).id.toString(),
-			username: (listing.author as { username: string }).username,
-		},
-		priceInCents: listing.priceInCents,
-		countries: listing.countries,
-		listedAt: listing.listedAt.toISOString(),
-		editedAt: listing.editedAt?.toISOString(),
-	})
+	const listingJson = makeMarketListingClientFriendly(listing.toJSON())
+	listingJson.pictures = listingJson.pictures.map(picture =>
+		`${env.MINIO_PUBLIC_ENDPOINT}/`
+		+ `${env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS}/`
+		+ `${picture.toString()}`
+	)
+
+	res.status(200).json(listingJson)
 }
 
 async function DELETE(

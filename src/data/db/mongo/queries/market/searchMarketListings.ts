@@ -1,8 +1,13 @@
+import type { PipelineStage } from 'mongoose'
+
 import MarketListing from '@/data/db/mongo/models/market-listing'
 import User from '@/data/db/mongo/models/user'
 import type { PaginatedResult } from '@/data/types/common'
-import type { PipelineStage } from 'mongoose'
-import { makeMarketListingClientFriendly } from './getMarketListingById'
+import {
+	type MarketListingSearchResult,
+	makeMarketListingClientFriendly,
+} from '.'
+
 
 
 export interface SearchMarketListingsOptions {
@@ -12,21 +17,6 @@ export interface SearchMarketListingsOptions {
 	priceMax?: number
 	skip?: number
 	limit?: number
-}
-
-export interface MarketListingSearchResult {
-	id: string,
-	title: string,
-	description: string,
-	pictures: string[],
-	author: {
-		id: string,
-		username?: string,
-	},
-	listedAt: string,
-	editedAt?: string,
-	priceInCents: number,
-	countries: string[],
 }
 
 export const searchMarketListings = async (
