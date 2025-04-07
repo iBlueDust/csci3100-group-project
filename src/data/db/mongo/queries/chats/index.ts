@@ -26,8 +26,6 @@ export const makeChatClientFriendly = (chat: any): ChatWithPopulatedFields => {
 		chat.lastMessage.id = chat.lastMessage._id
 		delete chat.lastMessage._id
 
-		chat.lastMessage.sender = chat.lastMessage.sender
-
 		if (chat.lastMessage.type === ChatMessageType.Text
 			&& Buffer.isBuffer(chat.lastMessage.content)) {
 			chat.lastMessage.content = chat.lastMessage.content.toString('base64')

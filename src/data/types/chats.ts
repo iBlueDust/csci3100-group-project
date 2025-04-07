@@ -11,10 +11,7 @@ export interface ChatWithPopulatedFields {
 	}[]
 	lastMessage: {
 		id: string
-		sender: {
-			id: string
-			username: string
-		}
+		sender: string
 		type: ChatMessageType
 		content: string
 	}
