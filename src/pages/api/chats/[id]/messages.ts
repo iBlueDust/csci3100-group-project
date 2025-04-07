@@ -4,7 +4,7 @@ import mongoose from 'mongoose'
 import { v4 as uuid } from 'uuid'
 
 import dbConnect from '@/data/db/mongo'
-import { Error, PaginatedResult } from '@/data/types/common'
+import { Error as ApiError, PaginatedResult } from '@/data/types/common'
 import Chat from '@/data/db/mongo/models/chat'
 import ChatMessage from '@/data/db/mongo/models/chat-message'
 import { sessionStore } from '@/data/session'
@@ -21,7 +21,7 @@ type PostData = { id: string }
 
 async function GET(
 	req: NextApiRequest,
-	res: NextApiResponse<GetData | Error>,
+	res: NextApiResponse<GetData | ApiError>,
 	auth: AuthData,
 ) {
 	const schema = Joi.object({
@@ -90,7 +90,7 @@ async function GET(
 
 async function POST(
 	req: NextApiRequest,
-	res: NextApiResponse<PostData | Error>,
+	res: NextApiResponse<PostData | ApiError>,
 	auth: AuthData,
 ) {
 	// Validate message content
@@ -103,6 +103,13 @@ async function POST(
 		return res.status(400).json({ code: 'INVALID_REQUEST', message: 'Invalid form data' })
 	}
 
+	const unvalidatedBody = {
+		content: fields?.content?.[0] ?? files?.content?.[0],
+		contentFilename: fields?.contentFilename?.[0],
+		type: fields?.type?.[0],
+		e2e: fields?.e2e?.[0] ? JSON.parse(fields?.e2e?.[0]) : null,
+	}
+
 	const schema = Joi.object({
 		content: Joi.when('type', {
 			is: ChatMessageType.Text,
@@ -111,22 +118,36 @@ async function POST(
 				Joi.object({
 					data: Joi.binary().max(TEXT_MESSAGE_SIZE_LIMIT).required(),
 					info: Joi
-						.custom(value =>
-							typeof value.toJSON === 'function'
-							&& value.toJSON().size <= TEXT_MESSAGE_SIZE_LIMIT
-						)
+						.custom((value, helper) => {
+							if (typeof value.toJSON !== 'function')
+								throw new Error('Invalid file metadata')
+							if (value.toJSON().size > TEXT_MESSAGE_SIZE_LIMIT)
+								return helper.error('any.max')
+
+							return value
+						})
 						.required(),
 				})
 			),
 			otherwise: Joi.object({
 				data: Joi.binary().max(ATTACHMENT_SIZE_LIMIT).required(),
 				info: Joi
-					.custom(value =>
-						typeof value.toJSON === 'function'
-						&& value.toJSON().size <= ATTACHMENT_SIZE_LIMIT
-					)
+					.custom((value, helper) => {
+						if (typeof value.toJSON !== 'function')
+							throw new Error('Invalid file metadata')
+						if (value.toJSON().size > ATTACHMENT_SIZE_LIMIT)
+							return helper.error('any.max')
+
+						return value
+					})
 					.required(),
 			})
+		}),
+
+		contentFilename: Joi.when('type', {
+			is: ChatMessageType.Attachment,
+			then: Joi.binary().max(ATTACHMENT_SIZE_LIMIT).required(),
+			otherwise: Joi.forbidden(),
 		}),
 
 		type: Joi.string().valid(
@@ -137,13 +158,7 @@ async function POST(
 		e2e: Joi.alternatives().try(Joi.object(), Joi.allow(null)).optional()
 	})
 
-	const { value: body, error: validationError } = schema.validate(
-		{
-			content: fields?.content?.[0] ?? files?.content?.[0],
-			type: fields?.type?.[0],
-			e2e: fields?.e2e?.[0] ? JSON.parse(fields?.e2e?.[0]) : null,
-		},
-	)
+	const { value: body, error: validationError } = schema.validate(unvalidatedBody)
 	if (validationError) {
 		return res.status(400).json({
 			code: 'INVALID_REQUEST',
@@ -201,6 +216,7 @@ async function POST(
 			chatId,
 			sender: auth.data.userId,
 			content: objectName,
+			contentFilename: body.contentFilename,
 			type: body.type,
 			e2e: body.e2e,
 		})
@@ -216,7 +232,7 @@ async function POST(
 
 export default async function handler(
 	req: NextApiRequest,
-	res: NextApiResponse<GetData | PostData | Error>,
+	res: NextApiResponse<GetData | PostData | ApiError>,
 ) {
 	switch (req.method) {
 		case 'GET':
