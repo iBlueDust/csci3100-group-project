@@ -2,7 +2,6 @@ import type mongoose from "mongoose"
 
 import dbConnect from '@/data/db/mongo'
 import Chat from '@/data/db/mongo/models/chat'
-import ChatMessage from '@/data/db/mongo/models/chat-message'
 import { deleteOrphanedChatMessages } from "./deleteOrphanedChatMessages"
 
 
@@ -31,10 +30,9 @@ export const deleteChat = async (
 
 	const userIsLastInChat = chat.deleteRequesters.length >= chat.participants.length - 1
 	if (userIsLastInChat) {
+		// Delete the chat, orphan the messages (will be deleted later)
 		await chat.deleteOne()
 		console.log(`Deleted chat ${chatId}`)
-		await ChatMessage.deleteMany({ chatId })
-		console.log(`Deleted all message of chat ${chatId}`)
 
 		// In case this chat was deleted by the other party between the time we checked
 		// and now (race condition), let's clean up all chats that should be deleted
@@ -43,7 +41,7 @@ export const deleteChat = async (
 			$expr: {
 				$gte: [
 					{ $size: "$deleteRequesters" },
-					{ $subtract: [{ $size: "$participants" }, 1] }
+					{ $size: "$participants" },
 				]
 			}
 		}).catch(() => null)
@@ -58,6 +56,7 @@ export const deleteChat = async (
 		await chat.save()
 	}
 
+	// Now, we finally delete the chat messages, and all other orphaned messages
 	await deleteOrphanedChatMessages()
 
 	return true
