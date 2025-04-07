@@ -38,7 +38,7 @@ export const deleteAllChatsByUserId = async (
 
 	if (chatsToDelete.length > 0) {
 		const chatDeleteResult = await Chat.deleteMany({
-			_id: { $in: chatsToDelete.map(chat => chat.id) }
+			_id: { $in: chatsToDelete.map(chat => chat._id) }
 		})
 
 		if (chatDeleteResult.deletedCount === chatsToDelete.length) {
