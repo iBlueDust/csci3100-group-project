@@ -48,7 +48,7 @@ async function POST(
     recipient: Joi.string().required()
   })
   const { value: body, error } = schema.validate(req.body)
-  const recipientId = body.recipient
+  const recipientId = body.recipient as string
 
   if (error) {
     res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })

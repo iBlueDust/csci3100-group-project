@@ -1,15 +1,17 @@
-import mongoose, { Types } from 'mongoose'
+import mongoose from 'mongoose'
 
 import type { PaginatedResult, PaginationOptions } from '@/data/types/common'
 import dbConnect from '@/data/db/mongo'
 import Chat from '@/data/db/mongo/models/chat'
 import ChatMessage from '@/data/db/mongo/models/chat-message'
 import User from '@/data/db/mongo/models/user'
-import { ChatMessageType, ChatWithPopulatedFields } from '@/data/types/chats'
+import { ChatWithPopulatedFields } from '@/data/types/chats'
 import { mergeObjects } from '@/utils'
+import { makeChatClientFriendly } from '.'
+
 
 export const getRecentChats = async (
-  userId: Types.ObjectId,
+  userId: mongoose.Types.ObjectId,
   options: PaginationOptions<{ query?: string, id?: mongoose.Types.ObjectId }>,
 ): Promise<PaginatedResult<ChatWithPopulatedFields>> => {
   await dbConnect()
@@ -40,7 +42,7 @@ export const getRecentChats = async (
               from: User.collection.name,
               localField: 'participants',
               foreignField: '_id',
-              as: 'participants',
+              as: 'participantLookups',
               pipeline: [{ $project: { _id: 1, username: 1 } }],
             },
           },
@@ -69,27 +71,15 @@ export const getRecentChats = async (
     },
   ]).exec()
 
-  // Change _id to id
-  for (const chat of result.data) {
-    chat.id = chat._id
-    delete chat._id
-
-    for (const participant of chat.participants) {
-      participant.id = participant._id
-      delete participant._id
-    }
-
-    if (chat.lastMessage) {
-      chat.lastMessage.id = chat.lastMessage._id
-      delete chat.lastMessage._id
-
-      chat.lastMessage.sender = chat.lastMessage.sender
-
-      if (chat.lastMessage.type === ChatMessageType.Text && Buffer.isBuffer(chat.lastMessage.content)) {
-        chat.lastMessage.content = chat.lastMessage.content.toString('base64')
-      }
-    }
+  // Reformat data
+  if (!result) {
+    return { data: [], meta: { ...options, total: 0 } }
   }
+  if (!result.data) {
+    result.data = []
+  }
+
+  result.data.forEach(makeChatClientFriendly)
 
   // Copy options to meta object
   result.meta = { ...options, ...result.meta[0] }
