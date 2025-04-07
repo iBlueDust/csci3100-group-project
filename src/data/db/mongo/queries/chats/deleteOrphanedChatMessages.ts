@@ -26,7 +26,7 @@ export const deleteOrphanedChatMessages = async () => {
 		return
 	}
 
-	await ChatMessage.deleteMany({ _id: { $in: messages.map(m => m.id) } })
+	await ChatMessage.deleteMany({ _id: { $in: messages.map(m => m._id) } })
 	console.log(`Deleted ${messages.length} messages not in any chat`)
 
 	const allAttachments = messages
