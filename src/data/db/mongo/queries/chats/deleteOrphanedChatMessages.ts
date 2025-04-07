@@ -26,8 +26,14 @@ export const deleteOrphanedChatMessages = async () => {
 		return
 	}
 
-	await ChatMessage.deleteMany({ _id: { $in: messages.map(m => m._id) } })
-	console.log(`Deleted ${messages.length} messages not in any chat`)
+	const results = await ChatMessage.deleteMany({
+		_id: { $in: messages.map(m => m._id) }
+	})
+	if (results.deletedCount < messages.length) {
+		console.warn(`Deleted ${results.deletedCount} messages not in any chat, but ${messages.length - results.deletedCount} messages were not deleted`)
+	} else {
+		console.log(`Deleted ${results.deletedCount} messages not in any chat`)
+	}
 
 	const allAttachments = messages
 		.filter(m => m.type === ChatMessageType.Attachment)
