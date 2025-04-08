@@ -34,7 +34,7 @@ export const makeChatMessageClientFriendly = (message: any) => {
 			&& Buffer.isBuffer(message.content)
 			? message.content.toString('base64')
 			: message.content,
-		contentFilename: message.contentFilename.toString('base64'),
+		contentFilename: message.contentFilename?.toString('base64'),
 		e2e: message.e2e,
 		sentAt: message.sentAt.toISOString(),
 	}
