@@ -10,6 +10,7 @@ import { UserRole } from "@/data/types/auth"
 
 type Data = {
 	id: string
+	expiresAt: string
 }
 
 type Error = {
@@ -57,7 +58,9 @@ async function POST(
 	const session = await sessionStore.createSession(user.id, user.roles)
 
 	res.setHeader('Set-Cookie', sessionToCookie(session))
-	res.status(200).send({ id: user.id })
+	res
+		.status(200)
+		.send({ id: user.id, expiresAt: session.expiresAt.toISOString() })
 }
 
 export default async function handler(
