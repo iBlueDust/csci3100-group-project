@@ -18,7 +18,7 @@ const Input: React.FC<InputProps> = (props) => {
         />
       </label>
 
-      <div className='text-red-500 min-h-5'>{props.error}</div>
+      <div className='mx-1 text-red-500 min-h-5'>{props.error}</div>
     </div>
   )
 }

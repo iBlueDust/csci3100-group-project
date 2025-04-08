@@ -4,14 +4,10 @@ import classNames from 'classnames'
 import { geistMono, geistSans } from '@/styles/fonts'
 import Input from '@/components/Input'
 import { toPasskey } from '@/utils/frontend/e2e/auth'
+import SubmitButton from '@/components/SubmitButton'
 
 export default function SignUp() {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  })
+  const [isLoading, setIsLoading] = useState(false)
 
   const [formErrors, setFormErrors] = useState<{
     general?: string
@@ -20,13 +16,6 @@ export default function SignUp() {
     password?: string
     confirmPassword?: string
   }>({})
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }))
-  }
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,44 +90,57 @@ export default function SignUp() {
     }
 
     if (!isValid) {
+      setIsLoading(false)
       return
     }
 
-    const payload = {
-      username: data.username,
-      passkey: await toPasskey(data.username, data.password),
-    }
+    setIsLoading(true)
 
-    const response = await fetch(
-      process.env.NEXT_PUBLIC_API_ENDPOINT + '/auth/signup',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    try {
+      const payload = {
+        username: data.username,
+        passkey: await toPasskey(data.username, data.password),
+      }
+
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_API_ENDPOINT + '/auth/signup',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      },
-    )
+      )
 
-    if (response.status === 409) {
-      // 409 Conflict
-      setFormErrors((prev) => ({
-        ...prev,
-        username: 'Username is already taken',
-      }))
-      return
-    }
+      if (response.status === 409) {
+        // 409 Conflict
+        setFormErrors((prev) => ({
+          ...prev,
+          username: 'Username is already taken',
+        }))
+        return
+      }
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setFormErrors((prev) => ({
+          ...prev,
+          general: 'An unexpected error occurred',
+        }))
+        return
+      }
+
+      const body = await response.json()
+      console.log('Logged in as user', body.id)
+    } catch (error) {
+      console.error('Error signing up:', error)
       setFormErrors((prev) => ({
         ...prev,
         general: 'An unexpected error occurred',
       }))
-      return
+    } finally {
+      setIsLoading(false)
     }
-
-    const body = await response.json()
-    console.log('Logged in as user', body.id)
   }, [])
 
   return (
@@ -159,9 +161,7 @@ export default function SignUp() {
             type='text'
             name='username'
             label='Username'
-            value={formData.username}
             error={formErrors.username}
-            onChange={handleChange}
             required
           />
 
@@ -169,9 +169,7 @@ export default function SignUp() {
             type='password'
             name='password'
             label='Password'
-            value={formData.password}
             error={formErrors.password}
-            onChange={handleChange}
             required
           />
 
@@ -179,16 +177,25 @@ export default function SignUp() {
             type='password'
             name='confirmPassword'
             label='Confirm Password'
-            value={formData.confirmPassword}
             error={formErrors.confirmPassword}
-            onChange={handleChange}
             required
           />
 
+          {formErrors.general && (
+            <p className='text-red-500 text-center max-w-96 mx-auto text-sm'>
+              {formErrors.general}
+            </p>
+          )}
+
           <div className='pt-4'>
-            <button type='submit' className='button-primary w-full'>
+            <SubmitButton
+              look='primary'
+              type='submit'
+              className='w-full'
+              loading={isLoading}
+            >
               Create Account
-            </button>
+            </SubmitButton>
           </div>
         </form>
 
