@@ -38,10 +38,20 @@ async function POST(
 	try {
 		user = await User.createWithPasskey(body.username, body.passkey, [UserRole.USER])
 	} catch (error) {
-		if (error instanceof MongoServerError && (error as MongoServerError).code === 11000) { // Duplicate key error code
-			return res.status(409).json({ code: 'USERNAME_TAKEN', message: 'Username is already taken' })
+		if (
+			error instanceof MongoServerError
+			&& (error as MongoServerError).code === 11000 // Duplicate key error code
+		) {
+			return res
+				.status(409)
+				.json({ code: 'USERNAME_TAKEN', message: 'Username is already taken' })
 		}
-		return res.status(500).json({ code: 'INTERNAL_SERVER_ERROR', message: 'An unexpected error occurred' })
+		return res
+			.status(500)
+			.json({
+				code: 'INTERNAL_SERVER_ERROR',
+				message: 'An unexpected error occurred'
+			})
 	}
 
 	const session = await sessionStore.createSession(user.id, user.roles)
