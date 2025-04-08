@@ -138,6 +138,7 @@ const SignUp: PageWithLayout = () => {
         api.setUser({
           id: body.id,
           username: data.username,
+          tokenExpiresAt: new Date(body.expiresAt),
         })
 
         router.push('/dashboard')

@@ -1,10 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import dayjs from 'dayjs'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
+dayjs.extend(customParseFormat)
 
 const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:3000/api'
 
 export interface ApiState {
-  user?: { id: string; username: string }
+  user?: { id: string; username: string; tokenExpiresAt: Date }
   setUser: (user: ApiState['user']) => void
 }
 
@@ -25,9 +28,14 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
     if (user) {
       localStorage.setItem('auth.id', user.id)
       localStorage.setItem('auth.username', user.username)
+      localStorage.setItem(
+        'auth.tokenExpiresAt',
+        user.tokenExpiresAt.toISOString(),
+      )
     } else {
       localStorage.removeItem('auth.id')
       localStorage.removeItem('auth.username')
+      localStorage.removeItem('auth.tokenExpiresAt')
     }
   }, [])
 
@@ -35,11 +43,14 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
   useEffect(() => {
     const id = localStorage.getItem('auth.id')
     const username = localStorage.getItem('auth.username')
+    const tokenExpiresAt = localStorage.getItem('auth.tokenExpiresAt')
+    const isTokenExpiresAtValid = dayjs(tokenExpiresAt).isValid()
 
-    if (id && username) {
+    if (id && username && tokenExpiresAt && isTokenExpiresAtValid) {
       // If user was set somewhere else, don't override it
-      console.log('Loaded user from local storage', { id, username })
-      _setUser((prev) => prev ?? { id, username })
+      const user = { id, username, tokenExpiresAt: new Date(tokenExpiresAt) }
+      console.log('Loaded user from local storage', user)
+      _setUser((prev) => prev ?? user)
     }
   }, [])
 
