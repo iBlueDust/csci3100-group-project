@@ -1,33 +1,40 @@
 import Link from 'next/link'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import classNames from 'classnames'
+import { useRouter } from 'next/router'
+
 import { geistMono, geistSans } from '@/styles/fonts'
+import Input from '@/components/Input'
 
 export default function Login() {
+  const router = useRouter()
+
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // In a real app, you would validate credentials here
-    console.log('Login form submitted:', formData)
-    
-    // Redirect to dashboard after successful login
-    window.location.href = '/dashboard'
-    
-    // Or using Next.js router (import { useRouter } from 'next/router' first)
-    // const router = useRouter()
-    // router.push('/dashboard')
-  }
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      // In a real app, you would validate credentials here
+      console.log('Login form submitted:', formData)
+
+      router.replace('/dashboard')
+
+      // Or using Next.js router (import { useRouter } from 'next/router' first)
+      // const router = useRouter()
+      // router.push('/dashboard')
+    },
+    [router],
+  )
 
   return (
     <div
@@ -41,65 +48,52 @@ export default function Login() {
         <h1 className='text-4xl font-bold border-b border-foreground font-mono'>
           Log In
         </h1>
-        
+
         <form onSubmit={handleSubmit} className='w-full space-y-4'>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
+          <Input
+            type='email'
+            name='email'
+            label='Email'
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+
+          <Input
+            type='password'
+            name='password'
+            label='Password'
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+
+          <div className='flex items-center justify-between'>
+            <label className='flex flex-row items-center'>
               <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300"
+                name='remember-me'
+                type='checkbox'
+                className='h-4 w-4 rounded border-gray-300'
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm">
-                Remember me
-              </label>
-            </div>
-            
-            <div className="text-sm">
-              <Link href="/forgot-password" className="link">
-                Forgot your password?
-              </Link>
-            </div>
+              <span className='ml-2 text-sm'>Remember me</span>
+            </label>
+
+            {/* <Link href='/forgot-password' className='link underline text-sm'>
+              Forgot your password?
+            </Link> */}
           </div>
-          
-          <div className="pt-4">
-            <button type="submit" className="button-primary w-full">
+
+          <div className='pt-4'>
+            <button type='submit' className='button-primary w-full'>
               Log In
             </button>
           </div>
         </form>
-        
-        <div className="text-center pt-2">
+
+        <div className='text-center pt-2'>
           <p>
-            Don't have an account?{' '}
-            <Link href="/signup" className="link">
+            Don&apos;t have an account?{' '}
+            <Link href='/signup' className='link'>
               Sign up
             </Link>
           </p>

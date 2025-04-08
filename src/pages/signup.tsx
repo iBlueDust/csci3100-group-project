@@ -1,28 +1,32 @@
 import Link from 'next/link'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import classNames from 'classnames'
 import { geistMono, geistSans } from '@/styles/fonts'
+import Input from '@/components/Input'
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Add your signup logic here
-    console.log('Signup form submitted:', formData)
-  }
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      // Add your signup logic here
+      console.log('Signup form submitted:', formData)
+    },
+    [formData],
+  )
 
   return (
     <div
@@ -36,71 +40,55 @@ export default function SignUp() {
         <h1 className='text-4xl font-bold border-b border-foreground font-mono'>
           Sign Up
         </h1>
-        
+
         <form onSubmit={handleSubmit} className='w-full space-y-4'>
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div className="pt-4">
-            <button type="submit" className="button-primary w-full">
+          <Input
+            type='text'
+            name='username'
+            label='Username'
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
+
+          <Input
+            type='email'
+            name='email'
+            label='Email'
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+
+          <Input
+            type='password'
+            name='password'
+            label='Password'
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+
+          <Input
+            type='password'
+            name='confirmPassword'
+            label='Confirm Password'
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+          />
+
+          <div className='pt-4'>
+            <button type='submit' className='button-primary w-full'>
               Create Account
             </button>
           </div>
         </form>
-        
-        <div className="text-center pt-2">
+
+        <div className='text-center pt-2'>
           <p>
             Already have an account?{' '}
-            <Link href="/login" className="link">
+            <Link href='/login' className='link'>
               Log in
             </Link>
           </p>
