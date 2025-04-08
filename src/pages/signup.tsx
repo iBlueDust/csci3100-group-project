@@ -1,12 +1,16 @@
 import Link from 'next/link'
 import { useCallback, useState } from 'react'
 import classNames from 'classnames'
+import { useRouter } from 'next/router'
+
 import { geistMono, geistSans } from '@/styles/fonts'
 import Input from '@/components/Input'
-import { toPasskey } from '@/utils/frontend/e2e/auth'
 import SubmitButton from '@/components/SubmitButton'
+import { toPasskey } from '@/utils/frontend/e2e/auth'
 
 export default function SignUp() {
+  const router = useRouter()
+
   const [isLoading, setIsLoading] = useState(false)
 
   const [formErrors, setFormErrors] = useState<{
@@ -17,131 +21,136 @@ export default function SignUp() {
     confirmPassword?: string
   }>({})
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
 
-    setFormErrors({})
+      setFormErrors({})
 
-    const formData = new FormData(e.target as HTMLFormElement)
+      const formData = new FormData(e.target as HTMLFormElement)
 
-    const data = {
-      username: formData.get('username') as string,
-      password: formData.get('password') as string,
-      confirmPassword: formData.get('confirmPassword') as string,
-    }
-
-    let isValid = true
-
-    if (!/^[a-zA-Z0-9.-]{1,64}$/.test(data.username)) {
-      setFormErrors((prev) => ({
-        ...prev,
-        username: 'Username must be alphanumeric and between 1-64 characters',
-      }))
-      isValid = false
-    }
-
-    // password must be ascii readable
-    if (!/^[!-~]+$/.test(data.password)) {
-      setFormErrors((prev) => ({
-        ...prev,
-        password:
-          'Password must compose of English letters, numbers, and symbols',
-      }))
-      isValid = false
-    } else if (data.password.length < 12 || data.password.length > 64) {
-      setFormErrors((prev) => ({
-        ...prev,
-        password:
-          'Password must be 12-64 characters long and contain an uppercase letter, a lowercase letter, a number, and a symbol',
-      }))
-      isValid = false
-    } else if (!/[A-Z]/.test(data.password)) {
-      setFormErrors((prev) => ({
-        ...prev,
-        password: 'Password must contain at least one uppercase letter',
-      }))
-      isValid = false
-    } else if (!/[a-z]/.test(data.password)) {
-      setFormErrors((prev) => ({
-        ...prev,
-        password: 'Password must contain at least one lowercase letter',
-      }))
-      isValid = false
-    } else if (!/[0-9]/.test(data.password)) {
-      setFormErrors((prev) => ({
-        ...prev,
-        password: 'Password must contain at least one number',
-      }))
-      isValid = false
-    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(data.password)) {
-      setFormErrors((prev) => ({
-        ...prev,
-        password: 'Password must contain at least one special character',
-      }))
-      isValid = false
-    }
-
-    if (data.password !== data.confirmPassword) {
-      setFormErrors((prev) => ({
-        ...prev,
-        confirmPassword: 'Passwords do not match',
-      }))
-      isValid = false
-    }
-
-    if (!isValid) {
-      setIsLoading(false)
-      return
-    }
-
-    setIsLoading(true)
-
-    try {
-      const payload = {
-        username: data.username,
-        passkey: await toPasskey(data.username, data.password),
+      const data = {
+        username: formData.get('username') as string,
+        password: formData.get('password') as string,
+        confirmPassword: formData.get('confirmPassword') as string,
       }
 
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_API_ENDPOINT + '/auth/signup',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        },
-      )
+      let isValid = true
 
-      if (response.status === 409) {
-        // 409 Conflict
+      if (!/^[a-zA-Z0-9.-]{1,64}$/.test(data.username)) {
         setFormErrors((prev) => ({
           ...prev,
-          username: 'Username is already taken',
+          username: 'Username must be alphanumeric and between 1-64 characters',
         }))
+        isValid = false
+      }
+
+      // password must be ascii readable
+      if (!/^[!-~]+$/.test(data.password)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password:
+            'Password must compose of English letters, numbers, and symbols',
+        }))
+        isValid = false
+      } else if (data.password.length < 12 || data.password.length > 64) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password:
+            'Password must be 12-64 characters long and contain an uppercase letter, a lowercase letter, a number, and a symbol',
+        }))
+        isValid = false
+      } else if (!/[A-Z]/.test(data.password)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password: 'Password must contain at least one uppercase letter',
+        }))
+        isValid = false
+      } else if (!/[a-z]/.test(data.password)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password: 'Password must contain at least one lowercase letter',
+        }))
+        isValid = false
+      } else if (!/[0-9]/.test(data.password)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password: 'Password must contain at least one number',
+        }))
+        isValid = false
+      } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(data.password)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password: 'Password must contain at least one special character',
+        }))
+        isValid = false
+      }
+
+      if (data.password !== data.confirmPassword) {
+        setFormErrors((prev) => ({
+          ...prev,
+          confirmPassword: 'Passwords do not match',
+        }))
+        isValid = false
+      }
+
+      if (!isValid) {
+        setIsLoading(false)
         return
       }
 
-      if (!response.ok) {
+      setIsLoading(true)
+
+      try {
+        const payload = {
+          username: data.username,
+          passkey: await toPasskey(data.username, data.password),
+        }
+
+        const response = await fetch(
+          process.env.NEXT_PUBLIC_API_ENDPOINT + '/auth/signup',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          },
+        )
+
+        if (response.status === 409) {
+          // 409 Conflict
+          setFormErrors((prev) => ({
+            ...prev,
+            username: 'Username is already taken',
+          }))
+          return
+        }
+
+        if (!response.ok) {
+          setFormErrors((prev) => ({
+            ...prev,
+            general: 'An unexpected error occurred',
+          }))
+          return
+        }
+
+        const body = await response.json()
+        console.log('Logged in as user', body.id)
+
+        router.push('/dashboard')
+      } catch (error) {
+        console.error('Error signing up:', error)
         setFormErrors((prev) => ({
           ...prev,
           general: 'An unexpected error occurred',
         }))
-        return
+      } finally {
+        setIsLoading(false)
       }
-
-      const body = await response.json()
-      console.log('Logged in as user', body.id)
-    } catch (error) {
-      console.error('Error signing up:', error)
-      setFormErrors((prev) => ({
-        ...prev,
-        general: 'An unexpected error occurred',
-      }))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+    },
+    [router],
+  )
 
   return (
     <div
