@@ -1,0 +1,4 @@
+# set mongo-init.sh and minio-init.sh as binary files to avoid CRLF conversion
+mongo-init.sh binary
+mongo-keyfile binary
+minio-init.sh binary
