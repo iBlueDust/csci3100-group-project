@@ -6,76 +6,14 @@ import React, {
   useState,
 } from 'react'
 import TextareaAutosize from 'react-textarea-autosize'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+dayjs.extend(relativeTime)
 
-import type { ClientChat } from '@/data/types/chats'
+import type { ClientChat, ClientChatMessage } from '@/data/types/chats'
 import { FiChevronLeft, FiMoreVertical, FiSend } from 'react-icons/fi'
 import classNames from 'classnames'
-
-// Mock message history
-const mockMessages = {
-  1: [
-    {
-      id: 1,
-      sender: 'jade_collector',
-      text: 'Hello, I saw your jade pendant listing. Is it still available?',
-      time: '2 hours ago',
-    },
-    {
-      id: 2,
-      sender: 'me',
-      text: "Yes, it's still available!",
-      time: '2 hours ago',
-    },
-    {
-      id: 3,
-      sender: 'jade_collector',
-      text: "Great! I'm interested in buying it. Can you tell me more about its history?",
-      time: '2 hours ago',
-    },
-    {
-      id: 4,
-      sender: 'me',
-      text: 'Of course! This pendant is from the Ming Dynasty period and has been authenticated by experts.',
-      time: '1 hour ago',
-    },
-    {
-      id: 5,
-      sender: 'jade_collector',
-      text: "I'm interested in your jade pendant. Would you consider6$50 less than your asking price?",
-      time: '1 hour ago',
-    },
-    {
-      id: 7,
-      sender: 'jade_collector',
-      text: 'Hello, I saw your jade pendant listing. Is it still available?',
-      time: '2 hours ago',
-    },
-    {
-      id: 8,
-      sender: 'me',
-      text: "Yes, it's still available!",
-      time: '2 hours ago',
-    },
-    {
-      id: 9,
-      sender: 'jade_collector',
-      text: "Great! I'm interested in buying it. Can you tell me more about its history?",
-      time: '2 hours ago',
-    },
-    {
-      id: 10,
-      sender: 'me',
-      text: 'Of course! This pendant is from the Ming Dynasty period and has been authenticated by experts.',
-      time: '1 hour ago',
-    },
-    {
-      id: 11,
-      sender: 'jade_collector',
-      text: "I'm interested in your jade pendant. Would you consider $50 less than your asking price?",
-      time: '1 hour ago',
-    },
-  ],
-}
+import { useApi } from '@/utils/frontend/api'
 
 export interface ChatThreadProps {
   className?: string
@@ -90,9 +28,13 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   currentUserId,
   onMobileCloseClick,
 }) => {
+  const api = useApi()
+
+  const [messages, setMessages] = useState<ClientChatMessage[]>([])
+  const scrollHelperRef = useRef<HTMLDivElement>(null)
+
   const [messageInput, setMessageInput] = useState('')
   const messageInputRef = useRef<HTMLTextAreaElement>(null)
-  const scrollHelperRef = useRef<HTMLDivElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
   // const [isLoading, setIsLoading] = useState(false)
 
@@ -101,6 +43,22 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       chat.participants.find((participant) => participant.id !== currentUserId),
     [currentUserId],
   )
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      const response = await api.fetch(`/chats/${chat.id}/messages`)
+      if (!response.ok) {
+        console.error('Failed to fetch messages')
+        return
+      }
+
+      const body = await response.json()
+      console.log('Fetched messages:', body.data)
+
+      setMessages(body.data)
+    }
+    fetchMessages()
+  }, [api, chat.id])
 
   const handleSendMessage = useCallback(async () => {
     if (!messageInput.trim()) return
@@ -173,7 +131,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       {/* Messages */}
       <div className='flex-1 overflow-y-auto p-4 space-y-4'>
-        {mockMessages[1]?.map((message) => (
+        {messages.map((message) => (
           <div
             key={message.id}
             className={classNames(
@@ -183,16 +141,16 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 : 'bg-background-dark mr-auto',
             )}
           >
-            <p>{message.text}</p>
+            <p>{message.content}</p>
             <p
               className={classNames(
                 'text-xs mt-1',
-                message.sender === 'me'
+                message.sender === currentUserId
                   ? 'text-white/70'
                   : 'text-foreground/50',
               )}
             >
-              {message.time}
+              {dayjs(message.sentAt).fromNow()}
             </p>
           </div>
         ))}

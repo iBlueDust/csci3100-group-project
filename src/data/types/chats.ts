@@ -57,9 +57,9 @@ export interface ClientChat {
 }
 
 export interface ClientChatMessage {
-	id: mongoose.Types.ObjectId
-	// chatId: mongoose.Types.ObjectId // client already knows
-	sender: mongoose.Types.ObjectId
+	id: string
+	// chatId: string // client already knows
+	sender: string
 	type: ChatMessageType
 	content: string | Buffer
 	contentFilename?: string

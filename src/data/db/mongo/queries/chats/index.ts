@@ -26,15 +26,15 @@ export const makeChatClientFriendly = (chat: any): ChatWithPopulatedFields => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const makeChatMessageClientFriendly = (message: any) => {
 	return {
-		id: message._id ?? message.id,
+		id: message._id.toString() ?? message.id,
 		// chatId: message.chatId, // client already knows
-		sender: message.sender,
+		sender: message.sender.toString(),
 		type: message.type,
 		content: message.type === ChatMessageType.Text
 			&& Buffer.isBuffer(message.content)
 			? message.content.toString('base64')
 			: message.content,
-		contentFilename: message.contentFilename,
+		contentFilename: message.contentFilename.toString('base64'),
 		e2e: message.e2e,
 		sentAt: message.sentAt.toISOString(),
 	}
