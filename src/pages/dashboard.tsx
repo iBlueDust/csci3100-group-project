@@ -6,6 +6,8 @@ import { FiHome, FiPackage, FiMessageSquare, FiSettings } from 'react-icons/fi'
 
 import { geistMono, geistSans } from '@/styles/fonts'
 import Sidebar from '@/components/Sidebar'
+import type { PageWithLayout } from '@/data/types/layout'
+import { ApiProvider } from '@/utils/frontend/api'
 
 // TODO: Add loading component
 const Home = dynamic(() => import('@/components/Home'), { ssr: false })
@@ -45,7 +47,7 @@ const navItems = [
   },
 ]
 
-export default function Dashboard() {
+const Dashboard: PageWithLayout = () => {
   const [activePage, setActivePage] = useState(Page.HOME)
   // Mock data for recent listings/trades
 
@@ -91,3 +93,9 @@ export default function Dashboard() {
     </div>
   )
 }
+
+Dashboard.PageLayout = function DashboardLayout({ children }) {
+  return <ApiProvider>{children}</ApiProvider>
+}
+
+export default Dashboard

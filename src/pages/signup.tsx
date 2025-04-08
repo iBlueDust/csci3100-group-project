@@ -7,10 +7,12 @@ import { geistMono, geistSans } from '@/styles/fonts'
 import Input from '@/components/Input'
 import SubmitButton from '@/components/SubmitButton'
 import { toPasskey } from '@/utils/frontend/e2e/auth'
-import { api } from '@/utils/frontend'
+import { ApiProvider, useApi } from '@/utils/frontend/api'
+import { PageWithLayout } from '@/data/types/layout'
 
-export default function SignUp() {
+const SignUp: PageWithLayout = () => {
   const router = useRouter()
+  const api = useApi()
 
   const [isLoading, setIsLoading] = useState(false)
 
@@ -133,6 +135,11 @@ export default function SignUp() {
         const body = await response.json()
         console.log('Logged in as user', body.id)
 
+        api.setUser({
+          id: body.id,
+          username: data.username,
+        })
+
         router.push('/dashboard')
       } catch (error) {
         console.error('Error signing up:', error)
@@ -144,7 +151,7 @@ export default function SignUp() {
         setIsLoading(false)
       }
     },
-    [router],
+    [router, api],
   )
 
   return (
@@ -215,3 +222,9 @@ export default function SignUp() {
     </div>
   )
 }
+
+SignUp.PageLayout = function SignUpLayout({ children }) {
+  return <ApiProvider>{children}</ApiProvider>
+}
+
+export default SignUp

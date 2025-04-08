@@ -2,8 +2,8 @@ import classNames from 'classnames'
 import React, { useCallback } from 'react'
 import { FiLogOut } from 'react-icons/fi'
 
-import { api } from '@/utils/frontend'
 import { useRouter } from 'next/router'
+import { useApi } from '@/utils/frontend/api'
 
 export interface SidebarProps {
   navItems: {
@@ -18,6 +18,7 @@ export interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ navItems, value, onChange }) => {
+  const api = useApi()
   const router = useRouter()
 
   const logoutHandler = useCallback(async () => {
@@ -40,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems, value, onChange }) => {
       console.error('Logout error:', error)
       onError()
     }
-  }, [router])
+  }, [router, api])
 
   return (
     <aside className='w-16 sm:w-64 border-r border-foreground/10 h-[calc(100vh-4rem)] p-4 flex flex-col'>

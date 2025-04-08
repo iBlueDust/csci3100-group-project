@@ -1,6 +1,18 @@
-import "@/styles/globals.css";
-import type { AppProps } from "next/app";
+import type { ExtendedAppProps } from '@/data/types/layout'
 
-export default function App({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />;
+import '@/styles/globals.css'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const App: React.FC<ExtendedAppProps<any>> = ({ Component, pageProps }) => {
+  const PageLayout =
+    Component.PageLayout ??
+    (({ children }: React.PropsWithChildren) => children)
+
+  return (
+    <PageLayout>
+      <Component {...pageProps} />
+    </PageLayout>
+  )
 }
+
+export default App
