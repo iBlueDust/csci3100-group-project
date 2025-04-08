@@ -24,14 +24,10 @@ export default function Login() {
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault()
-      // In a real app, you would validate credentials here
+      const formData = new FormData(e.target as HTMLFormElement)
       console.log('Login form submitted:', formData)
 
       router.replace('/dashboard')
-
-      // Or using Next.js router (import { useRouter } from 'next/router' first)
-      // const router = useRouter()
-      // router.push('/dashboard')
     },
     [router],
   )
@@ -67,21 +63,6 @@ export default function Login() {
             onChange={handleChange}
             required
           />
-
-          <div className='flex items-center justify-between'>
-            <label className='flex flex-row items-center'>
-              <input
-                name='remember-me'
-                type='checkbox'
-                className='h-4 w-4 rounded border-gray-300'
-              />
-              <span className='ml-2 text-sm'>Remember me</span>
-            </label>
-
-            {/* <Link href='/forgot-password' className='link underline text-sm'>
-              Forgot your password?
-            </Link> */}
-          </div>
 
           <div className='pt-4'>
             <button type='submit' className='button-primary w-full'>
