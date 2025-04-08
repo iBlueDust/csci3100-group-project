@@ -7,6 +7,7 @@ import { geistMono, geistSans } from '@/styles/fonts'
 import Input from '@/components/Input'
 import SubmitButton from '@/components/SubmitButton'
 import { toPasskey } from '@/utils/frontend/e2e/auth'
+import { api } from '@/utils/frontend'
 
 export default function Login() {
   const router = useRouter()
@@ -62,16 +63,10 @@ export default function Login() {
           passkey: await toPasskey(data.username, data.password),
         }
 
-        const response = await fetch(
-          process.env.NEXT_PUBLIC_API_ENDPOINT + '/auth/login',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-          },
-        )
+        const response = await api.fetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        })
 
         if (response.status === 401) {
           // 401 Unauthorized
