@@ -1,11 +1,14 @@
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import classNames from 'classnames'
 import { geistMono, geistSans } from '@/styles/fonts'
-import { FiHome, FiPackage, FiUser, FiMessageSquare, FiSettings, FiLogOut } from 'react-icons/fi'
-import Messages from '@/components/messages'
-import Marketplace from '@/components/marketplace'
-import Settings from '@/components/settings'
+import { FiHome, FiPackage, FiMessageSquare, FiSettings, FiLogOut } from 'react-icons/fi'
+
+// TODO: Add loading component
+const Messages = dynamic(() => import('@/components/messages'), { ssr: false })
+const Marketplace = dynamic(() => import('@/components/marketplace'), { ssr: false })
+const Settings = dynamic(() => import('@/components/settings'), { ssr: false })
 
 export default function Dashboard() {
   const [activePage, setActivePage] = useState('home')
@@ -115,7 +118,8 @@ export default function Dashboard() {
             <>
               <div className="mb-6">
                 <h2 className="text-3xl font-bold mb-2">Welcome back!</h2>
-                <p className="text-foreground/70">Here's what's happening on your Jade Trail today.</p>
+                <p className="text-foreground/70">
+                  Here&apos;s what&apos;s happening on your Jade Trail today.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
