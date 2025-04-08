@@ -77,7 +77,7 @@ export default function Dashboard() {
 
         {/* Main content */}
         <main className='flex-1 p-6'>
-          {activePage === 'home' && <Home />}
+          {activePage === Page.HOME && <Home />}
 
           {activePage === Page.MESSAGES && <Messages />}
 
