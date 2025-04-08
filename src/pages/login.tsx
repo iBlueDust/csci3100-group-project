@@ -5,29 +5,104 @@ import { useRouter } from 'next/router'
 
 import { geistMono, geistSans } from '@/styles/fonts'
 import Input from '@/components/Input'
+import SubmitButton from '@/components/SubmitButton'
+import { toPasskey } from '@/utils/frontend/e2e/auth'
 
 export default function Login() {
   const router = useRouter()
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  })
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }))
-  }
+  const [formErrors, setFormErrors] = useState<{
+    general?: string
+    username?: string
+    password?: string
+  }>({})
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault()
-      const formData = new FormData(e.target as HTMLFormElement)
-      console.log('Login form submitted:', formData)
 
-      router.replace('/dashboard')
+      setFormErrors({})
+
+      const formData = new FormData(e.target as HTMLFormElement)
+      const data = {
+        username: formData.get('username') as string,
+        password: formData.get('password') as string,
+      }
+
+      let isValid = true
+
+      if (!data.username) {
+        setFormErrors((prev) => ({
+          ...prev,
+          username: 'Username is required',
+        }))
+        isValid = false
+      }
+
+      if (!data.password) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password: 'Password is required',
+        }))
+        isValid = false
+      }
+
+      if (!isValid) {
+        setIsLoading(false)
+        return
+      }
+
+      setIsLoading(true)
+
+      try {
+        const payload = {
+          username: data.username,
+          passkey: await toPasskey(data.username, data.password),
+        }
+
+        const response = await fetch(
+          process.env.NEXT_PUBLIC_API_ENDPOINT + '/auth/login',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          },
+        )
+
+        if (response.status === 401) {
+          // 401 Unauthorized
+          setFormErrors((prev) => ({
+            ...prev,
+            general: 'Invalid username or password',
+          }))
+          return
+        }
+
+        if (!response.ok) {
+          setFormErrors((prev) => ({
+            ...prev,
+            general: 'An unexpected error occurred',
+          }))
+          return
+        }
+
+        const body = await response.json()
+        console.log('Logged in as user', body.id)
+
+        router.push('/dashboard')
+      } catch (error) {
+        console.error('Login error:', error)
+        setFormErrors((prev) => ({
+          ...prev,
+          general: 'Invalid username or password',
+        }))
+      } finally {
+        setIsLoading(false)
+      }
     },
     [router],
   )
@@ -46,28 +121,24 @@ export default function Login() {
         </h1>
 
         <form onSubmit={handleSubmit} className='w-full space-y-4'>
-          <Input
-            type='email'
-            name='email'
-            label='Email'
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+          <Input type='username' name='username' label='Username' required />
+          <Input type='password' name='password' label='Password' required />
 
-          <Input
-            type='password'
-            name='password'
-            label='Password'
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+          {formErrors.general && (
+            <p className='max-w-96 text-center text-red-500 text-sm'>
+              {formErrors.general}
+            </p>
+          )}
 
           <div className='pt-4'>
-            <button type='submit' className='button-primary w-full'>
+            <SubmitButton
+              look='primary'
+              type='submit'
+              className='w-full'
+              loading={isLoading}
+            >
               Log In
-            </button>
+            </SubmitButton>
           </div>
         </form>
 
