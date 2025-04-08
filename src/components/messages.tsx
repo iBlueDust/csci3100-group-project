@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { FiSend, FiMoreVertical, FiChevronLeft } from 'react-icons/fi'
+import dynamic from 'next/dynamic'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import type { ChatMessageType } from '@/data/types/chats'
 import type { PageWithLayout } from '@/data/types/layout'
+import type { ClientChat } from '@/data/types/chats'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
+
+const ChatThread = dynamic(() => import('@/components/ChatThread'), {
+  ssr: false,
+})
 
 // Mock data for conversations
 // const mockConversations = [
@@ -44,138 +48,10 @@ import { ApiProvider, useApi } from '@/utils/frontend/api'
 //   },
 // ]
 
-export interface ClientChat {
-  id: string
-  participants: {
-    id: string
-    username: string
-  }[]
-  lastMessage?: {
-    id: string
-    sender: string
-    content: string
-    sentAt: string
-    e2e: unknown
-  } & (
-    | {
-        type: ChatMessageType.Text
-        contentFilename?: never
-      }
-    | {
-        type: ChatMessageType.Attachment
-        contentFilename: string
-      }
-  )
-  wasRequestedToDelete: boolean
-}
-
-// Mock message history
-const mockMessages = {
-  1: [
-    {
-      id: 1,
-      sender: 'jade_collector',
-      text: 'Hello, I saw your jade pendant listing. Is it still available?',
-      time: '2 hours ago',
-    },
-    {
-      id: 2,
-      sender: 'me',
-      text: "Yes, it's still available!",
-      time: '2 hours ago',
-    },
-    {
-      id: 3,
-      sender: 'jade_collector',
-      text: "Great! I'm interested in buying it. Can you tell me more about its history?",
-      time: '2 hours ago',
-    },
-    {
-      id: 4,
-      sender: 'me',
-      text: 'Of course! This pendant is from the Ming Dynasty period and has been authenticated by experts.',
-      time: '1 hour ago',
-    },
-    {
-      id: 5,
-      sender: 'jade_collector',
-      text: "I'm interested in your jade pendant. Would you consider $50 less than your asking price?",
-      time: '1 hour ago',
-    },
-  ],
-  2: [
-    {
-      id: 1,
-      sender: 'antique_lover',
-      text: "Hi there, I'm interested in your vintage item.",
-      time: '1 day ago',
-    },
-    {
-      id: 2,
-      sender: 'me',
-      text: 'Hello! Thanks for your interest.',
-      time: '1 day ago',
-    },
-    {
-      id: 3,
-      sender: 'antique_lover',
-      text: 'Is the price negotiable?',
-      time: '1 day ago',
-    },
-    {
-      id: 4,
-      sender: 'me',
-      text: "I can offer a 5% discount if you're seriously interested.",
-      time: '1 day ago',
-    },
-  ],
-  3: [
-    {
-      id: 1,
-      sender: 'me',
-      text: 'Your package has been shipped! Tracking: JT123456',
-      time: '4 days ago',
-    },
-    {
-      id: 2,
-      sender: 'treasure_hunter',
-      text: 'Got it, thank you!',
-      time: '3 days ago',
-    },
-    {
-      id: 3,
-      sender: 'treasure_hunter',
-      text: 'Just received the package. Thanks for the quick delivery!',
-      time: '3 days ago',
-    },
-  ],
-  4: [
-    {
-      id: 1,
-      sender: 'gem_specialist',
-      text: 'The quality of your jade items is impressive.',
-      time: '1 week ago',
-    },
-    {
-      id: 2,
-      sender: 'me',
-      text: 'Thank you! I try to ensure all items are of the highest quality.',
-      time: '1 week ago',
-    },
-    {
-      id: 3,
-      sender: 'gem_specialist',
-      text: 'Do you have any more items like this?',
-      time: '1 week ago',
-    },
-  ],
-}
-
 const Messages: PageWithLayout = () => {
   const api = useApi()
 
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
-  const [messageInput, setMessageInput] = useState('')
   const [chats, setChats] = useState<ClientChat[]>([])
   const [mobileChatVisible, setMobileChatVisible] = useState(false)
 
@@ -222,23 +98,6 @@ const Messages: PageWithLayout = () => {
 
     if (api.user) fetchChats()
   }, [api])
-
-  const handleSendMessage = () => {
-    if (!messageInput.trim() || !activeChatId) return
-
-    // In a real app, you would send the message to an API
-    console.log('Sending message:', messageInput)
-
-    // Reset input
-    setMessageInput('')
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
-    }
-  }
 
   const openConversation = (id: string) => {
     setActiveChatId(id)
@@ -311,81 +170,16 @@ const Messages: PageWithLayout = () => {
             !mobileChatVisible ? 'hidden md:flex' : 'flex'
           }`}
         >
-          {activeChatId ? (
-            <>
-              {/* Chat Header */}
-              <div className='h-16 flex items-center justify-between px-4 border-b border-foreground/10'>
-                <div className='flex items-center gap-3'>
-                  <button
-                    className='md:hidden text-foreground/70'
-                    onClick={() => setMobileChatVisible(false)}
-                  >
-                    <FiChevronLeft size={20} />
-                  </button>
-                  <div className='w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-foreground'>
-                    {otherParty(activeChat!)?.username.charAt(0).toUpperCase()}
-                  </div>
-                  <h3 className='font-medium'>
-                    {otherParty(activeChat!)?.username}
-                  </h3>
-                </div>
-                <button className='text-foreground/70'>
-                  <FiMoreVertical size={20} />
-                </button>
-              </div>
-
-              {/* Messages */}
-              <div className='flex-1 overflow-y-auto p-4 space-y-4'>
-                {mockMessages[1]?.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.sender === 'me' ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                        message.sender === 'me'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-background-dark'
-                      }`}
-                    >
-                      <p>{message.text}</p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          message.sender === 'me'
-                            ? 'text-white/70'
-                            : 'text-foreground/50'
-                        }`}
-                      >
-                        {message.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Message Input */}
-              <div className='p-4 border-t border-foreground/10'>
-                <div className='flex items-center gap-2'>
-                  <textarea
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    onKeyDown={handleKeyPress}
-                    placeholder='Type a message...'
-                    className='flex-1 rounded-md border border-foreground/20 bg-background px-3 py-2 min-h-[2.5rem] max-h-[10rem] resize-none'
-                    rows={1}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    className='h-10 w-10 rounded-full bg-blue-500 text-white flex items-center justify-center disabled:opacity-50'
-                    disabled={!messageInput.trim()}
-                  >
-                    <FiSend size={18} />
-                  </button>
-                </div>
-              </div>
-            </>
+          {activeChat ? (
+            <ChatThread
+              className='h-full'
+              chat={activeChat}
+              currentUserId={api.user?.id ?? ''}
+              onMobileCloseClick={() => {
+                setActiveChatId(null)
+                setMobileChatVisible(false)
+              }}
+            />
           ) : (
             <div className='flex-1 flex items-center justify-center text-foreground/50'>
               <div className='text-center'>
