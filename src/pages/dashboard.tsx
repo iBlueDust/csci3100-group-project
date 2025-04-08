@@ -22,6 +22,29 @@ enum Page {
   SETTINGS = 'settings',
 }
 
+const navItems = [
+  {
+    key: Page.HOME,
+    icon: <FiHome className='w-5 h-5 min-w-5' />,
+    label: 'Home',
+  },
+  {
+    key: Page.MARKETPLACE,
+    icon: <FiPackage className='w-5 h-5 min-w-5' />,
+    label: 'Marketplace',
+  },
+  {
+    key: Page.MESSAGES,
+    icon: <FiMessageSquare className='w-5 h-5 min-w-5' />,
+    label: 'Messages',
+  },
+  {
+    key: Page.SETTINGS,
+    icon: <FiSettings className='w-5 h-5 min-w-5' />,
+    label: 'Settings',
+  },
+]
+
 export default function Dashboard() {
   const [activePage, setActivePage] = useState(Page.HOME)
   // Mock data for recent listings/trades
@@ -49,28 +72,7 @@ export default function Dashboard() {
       <div className='flex'>
         {/* Sidebar */}
         <Sidebar
-          navItems={[
-            {
-              key: Page.HOME,
-              icon: <FiHome className='w-5 h-5 min-w-5' />,
-              label: 'Home',
-            },
-            {
-              key: Page.MARKETPLACE,
-              icon: <FiPackage className='w-5 h-5 min-w-5' />,
-              label: 'Marketplace',
-            },
-            {
-              key: Page.MESSAGES,
-              icon: <FiMessageSquare className='w-5 h-5 min-w-5' />,
-              label: 'Messages',
-            },
-            {
-              key: Page.SETTINGS,
-              icon: <FiSettings className='w-5 h-5 min-w-5' />,
-              label: 'Settings',
-            },
-          ]}
+          navItems={navItems}
           value={activePage}
           onChange={setActivePage as (value: string | number) => void}
         />
