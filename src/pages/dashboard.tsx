@@ -10,8 +10,15 @@ const Messages = dynamic(() => import('@/components/messages'), { ssr: false })
 const Marketplace = dynamic(() => import('@/components/marketplace'), { ssr: false })
 const Settings = dynamic(() => import('@/components/settings'), { ssr: false })
 
+enum Page {
+  HOME = 'home',
+  MARKETPLACE = 'marketplace',
+  MESSAGES = 'messages',
+  SETTINGS = 'settings',
+}
+
 export default function Dashboard() {
-  const [activePage, setActivePage] = useState('home')
+  const [activePage, setActivePage] = useState(Page.HOME)
   // Mock data for recent listings/trades
   const recentListings = [
     { id: 1, title: 'Collectible Item', price: '$250', seller: 'user123', time: '2 hours ago' },
@@ -45,10 +52,10 @@ export default function Dashboard() {
         <aside className="w-16 sm:w-64 border-r border-foreground/10 h-[calc(100vh-4rem)] p-4 flex flex-col">
           <nav className="space-y-1">
             <button
-              onClick={() => setActivePage('home')}
+              onClick={() => setActivePage(Page.HOME)}
               className={classNames(
                 "flex items-center gap-3 px-3 py-2 rounded-md w-full transition-colors",
-                activePage === 'home'
+                activePage === Page.HOME
                   ? "bg-foreground text-background"
                   : "hover:bg-background-dark"
               )}
@@ -58,10 +65,10 @@ export default function Dashboard() {
             </button>
 
             <button
-              onClick={() => setActivePage('marketplace')}
+              onClick={() => setActivePage(Page.MARKETPLACE)}
               className={classNames(
                 "flex items-center gap-3 px-3 py-2 rounded-md w-full transition-colors",
-                activePage === 'marketplace'
+                activePage === Page.MARKETPLACE
                   ? "bg-foreground text-background"
                   : "hover:bg-background-dark"
               )}
@@ -71,10 +78,10 @@ export default function Dashboard() {
             </button>
 
             <button
-              onClick={() => setActivePage('messages')}
+              onClick={() => setActivePage(Page.MESSAGES)}
               className={classNames(
                 "flex items-center gap-3 px-3 py-2 rounded-md w-full transition-colors",
-                activePage === 'messages'
+                activePage === Page.MESSAGES
                   ? "bg-foreground text-background"
                   : "hover:bg-background-dark"
               )}
@@ -84,10 +91,10 @@ export default function Dashboard() {
             </button>
 
             <button
-              onClick={() => setActivePage('settings')}
+              onClick={() => setActivePage(Page.SETTINGS)}
               className={classNames(
                 "flex items-center gap-3 px-3 py-2 rounded-md w-full transition-colors",
-                activePage === 'settings'
+                activePage === Page.SETTINGS
                   ? "bg-foreground text-background"
                   : "hover:bg-background-dark"
               )}
@@ -197,15 +204,15 @@ export default function Dashboard() {
             </>
           )}
 
-          {activePage === 'messages' && (
+          {activePage === Page.MESSAGES && (
             <Messages />
           )}
 
-          {activePage === 'marketplace' && (
+          {activePage === Page.MARKETPLACE && (
             <Marketplace />
           )}
 
-          {activePage === 'settings' && (
+          {activePage === Page.SETTINGS && (
             <Settings />
           )}
         </main>
