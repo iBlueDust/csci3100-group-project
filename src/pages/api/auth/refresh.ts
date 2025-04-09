@@ -5,7 +5,6 @@ import dbConnect from "@/data/db/mongo"
 import User from "@/data/db/mongo/models/user"
 import { sessionStore, sessionToCookie } from "@/data/session"
 import { UserRole } from "@/data/types/auth"
-import { AuthData, protectedRoute } from "@/utils/api/auth"
 import env from "@/env"
 
 type Data = {
@@ -21,22 +20,25 @@ type Error = {
 async function POST(
 	req: NextApiRequest,
 	res: NextApiResponse<Data | Error>,
-	auth: AuthData,
 ) {
-	await dbConnect()
-	const user = await User.findById(auth.data.userId)
-	if (!user) {
+	const refreshToken = req.cookies['refreshToken']
+	if (!refreshToken) {
 		return res.status(401).json({ code: 'INVALID_CREDENTIALS' })
 	}
 
-	const refreshTokenData = await sessionStore.checkRefreshToken(
-		auth.refreshToken.toString()
-	)
+	const refreshTokenData = await sessionStore.checkRefreshToken(refreshToken)
 	if (!refreshTokenData) {
 		return res.status(401).json({ code: 'INVALID_CREDENTIALS' })
 	}
 
 	const issuedAt = new Date()
+	const userId = refreshTokenData.userId
+
+	await dbConnect()
+	const user = await User.findOne({ _id: userId }).select('roles')
+	if (!user) {
+		return res.status(401).json({ code: 'INVALID_CREDENTIALS' })
+	}
 
 	// If refresh token is not halfway through its expiration time, only reissue token
 	const halfExpiration = (1000 * env.AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS / 2)
@@ -45,7 +47,7 @@ async function POST(
 			.reissueToken(user.id, user.roles as UserRole[])
 		const session = {
 			token: newToken.token,
-			refreshToken: auth.refreshToken,
+			refreshToken,
 			issuedAt: issuedAt,
 			expiresAt: newToken.expiresAt,
 		}
@@ -57,7 +59,7 @@ async function POST(
 	}
 
 	// Also invalidates old tokens
-	const session = await sessionStore.createSession(user.username, user.roles as UserRole[])
+	const session = await sessionStore.createSession(user.id, user.roles as UserRole[])
 
 	// httpOnly cookies
 	res.setHeader('Set-Cookie', sessionToCookie(session))
@@ -71,7 +73,7 @@ export default async function handler(
 ) {
 	switch (req.method) {
 		case "POST":
-			return await protectedRoute(POST, sessionStore)(req, res)
+			return await POST(req, res)
 		default:
 			res.status(405).end() // Method Not Allowed
 	}
