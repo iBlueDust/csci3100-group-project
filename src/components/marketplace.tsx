@@ -19,6 +19,7 @@ import { useApi } from '@/utils/frontend/api'
 import Image from 'next/image'
 import Link from 'next/link'
 import Input from './Input'
+import { formatCurrency } from '@/utils/format'
 
 // Mock categories
 const categories = [
@@ -408,7 +409,7 @@ export default function Marketplace() {
                 </div>
 
                 <p className='text-lg font-mono font-bold mt-1'>
-                  {item.priceInCents / 100}
+                  {formatCurrency(item.priceInCents / 100)}
                 </p>
 
                 <div className='flex items-center text-sm mt-1 text-foreground/70'>
@@ -459,7 +460,7 @@ export default function Marketplace() {
                 <div className='flex justify-between items-start'>
                   <h3 className='font-medium'>{item.title}</h3>
                   <p className='text-lg font-mono font-bold'>
-                    {item.priceInCents / 100}
+                    {formatCurrency(item.priceInCents / 100)}
                   </p>
                 </div>
 
