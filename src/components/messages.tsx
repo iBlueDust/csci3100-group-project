@@ -10,6 +10,7 @@ import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '@/data/types/queries'
 import { getChats } from '@/data/frontend/queries/getChats'
+import classNames from 'classnames'
 
 const ChatThread = dynamic(() => import('@/components/ChatThread'), {
   ssr: false,
@@ -100,14 +101,15 @@ const Messages: PageWithLayout = () => {
             <h3 className='text-lg font-bold'>Conversations</h3>
           </div>
 
-          <div className='overflow-y-auto h-[calc(100%-4rem)]'>
+          <div className='overflow-y-auto h-[calc(100%-4rem)] items-stretch'>
             {chats?.data.map((chat) => (
-              <div
+              <button
                 key={chat.id}
                 onClick={() => openConversation(chat.id)}
-                className={`p-4 border-b border-foreground/5 cursor-pointer hover:bg-background-dark/30 transition-colors ${
-                  activeChatId === chat.id ? 'bg-background-dark/50' : ''
-                }`}
+                className={classNames(
+                  'w-full text-start p-4 border-b border-foreground/5 cursor-pointer hover:bg-background-dark/30 focus:bg-background-dark/30 transition-colors',
+                  activeChatId === chat.id && 'bg-background-dark/50',
+                )}
               >
                 <div className='flex items-center gap-3'>
                   {!chat.wasRequestedToDelete ? (
@@ -140,7 +142,7 @@ const Messages: PageWithLayout = () => {
                     <div className='w-2 h-2 rounded-full bg-blue-500'></div>
                   )} */}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
