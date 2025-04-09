@@ -7,6 +7,7 @@ import React, {
 } from 'react'
 import TextareaAutosize from 'react-textarea-autosize'
 import dayjs from 'dayjs'
+import { useQuery } from '@tanstack/react-query'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
@@ -14,6 +15,9 @@ import type { ClientChat, ClientChatMessage } from '@/data/types/chats'
 import { FiChevronLeft, FiMoreVertical, FiSend } from 'react-icons/fi'
 import classNames from 'classnames'
 import { useApi } from '@/utils/frontend/api'
+import { QueryKeys } from '@/data/types/queries'
+import { getChatMessages } from '@/data/frontend/queries/getChatMessages'
+import { PaginatedResult } from '@/data/types/common'
 
 export interface ChatThreadProps {
   className?: string
@@ -30,35 +34,23 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 }) => {
   const api = useApi()
 
-  const [messages, setMessages] = useState<ClientChatMessage[]>([])
+  const { data: messages } = useQuery<PaginatedResult<ClientChatMessage>>({
+    queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
+    queryFn: async () => getChatMessages(api, chat.id),
+    enabled: !!api.user,
+  })
+
   const scrollHelperRef = useRef<HTMLDivElement>(null)
 
   const [messageInput, setMessageInput] = useState('')
   const messageInputRef = useRef<HTMLTextAreaElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
-  // const [isLoading, setIsLoading] = useState(false)
 
   const otherParty = useCallback(
     (chat: ClientChat) =>
       chat.participants.find((participant) => participant.id !== currentUserId),
     [currentUserId],
   )
-
-  useEffect(() => {
-    const fetchMessages = async () => {
-      const response = await api.fetch(`/chats/${chat.id}/messages`)
-      if (!response.ok) {
-        console.error('Failed to fetch messages')
-        return
-      }
-
-      const body = await response.json()
-      console.log('Fetched messages:', body.data)
-
-      setMessages(body.data)
-    }
-    fetchMessages()
-  }, [api, chat.id])
 
   const handleSendMessage = useCallback(async () => {
     if (!messageInput.trim()) return
@@ -131,7 +123,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       {/* Messages */}
       <div className='flex-1 overflow-y-auto p-4 space-y-4'>
-        {messages.map((message) => (
+        {messages?.data.map((message) => (
           <div
             key={message.id}
             className={classNames(

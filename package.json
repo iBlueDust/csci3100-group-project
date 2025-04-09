@@ -12,6 +12,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.72.1",
     "classnames": "^2.5.1",
     "dayjs": "^1.11.13",
     "formidable": "^3.5.2",

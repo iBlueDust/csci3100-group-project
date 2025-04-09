@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -7,6 +7,9 @@ dayjs.extend(relativeTime)
 import type { PageWithLayout } from '@/data/types/layout'
 import type { ClientChat } from '@/data/types/chats'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
+import { useQuery } from '@tanstack/react-query'
+import { QueryKeys } from '@/data/types/queries'
+import { getChats } from '@/data/frontend/queries/getChats'
 
 const ChatThread = dynamic(() => import('@/components/ChatThread'), {
   ssr: false,
@@ -52,14 +55,17 @@ const Messages: PageWithLayout = () => {
   const api = useApi()
 
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
-  const [chats, setChats] = useState<ClientChat[]>([])
   const [mobileChatVisible, setMobileChatVisible] = useState(false)
 
-  const [isLoading, setIsLoading] = useState(false)
+  const { data: chats } = useQuery({
+    queryKey: [QueryKeys.CHATS],
+    queryFn: () => getChats(api),
+    enabled: !!api.user,
+  })
 
   const activeChat = useMemo(() => {
     if (!activeChatId) return null
-    return chats.find((chat) => chat.id === activeChatId)
+    return chats?.data.find((chat) => chat.id === activeChatId)
   }, [activeChatId, chats])
 
   const otherParty = useCallback(
@@ -73,31 +79,6 @@ const Messages: PageWithLayout = () => {
     },
     [api],
   )
-
-  useEffect(() => {
-    const fetchChats = async () => {
-      setIsLoading(true)
-
-      try {
-        const response = await api.fetch('/chats')
-        if (!response.ok) {
-          console.error('Failed to fetch chats')
-          return
-        }
-
-        const body = await response.json()
-
-        setChats(body.data)
-        console.log('Fetched chats')
-      } catch (error) {
-        console.error('Error fetching chats:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    if (api.user) fetchChats()
-  }, [api])
 
   const openConversation = (id: string) => {
     setActiveChatId(id)
@@ -120,7 +101,7 @@ const Messages: PageWithLayout = () => {
           </div>
 
           <div className='overflow-y-auto h-[calc(100%-4rem)]'>
-            {chats.map((chat) => (
+            {chats?.data.map((chat) => (
               <div
                 key={chat.id}
                 onClick={() => openConversation(chat.id)}
@@ -136,7 +117,7 @@ const Messages: PageWithLayout = () => {
                         .toUpperCase()}
                     </div>
                   ) : (
-                    <div className='w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-foreground text-red-500'>
+                    <div className='w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500'>
                       !
                     </div>
                   )}

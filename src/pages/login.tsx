@@ -93,8 +93,8 @@ const Login: PageWithLayout = () => {
         api.setUser({
           id: body.id,
           username: data.username,
-          tokenExpiresAt: new Date(body.expiresAt),
         })
+        api.setTokenExpiresAt(new Date(body.expiresAt))
 
         router.push('/dashboard')
       } catch (error) {
