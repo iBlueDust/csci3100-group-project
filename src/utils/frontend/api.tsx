@@ -82,16 +82,6 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
   )
 }
 
-const basicFetch = async (url: string, options?: RequestInit) => {
-  return await fetch(API_ENDPOINT + url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  })
-}
-
 export interface Api {
   user?: { id: string; username: string }
   setUser: (user: Api['user']) => void
@@ -111,7 +101,7 @@ export const useApi = (): Api => {
   const refreshToken = useCallback(async () => {
     console.log('Token expired, refreshing')
 
-    const response = await basicFetch('/auth/refresh', {
+    const response = await fetch(API_ENDPOINT + '/auth/refresh', {
       method: 'POST',
     }).catch((error) => {
       console.error('Error refreshing token:', error)
@@ -147,13 +137,13 @@ export const useApi = (): Api => {
         }
       }
 
-      const response = await basicFetch(url, options)
+      const response = await fetch(API_ENDPOINT + url, options)
 
       if (response.status === 401 && !wasTokenRefreshed) {
         await refreshToken()
 
         // Retry the request after refreshing the token
-        return await basicFetch(url, options)
+        return await fetch(API_ENDPOINT + url, options)
       }
 
       return response

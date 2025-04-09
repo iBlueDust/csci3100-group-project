@@ -7,17 +7,25 @@ import React, {
 } from 'react'
 import TextareaAutosize from 'react-textarea-autosize'
 import dayjs from 'dayjs'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import type { ClientChat, ClientChatMessage } from '@/data/types/chats'
+import {
+  ChatMessageType,
+  type ClientChat,
+  type ClientChatMessage,
+} from '@/data/types/chats'
 import { FiChevronLeft, FiMoreVertical, FiSend } from 'react-icons/fi'
 import classNames from 'classnames'
 import { useApi } from '@/utils/frontend/api'
 import { QueryKeys } from '@/data/types/queries'
 import { getChatMessages } from '@/data/frontend/queries/getChatMessages'
 import { PaginatedResult } from '@/data/types/common'
+import {
+  sendChatMessage,
+  SendChatMessagePayload,
+} from '@/data/frontend/queries/sendChatMessage'
 
 export interface ChatThreadProps {
   className?: string
@@ -33,11 +41,32 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   onMobileCloseClick,
 }) => {
   const api = useApi()
+  const queryClient = useQueryClient()
 
   const { data: messages } = useQuery<PaginatedResult<ClientChatMessage>>({
     queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
-    queryFn: async () => getChatMessages(api, chat.id),
+    queryFn: async () => {
+      const payload: PaginatedResult<ClientChatMessage> = await getChatMessages(
+        api,
+        chat.id,
+      )
+      return {
+        data: payload.data.toReversed(),
+        meta: payload.meta,
+      }
+    },
     enabled: !!api.user,
+  })
+
+  const mutation = useMutation({
+    mutationFn: (arg: SendChatMessagePayload) =>
+      sendChatMessage(api, chat.id, arg),
+    onSuccess: () => {
+      // Handle success
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
+      })
+    },
   })
 
   const scrollHelperRef = useRef<HTMLDivElement>(null)
@@ -53,14 +82,34 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   )
 
   const handleSendMessage = useCallback(async () => {
-    if (!messageInput.trim()) return
+    const messageInput = messageInputRef.current?.value || ''
+    console.log({ messageInput })
+    if (!messageInput.trim()) {
+      console.warn('Message input is empty')
+      return
+    }
+
+    if (!api.user) {
+      console.warn('User is not yet authenticated')
+      return
+    }
 
     // In a real app, you would send the message to an API
     console.log('Sending message:', messageInput)
+    const message: SendChatMessagePayload = {
+      type: ChatMessageType.Text,
+      content: messageInput,
+    }
+
+    try {
+      await mutation.mutateAsync(message)
+    } catch (error) {
+      console.error('Error sending message:', error)
+    }
 
     // Reset input
     setMessageInput('')
-  }, [messageInput])
+  }, [api, mutation])
 
   const handleFormSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -78,7 +127,6 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     const elem = messageInputRef.current
 
     const listener = (e: KeyboardEvent) => {
-      console.log('keydown event fired')
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
         handleSendMessage()
@@ -128,7 +176,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             key={message.id}
             className={classNames(
               'max-w-[80%] rounded-lg px-4 py-2 w-max',
-              message.sender === 'me'
+              message.sender === api.user?.id
                 ? 'bg-blue-500 text-white ml-auto'
                 : 'bg-background-dark mr-auto',
             )}

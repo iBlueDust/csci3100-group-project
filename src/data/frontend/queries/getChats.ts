@@ -3,7 +3,9 @@ import type { PaginatedResult } from "@/data/types/common"
 import type { Api } from "@/utils/frontend/api"
 
 export async function getChats(api: Api): Promise<PaginatedResult<ClientChat>> {
-	const response = await api.fetch('/chats')
+	const response = await api.fetch('/chats', {
+		headers: { 'Content-Type': 'application/json' },
+	})
 	if (!response.ok) {
 		console.error('Failed to fetch chats')
 		throw new Error(`Failed to fetch chats ${response.statusText}`)
