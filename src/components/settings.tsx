@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { FiUser, FiLock, FiCreditCard, FiEye, FiEyeOff, FiGlobe, FiShield } from 'react-icons/fi'
-import { deleteUserData } from '../data/db/mongo/queries/users' // Import the function to delete user data
 
 // Tab interfaces - removed 'notifications'
 type SettingsTab = 'profile' | 'security' | 'payment' | 'privacy'
@@ -35,6 +34,7 @@ export default function Settings() {
     activityVisibility: 'followers',
     allowMessages: 'authenticated',
     showLocation: true,
+    twoFactorAuth: false
   })
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -263,6 +263,23 @@ export default function Settings() {
                 </div>
               </div>
             </div>
+            
+            <div>
+              <h3 className="text-xl font-bold mb-4">Two-Factor Authentication</h3>
+              
+              <div className="flex items-center justify-between p-4 bg-background-light border border-foreground/10 rounded-lg">
+                <div>
+                  <p className="font-medium">Enhance your account security</p>
+                  <p className="text-sm text-foreground/70">
+                    Add an extra layer of security to your account by requiring a verification code.
+                  </p>
+                </div>
+                
+                <button className="button px-4 py-2">
+                  Enable 2FA
+                </button>
+              </div>
+            </div>
           </div>
         )
         
@@ -467,25 +484,43 @@ export default function Settings() {
               </div>
               
               <div className="bg-background-light p-4 border border-foreground/10 rounded-lg">
+                <h4 className="font-bold mb-4 flex items-center gap-2">
+                  <FiShield />
+                  <span>Security Enhancements</span>
+                </h4>
+                
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <p className="font-medium">Two-Factor Authentication</p>
+                    <p className="text-sm text-foreground/70">Add an extra layer of security to your account</p>
+                  </div>
+                  <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                    <input 
+                      type="checkbox" 
+                      id="twoFactorAuth" 
+                      checked={privacySettings.twoFactorAuth}
+                      onChange={() => handlePrivacyChange('twoFactorAuth')}
+                      className="sr-only"
+                    />
+                    <label 
+                      htmlFor="twoFactorAuth"
+                      className={`block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer ${privacySettings.twoFactorAuth ? 'bg-blue-500' : ''}`}
+                    >
+                      <span 
+                        className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform ${privacySettings.twoFactorAuth ? 'translate-x-4' : 'translate-x-0'}`}
+                      ></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-background-light p-4 border border-foreground/10 rounded-lg">
                 <h4 className="font-bold mb-4">Data & Privacy</h4>
-                <button 
-                  className="button text-red-500 w-full justify-start text-left"
-                  onClick={async () => {
-                    const confirmation = confirm('Are you sure you want to delete your account? This action cannot be undone.')
-                    if (confirmation) {
-                      try {
-                        await deleteUserData() // Call the function to delete user data
-                        alert('Your account and all associated data have been deleted.')
-                        window.location.href = '/' // Redirect to the homepage
-                      } catch (error) {
-                        console.error('Error deleting account:', error)
-                        alert('An error occurred while deleting your account. Please try again later.')
-                      }
-                    }
-                  }}
-                >
-                  Delete Account
-                </button>
+                
+                <button className="button mb-2 w-full justify-start text-left">Export Your Data</button>
+                <button className="button mb-2 w-full justify-start text-left">View Privacy Policy</button>
+                <button className="button mb-2 w-full justify-start text-left">Manage Cookies</button>
+                <button className="button text-red-500 w-full justify-start text-left">Delete Account</button>
               </div>
             </div>
             
