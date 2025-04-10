@@ -45,7 +45,7 @@ const Home: React.FC<HomeProps> = ({}) => {
       </div>
 
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
-        <div className='bg-background-light p-6 rounded-lg border border-foreground/10 shadow-sm'>
+        <div className='bg-background-light p-6 rounded-lg border-2 border-foreground/10 shadow-sm'>
           <h3 className='text-xl font-bold mb-4'>Market Summary</h3>
           <div className='space-y-2'>
             <div className='flex justify-between'>
@@ -64,7 +64,7 @@ const Home: React.FC<HomeProps> = ({}) => {
           <button className='mt-4 button w-full'>View More Stats</button>
         </div>
 
-        <div className='bg-background-light p-6 rounded-lg border border-foreground/10 shadow-sm'>
+        <div className='bg-background-light p-6 rounded-lg border-2 border-foreground/10 shadow-sm'>
           <h3 className='text-xl font-bold mb-4'>Your Activity</h3>
           <div className='space-y-2'>
             <div className='flex justify-between'>
@@ -86,14 +86,14 @@ const Home: React.FC<HomeProps> = ({}) => {
         </div>
       </div>
 
-      <div className='bg-background-light p-6 rounded-lg border border-foreground/10 shadow-sm'>
+      <div className='bg-background-light p-6 rounded-lg border-2 border-foreground/10 shadow-sm'>
         <div className='flex justify-between items-center mb-4'>
           <h3 className='text-xl font-bold'>Recent Listings</h3>
           <button className='text-sm link'>View All</button>
         </div>
         <div className='overflow-x-auto'>
           <table className='min-w-full'>
-            <thead className='border-b border-foreground/10'>
+            <thead className='border-b-2 border-foreground/10'>
               <tr>
                 <th className='py-3 text-left'>Item</th>
                 <th className='py-3 text-left'>Price</th>

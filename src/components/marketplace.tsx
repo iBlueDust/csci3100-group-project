@@ -127,26 +127,26 @@ export default function Marketplace() {
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [showFilters, setShowFilters] = useState(false)
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(8)
   const [totalPages, setTotalPages] = useState(1)
-  
+
   // Filter and sort listings
   const filteredListings = mockListings
     .filter(listing => {
       // Search filter
-      const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           listing.description.toLowerCase().includes(searchQuery.toLowerCase());
-      
+      const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        listing.description.toLowerCase().includes(searchQuery.toLowerCase());
+
       // Category filter
       const matchesCategory = selectedCategory === 'all' || listing.category === selectedCategory;
-      
+
       // Price filter
       const matchesMinPrice = !minPrice || parseFloat(listing.price.substring(1).replace(',', '')) >= parseFloat(minPrice);
       const matchesMaxPrice = !maxPrice || parseFloat(listing.price.substring(1).replace(',', '')) <= parseFloat(maxPrice);
-      
+
       return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice;
     })
     .sort((a, b) => {
@@ -184,13 +184,13 @@ export default function Marketplace() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<typeof mockListings[0] | null>(null);
   const [chatMessage, setChatMessage] = useState('');
-  const [chatMessages, setChatMessages] = useState<Array<{type: 'text' | 'attachment' | 'listing', content: string, sender: 'user' | 'other', listing?: typeof mockListings[0]}>>([]);
-  
+  const [chatMessages, setChatMessages] = useState<Array<{ type: 'text' | 'attachment' | 'listing', content: string, sender: 'user' | 'other', listing?: typeof mockListings[0] }>>([]);
+
   // Open chat with a specific listing
   const openChat = (item: typeof mockListings[0]) => {
     setSelectedListing(item);
     setIsChatOpen(true);
-    
+
     // Demo: Add the listing as a message in the chat
     setChatMessages([
       ...chatMessages,
@@ -202,7 +202,7 @@ export default function Marketplace() {
       }
     ]);
   };
-  
+
   // Send a message in the chat
   const sendChatMessage = () => {
     if (chatMessage.trim()) {
@@ -215,7 +215,7 @@ export default function Marketplace() {
         }
       ]);
       setChatMessage('');
-      
+
       // Demo: Mock response from the seller
       setTimeout(() => {
         setChatMessages(prev => [
@@ -229,7 +229,7 @@ export default function Marketplace() {
       }, 1000);
     }
   };
-  
+
   // Simulate sending an attachment
   const sendAttachment = () => {
     setChatMessages([
@@ -258,17 +258,17 @@ export default function Marketplace() {
               placeholder="Search for items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 pl-10 border border-foreground/10 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 pl-10 border-2 border-foreground/10 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <FiSearch className="absolute left-3 top-3 text-foreground/50" />
           </div>
-          
+
           <div className="flex gap-2">
             <div className="relative">
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
-                className="h-full px-4 py-2 border border-foreground/10 rounded-md appearance-none pr-8 bg-background"
+                className="h-full px-4 py-2 border-2 border-foreground/10 rounded-md appearance-none pr-8 bg-background"
               >
                 <option value="newest">Newest</option>
                 <option value="price_low">Price: Low to High</option>
@@ -277,22 +277,22 @@ export default function Marketplace() {
               </select>
               <FiChevronDown className="absolute right-3 top-3 pointer-events-none text-foreground/50" />
             </div>
-            
-            <button 
+
+            <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-foreground/10' : ''}`}
             >
               <FiGrid />
             </button>
-            
-            <button 
+
+            <button
               onClick={() => setViewMode('list')}
               className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-foreground/10' : ''}`}
             >
               <FiList />
             </button>
-            
-            <button 
+
+            <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-1 p-2 rounded-md ${showFilters ? 'bg-foreground/10' : ''}`}
             >
@@ -301,10 +301,10 @@ export default function Marketplace() {
             </button>
           </div>
         </div>
-        
+
         {/* Filter options */}
         {showFilters && (
-          <div className="mt-4 p-4 border border-foreground/10 rounded-md">
+          <div className="mt-4 p-4 border-2 border-foreground/10 rounded-md">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <h4 className="font-medium mb-2">Categories</h4>
@@ -324,7 +324,7 @@ export default function Marketplace() {
                   ))}
                 </div>
               </div>
-              
+
               <div>
                 <h4 className="font-medium mb-2">Price Range</h4>
                 <div className="flex items-center gap-2">
@@ -333,7 +333,7 @@ export default function Marketplace() {
                     placeholder="Min"
                     value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
-                    className="w-full p-2 border border-foreground/10 rounded-md"
+                    className="w-full p-2 border-2 border-foreground/10 rounded-md"
                   />
                   <span>to</span>
                   <input
@@ -341,13 +341,13 @@ export default function Marketplace() {
                     placeholder="Max"
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
-                    className="w-full p-2 border border-foreground/10 rounded-md"
+                    className="w-full p-2 border-2 border-foreground/10 rounded-md"
                   />
                 </div>
               </div>
-              
+
               <div className="flex items-end">
-                <button 
+                <button
                   onClick={() => {
                     setSelectedCategory('all');
                     setMinPrice('');
@@ -362,24 +362,23 @@ export default function Marketplace() {
           </div>
         )}
       </div>
-      
+
       {/* Category pills */}
       <div className="flex flex-wrap gap-2 mb-6">
         {categories.map(category => (
           <button
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
-            className={`px-4 py-1 rounded-full text-sm ${
-              selectedCategory === category.id 
+            className={`px-4 py-1 rounded-full text-sm ${selectedCategory === category.id 
                 ? 'bg-foreground text-background' 
-                : 'bg-background-light border border-foreground/10'
-            }`}
+                : 'bg-background-light border-2 border-foreground/10'
+              }`}
           >
             {category.name}
           </button>
         ))}
       </div>
-      
+
       {/* Results count */}
       <p className="mb-4 text-foreground/70">
         Showing {filteredListings.length} {filteredListings.length === 1 ? 'result' : 'results'}
@@ -391,13 +390,13 @@ export default function Marketplace() {
           {currentItems.map(item => (
             <div 
               key={item.id} 
-              className="bg-background-light border border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+              className="bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
             >
               {/* Image placeholder */}
               <div className="h-48 bg-foreground/5 flex items-center justify-center">
                 <span className="text-foreground/30">Item Image</span>
               </div>
-              
+
               <div className="p-4">
                 <div className="flex justify-between items-start">
                   <h3 className="font-medium">{item.title}</h3>
@@ -405,9 +404,9 @@ export default function Marketplace() {
                     <FiHeart />
                   </button>
                 </div>
-                
+
                 <p className="text-lg font-mono font-bold mt-1">{item.price}</p>
-                
+
                 <div className="flex items-center text-sm mt-1 text-foreground/70">
                   <span className="flex items-center">
                     ★ {item.rating}
@@ -415,15 +414,15 @@ export default function Marketplace() {
                   <span className="mx-1">•</span>
                   <span>{item.reviews} reviews</span>
                 </div>
-                
+
                 <p className="text-sm mt-1 text-foreground/70">
                   Seller: {item.seller}
                 </p>
-                
+
                 <div className="flex flex-col mt-4">
                   <span className="text-xs text-foreground/50 mb-2">{item.listed}</span>
                   <div className="flex justify-between">
-                    <button 
+                    <button
                       className="button py-1 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center"
                       onClick={() => openChat(item)}
                     >
@@ -445,43 +444,43 @@ export default function Marketplace() {
           {currentItems.map(item => (
             <div 
               key={item.id} 
-              className="bg-background-light border border-foreground/10 rounded-lg p-4 flex gap-4 hover:shadow-md transition-shadow"
+              className="bg-background-light border-2 border-foreground/10 rounded-lg p-4 flex gap-4 hover:shadow-md transition-shadow"
             >
               {/* Image placeholder */}
               <div className="h-24 w-24 bg-foreground/5 flex items-center justify-center shrink-0">
                 <span className="text-foreground/30">Image</span>
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
                   <h3 className="font-medium">{item.title}</h3>
                   <p className="text-lg font-mono font-bold">{item.price}</p>
                 </div>
-                
+
                 <p className="text-sm mt-1 line-clamp-2 text-foreground/70">
                   {item.description}
                 </p>
-                
+
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
                   <span className="text-sm text-foreground/70">
                     Seller: {item.seller}
                   </span>
-                  
+
                   <span className="text-sm flex items-center text-foreground/70">
                     ★ {item.rating} ({item.reviews} reviews)
                   </span>
-                  
+
                   <span className="text-sm text-foreground/70">
                     Location: {item.location}
                   </span>
-                  
+
                   <span className="text-sm text-foreground/70">
                     Listed: {item.listed}
                   </span>
                 </div>
-                
+
                 <div className="flex mt-3 gap-2">
-                  <button 
+                  <button
                     className="button py-1 px-3 h-auto flex items-center gap-1"
                     onClick={() => openChat(item)}
                   >
@@ -498,12 +497,12 @@ export default function Marketplace() {
           ))}
         </div>
       )}
-      
+
       {/* Empty state */}
       {filteredListings.length === 0 && (
         <div className="text-center py-12">
           <p className="text-foreground/50 text-lg">No items found matching your criteria</p>
-          <button 
+          <button
             onClick={() => {
               setSearchQuery('');
               setSelectedCategory('all');
@@ -516,31 +515,31 @@ export default function Marketplace() {
           </button>
         </div>
       )}
-      
+
       {/* Pagination */}
       {filteredListings.length > 0 && (
         <div className="mt-8 flex justify-center">
-          <div className="flex border border-foreground/10 rounded-md overflow-hidden">
+          <div className="flex border-2 border-foreground/10 rounded-md overflow-hidden">
             <button 
               onClick={() => paginate(currentPage - 1)} 
               disabled={currentPage === 1}
-              className={`px-4 py-2 border-r border-foreground/10 flex items-center ${
+              className={`px-4 py-2 border-r-2 border-foreground/10 flex items-center ${
                 currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
               <FiChevronLeft className="mr-1" />
               Previous
             </button>
-            
+
             <div className="flex">
               {Array.from({ length: totalPages }, (_, i) => (
-                <button 
-                  key={i + 1} 
+                <button
+                  key={i + 1}
                   onClick={() => paginate(i + 1)}
-                  className={`px-4 py-2 ${currentPage === i + 1 
-                    ? 'bg-foreground text-background' 
+                  className={`px-4 py-2 ${currentPage === i + 1
+                    ? 'bg-foreground text-background'
                     : 'hover:bg-background-light'
-                  }`}
+                    }`}
                 >
                   {i + 1}
                 </button>
@@ -550,11 +549,11 @@ export default function Marketplace() {
                 Math.min(totalPages, Math.max(5, currentPage + 2))
               )}
             </div>
-            
+
             <button 
               onClick={() => paginate(currentPage + 1)} 
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 border-l border-foreground/10 flex items-center ${
+              className={`px-4 py-2 border-l-2 border-foreground/10 flex items-center ${
                 currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
@@ -564,7 +563,7 @@ export default function Marketplace() {
           </div>
         </div>
       )}
-      
+
       {/* Items per page selector */}
       {filteredListings.length > 0 && (
         <div className="mt-4 text-center flex justify-center items-center gap-2">
@@ -575,7 +574,7 @@ export default function Marketplace() {
               setItemsPerPage(Number(e.target.value));
               setCurrentPage(1); // Reset to first page when changing items per page
             }}
-            className="px-2 py-1 border border-foreground/10 rounded-md text-black"
+            className="px-2 py-1 border-2 border-foreground/10 rounded-md text-black"
           >
             <option value={8}>8</option>
             <option value={16}>16</option>
@@ -586,12 +585,12 @@ export default function Marketplace() {
           </span>
         </div>
       )}
-      
+
       {/* Floating Chat Bubble */}
       {isChatOpen && selectedListing && (
-        <div className="fixed bottom-4 right-4 w-80 md:w-96 h-96 bg-background border border-foreground/10 rounded-lg shadow-lg flex flex-col">
+        <div className="fixed bottom-4 right-4 w-80 md:w-96 h-96 bg-background border-2 border-black dark:border-[#343434] rounded-lg shadow-xl flex flex-col z-50">
           {/* Chat Header */}
-          <div className="flex justify-between items-center p-3 border-b border-foreground/10 bg-background-light">
+          <div className="flex justify-between items-center p-3 border-b border-l border-r border-foreground/10 bg-background-light rounded-t-lg"> {/* Added border-l, border-r, and rounded-t-lg */}
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-foreground">
                 {selectedListing.seller.charAt(0).toUpperCase()}
@@ -605,32 +604,31 @@ export default function Marketplace() {
               <FiX size={20} />
             </button>
           </div>
-          
+
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
             {chatMessages.map((msg, i) => (
-              <div 
+              <div
                 key={i}
                 className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div 
-                  className={`max-w-[80%] rounded-xl px-3 py-2 ${
-                    msg.sender === 'user' 
-                      ? 'bg-black text-white border border-gray-700' 
-                      : 'bg-white text-black border border-gray-700'
-                  }`}
+                <div
+                  className={`max-w-[80%] rounded-xl px-3 py-2 ${msg.sender === 'user'
+                      ? 'bg-black text-white border-2 border-[#343434]'
+                      : 'bg-white text-black border-2 border-[#343434]'
+                    }`}
                 >
                   {msg.type === 'text' && (
                     <p className="text-sm">{msg.content}</p>
                   )}
-                  
+
                   {msg.type === 'attachment' && (
                     <div className="flex items-center gap-2 bg-background-light rounded p-2">
                       <FiPaperclip size={14} />
                       <span className="text-sm">{msg.content}</span>
                     </div>
                   )}
-                  
+
                   {msg.type === 'listing' && msg.listing && (
                     <div className="bg-background-light rounded p-2 space-y-1">
                       <div className="flex justify-between">
@@ -647,24 +645,24 @@ export default function Marketplace() {
               </div>
             ))}
           </div>
-          
+
           {/* Chat Input */}
           <div className="p-3 border-t border-foreground/10 flex gap-2">
-            <button 
-              onClick={sendAttachment} 
+            <button
+              onClick={sendAttachment}
               className="p-2 text-foreground/70 hover:text-foreground"
             >
               <FiPaperclip size={20} />
             </button>
-            <input 
-              type="text" 
-              value={chatMessage} 
+            <input
+              type="text"
+              value={chatMessage}
               onChange={(e) => setChatMessage(e.target.value)}
-              placeholder="Type a message..." 
-              className="flex-1 py-2 px-3 border border-foreground/20 rounded-full bg-background"
+              placeholder="Type a message..."
+              className="flex-1 py-2 px-3 border-2 border-foreground/20 rounded-full bg-background"
             />
-            <button 
-              onClick={sendChatMessage} 
+            <button
+              onClick={sendChatMessage}
               className="h-8 w-8 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-50"
               disabled={!chatMessage.trim()}
             >

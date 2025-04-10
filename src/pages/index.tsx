@@ -13,7 +13,7 @@ export default function Home() {
       )}
     >
       <main className='flex flex-col gap-8 row-start-2 items-center sm:items-start'>
-        <h1 className='text-6xl font-bold border-b border-foreground font-mono'>
+        <h1 className='text-6xl font-bold border-b-2 border-foreground font-mono'>
           The Jade Trail
         </h1>
         <p className='text-base text-center sm:text-left font-mono mb-8'>

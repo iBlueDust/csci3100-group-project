@@ -58,7 +58,7 @@ export default function Dashboard() {
       )}
     >
       {/* Header */}
-      <header className='h-16 px-6 border-b border-foreground/10 flex items-center justify-between'>
+      <header className='h-16 px-6 border-b-2 border-foreground/10 flex items-center justify-between'>
         <Link href='/' className='font-bold text-xl'>
           The Jade Trail
         </Link>

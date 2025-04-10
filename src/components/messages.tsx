@@ -134,10 +134,10 @@ export default function Messages() {
     <div className="h-[calc(100vh-7rem)] flex flex-col">
       <h2 className="text-3xl font-bold mb-4">Messages</h2>
       
-      <div className="flex flex-1 border border-foreground/10 rounded-lg overflow-hidden">
+      <div className="flex flex-1 border-2 border-foreground/10 rounded-lg overflow-hidden">
         {/* Conversation List - hidden on mobile when a chat is open */}
-        <div className={`w-full md:w-1/3 border-r border-foreground/10 bg-background-light ${mobileChatVisible ? 'hidden md:block' : 'block'}`}>
-          <div className="h-16 flex items-center px-4 border-b border-foreground/10">
+        <div className={`w-full md:w-1/3 border-r-2 border-foreground/10 bg-background-light ${mobileChatVisible ? 'hidden md:block' : 'block'}`}>
+          <div className="h-16 flex items-center px-4 border-b-2 border-foreground/10">
             <h3 className="text-lg font-bold">Conversations</h3>
           </div>
           
@@ -146,7 +146,7 @@ export default function Messages() {
               <div 
                 key={conversation.id}
                 onClick={() => openConversation(String(conversation.id))}
-                className={`p-4 border-b border-foreground/5 hover:bg-background-dark/10 cursor-pointer ${
+                className={`p-4 border-b-2 border-foreground/5 hover:bg-background-dark/10 cursor-pointer ${
                   activeConversation === String(conversation.id) ? 'bg-background-dark/20' : ''
                 }`}
               >
@@ -164,7 +164,7 @@ export default function Messages() {
           </div>
           
           {/* Pagination controls for conversations */}
-          <div className="h-12 flex items-center justify-center border-t border-foreground/10">
+          <div className="h-12 flex items-center justify-center border-t-2 border-foreground/10">
             <div className="flex items-center">
               <button 
                 onClick={() => changePage(currentPage - 1)}
@@ -194,7 +194,7 @@ export default function Messages() {
           {activeConversation ? (
             <>
               {/* Chat Header */}
-              <div className="h-16 flex items-center justify-between px-4 border-b border-foreground/10">
+              <div className="h-16 flex items-center justify-between px-4 border-b-2 border-foreground/10">
                 <div className="flex items-center gap-3">
                   <button 
                     className="md:hidden text-foreground/70"
@@ -248,8 +248,8 @@ export default function Messages() {
                     <div 
                       className={`max-w-[80%] rounded-xl px-4 py-2 ${
                         message.sender === 'me' 
-                          ? 'bg-black text-white border border-gray-700' 
-                          : 'bg-white text-black border border-gray-700'
+                          ? 'bg-black text-white border-2 border-[#343434]' 
+                          : 'bg-white text-black border-2 border-[#343434]'
                       }`}
                     >
                       <p>{message.text}</p>
@@ -262,18 +262,18 @@ export default function Messages() {
               </div>
               
               {/* Message Input */}
-              <div className="p-4 border-t border-foreground/10">
+              <div className="p-4 border-t-2 border-foreground/10">
                 <div className="flex items-center gap-2">
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 rounded-md border border-foreground/20 bg-background px-3 py-2 min-h-[2.5rem] max-h-[10rem] resize-none"
+                    className="flex-1 rounded-md border-2 border-foreground/20 bg-background px-3 py-2 min-h-[2.5rem] max-h-[10rem] resize-none"
                     rows={1}
                   />
                   <button 
                     onClick={handleSend}
-                    className="h-10 w-10 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center disabled:opacity-50 border border-gray-200 dark:border-gray-700"
+                    className="h-10 w-10 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center disabled:opacity-50 border-2 border-gray-200 dark:border-gray-700"
                     disabled={!message.trim()}
                   >
                     <FiSend size={18} />
