@@ -33,9 +33,12 @@ export default function Settings() {
     profileVisibility: 'public',
     activityVisibility: 'followers',
     allowMessages: 'authenticated',
-    showLocation: true,
-    twoFactorAuth: false
+    showLocation: true
   })
+  
+  // Account deletion state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProfileForm({
@@ -265,18 +268,21 @@ export default function Settings() {
             </div>
             
             <div>
-              <h3 className="text-xl font-bold mb-4">Two-Factor Authentication</h3>
+              <h3 className="text-xl font-bold mb-4">Account Actions</h3>
               
               <div className="flex items-center justify-between p-4 bg-background-light border border-foreground/10 rounded-lg">
                 <div>
-                  <p className="font-medium">Enhance your account security</p>
+                  <p className="font-medium">Delete your account</p>
                   <p className="text-sm text-foreground/70">
-                    Add an extra layer of security to your account by requiring a verification code.
+                    Permanently remove your account and all associated data from The Jade Trail.
                   </p>
                 </div>
                 
-                <button className="button px-4 py-2">
-                  Enable 2FA
+                <button 
+                  className="button text-red-500 px-4 py-2"
+                  onClick={() => setShowDeleteModal(true)}
+                >
+                  Delete Account
                 </button>
               </div>
             </div>
@@ -486,28 +492,26 @@ export default function Settings() {
               <div className="bg-background-light p-4 border border-foreground/10 rounded-lg">
                 <h4 className="font-bold mb-4 flex items-center gap-2">
                   <FiShield />
-                  <span>Security Enhancements</span>
+                  <span>Security Preferences</span>
                 </h4>
                 
                 <div className="flex items-center justify-between py-2">
                   <div>
-                    <p className="font-medium">Two-Factor Authentication</p>
-                    <p className="text-sm text-foreground/70">Add an extra layer of security to your account</p>
+                    <p className="font-medium">Login Notifications</p>
+                    <p className="text-sm text-foreground/70">Get notified when someone logs into your account</p>
                   </div>
                   <div className="relative inline-block w-10 mr-2 align-middle select-none">
                     <input 
                       type="checkbox" 
-                      id="twoFactorAuth" 
-                      checked={privacySettings.twoFactorAuth}
-                      onChange={() => handlePrivacyChange('twoFactorAuth')}
+                      id="loginNotifications" 
                       className="sr-only"
                     />
                     <label 
-                      htmlFor="twoFactorAuth"
-                      className={`block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer ${privacySettings.twoFactorAuth ? 'bg-blue-500' : ''}`}
+                      htmlFor="loginNotifications"
+                      className="block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer"
                     >
                       <span 
-                        className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform ${privacySettings.twoFactorAuth ? 'translate-x-4' : 'translate-x-0'}`}
+                        className="block h-6 w-6 rounded-full bg-white shadow transform transition-transform translate-x-0"
                       ></span>
                     </label>
                   </div>
@@ -520,7 +524,12 @@ export default function Settings() {
                 <button className="button mb-2 w-full justify-start text-left">Export Your Data</button>
                 <button className="button mb-2 w-full justify-start text-left">View Privacy Policy</button>
                 <button className="button mb-2 w-full justify-start text-left">Manage Cookies</button>
-                <button className="button text-red-500 w-full justify-start text-left">Delete Account</button>
+                <button 
+                  onClick={() => setShowDeleteModal(true)}
+                  className="button text-red-500 w-full justify-start text-left"
+                >
+                  Delete Account
+                </button>
               </div>
             </div>
             
@@ -583,6 +592,55 @@ export default function Settings() {
       <div className="bg-background rounded-lg">
         {renderTabContent()}
       </div>
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg max-w-md w-full p-6 border-2 border-foreground/10">
+            <h3 className="text-xl font-bold text-red-500 mb-2">Delete Account</h3>
+            <p className="text-foreground/70 mb-4">
+              This action cannot be undone. All of your data, including profile information, listings, and messages will be permanently deleted.
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                To confirm, type <span className="font-bold">{profileForm.username}</span> below:
+              </label>
+              <input 
+                type="text" 
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                placeholder={`Type ${profileForm.username} to confirm`}
+              />
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <button 
+                className="button px-4 py-2"
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setDeleteConfirmation('')
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="button bg-red-500 text-white px-4 py-2 disabled:opacity-50"
+                disabled={deleteConfirmation !== profileForm.username}
+                onClick={() => {
+                  // Here you would call your API to delete the account
+                  alert('Account deletion initiated. In a real app, this would delete your account.')
+                  setShowDeleteModal(false)
+                  setDeleteConfirmation('')
+                }}
+              >
+                Permanently Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
