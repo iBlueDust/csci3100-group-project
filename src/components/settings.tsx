@@ -479,7 +479,7 @@ export default function Settings() {
                     />
                     <label 
                       htmlFor="showLocation"
-                      className={`block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer ${privacySettings.showLocation ? 'bg-blue-500' : ''}`}
+                      className={`block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer ${privacySettings.showLocation ? 'bg-green-500' : ''}`}
                     >
                       <span 
                         className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform ${privacySettings.showLocation ? 'translate-x-4' : 'translate-x-0'}`}
