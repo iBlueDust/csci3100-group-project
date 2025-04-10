@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FiSend, FiMoreVertical, FiChevronLeft } from 'react-icons/fi'
+import { FiSend, FiMoreVertical, FiChevronLeft, FiTrash2, FiPlus } from 'react-icons/fi'
 
 // Mock data for conversations
 const mockConversations = [
@@ -38,7 +38,7 @@ const mockConversations = [
 ]
 
 // Mock message history
-const mockMessages = {
+const mockMessages: Record<number, { id: number; sender: string; text: string; time: string; }[]> = {
   1: [
     { id: 1, sender: 'jade_collector', text: 'Hello, I saw your jade pendant listing. Is it still available?', time: '2 hours ago' },
     { id: 2, sender: 'me', text: "Yes, it's still available!", time: '2 hours ago' },
@@ -62,21 +62,21 @@ const mockMessages = {
     { id: 2, sender: 'me', text: 'Thank you! I try to ensure all items are of the highest quality.', time: '1 week ago' },
     { id: 3, sender: 'gem_specialist', text: 'Do you have any more items like this?', time: '1 week ago' },
   ],
-}
+};
 
 export default function Messages() {
   const [activeConversation, setActiveConversation] = useState<number | null>(null)
   const [messageInput, setMessageInput] = useState('')
   const [conversations, setConversations] = useState(mockConversations)
   const [mobileChatVisible, setMobileChatVisible] = useState(false)
+  const [newChatVisible, setNewChatVisible] = useState(false)
+  const [newChatUser, setNewChatUser] = useState('')
+  const [newChatMessage, setNewChatMessage] = useState('')
 
   const handleSendMessage = () => {
     if (!messageInput.trim() || !activeConversation) return
-    
-    // In a real app, you would send the message to an API
+
     console.log('Sending message:', messageInput)
-    
-    // Reset input
     setMessageInput('')
   }
 
@@ -90,27 +90,88 @@ export default function Messages() {
   const openConversation = (id: number) => {
     setActiveConversation(id)
     setMobileChatVisible(true)
-    
-    // Mark conversation as read
-    setConversations(conversations.map(conv => 
-      conv.id === id ? { ...conv, unread: false } : conv
-    ))
+    setConversations((prevConversations) =>
+      prevConversations.map((conv) =>
+        conv.id === id ? { ...conv, unread: false } : conv
+      )
+    )
   }
+
+  const handleDeleteChat = (id: number) => {
+    console.log('Deleting chat with ID:', id)
+    setConversations(conversations.filter((conv) => conv.id !== id))
+    if (activeConversation === id) {
+      setActiveConversation(null)
+    }
+  }
+
+  const handleCreateChat = () => {
+    if (!newChatUser.trim() || !newChatMessage.trim()) return
+
+    // Generate a unique id (using max id + 1)
+    const newId = Math.max(...conversations.map(c => c.id)) + 1
+    const newConversation = {
+      id: newId,
+      user: newChatUser.trim(),
+      avatar: '',
+      lastMessage: newChatMessage.trim(),
+      unread: false,
+      time: 'Just now',
+    }
+    setConversations([newConversation, ...conversations])
+
+    // Optionally, add an initial message to the mockMessages (in a real app, this would be done via an API)
+    mockMessages[newId] = [
+      { id: 1, sender: 'me', text: newChatMessage.trim(), time: 'Just now' },
+    ]
+    setNewChatUser('')
+    setNewChatMessage('')
+    setNewChatVisible(false)
+    openConversation(newId)
+  }
+
+  const activeConv = conversations.find((c) => c.id === activeConversation)
 
   return (
     <div className="h-[calc(100vh-7rem)] flex flex-col">
       <h2 className="text-3xl font-bold mb-4">Messages</h2>
-      
+
       <div className="flex flex-1 border border-foreground/10 rounded-lg overflow-hidden">
-        {/* Conversation List - hidden on mobile when a chat is open */}
+        {/* Conversation List */}
         <div className={`w-full md:w-1/3 border-r border-foreground/10 bg-background-light ${mobileChatVisible ? 'hidden md:block' : 'block'}`}>
-          <div className="h-16 flex items-center px-4 border-b border-foreground/10">
+          <div className="h-16 flex items-center justify-between px-4 border-b border-foreground/10">
             <h3 className="text-lg font-bold">Conversations</h3>
+            <button onClick={() => setNewChatVisible(!newChatVisible)} className="text-foreground/70 hover:text-foreground">
+              <FiPlus size={20} />
+            </button>
           </div>
-          
+
+          {/* New Chat Form */}
+          {newChatVisible && (
+            <div className="px-4 py-2 border-b border-foreground/10">
+              <input
+                type="text"
+                placeholder="Username"
+                value={newChatUser}
+                onChange={(e) => setNewChatUser(e.target.value)}
+                className="w-full mb-2 rounded-md border border-foreground/20 px-3 py-2 bg-background"
+              />
+              <textarea
+                placeholder="Type your message..."
+                value={newChatMessage}
+                onChange={(e) => setNewChatMessage(e.target.value)}
+                rows={2}
+                className="w-full mb-2 rounded-md border border-foreground/20 px-3 py-2 bg-background resize-none"
+              />
+              <button onClick={handleCreateChat} className="w-full bg-blue-500 text-white py-2 rounded-md">
+                Create Chat
+              </button>
+            </div>
+          )}
+
           <div className="overflow-y-auto h-[calc(100%-4rem)]">
             {conversations.map((conversation) => (
-              <div 
+              <div
                 key={conversation.id}
                 onClick={() => openConversation(conversation.id)}
                 className={`p-4 border-b border-foreground/5 cursor-pointer hover:bg-background-dark/30 transition-colors ${
@@ -130,15 +191,21 @@ export default function Messages() {
                       {conversation.lastMessage}
                     </p>
                   </div>
-                  {conversation.unread && (
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteChat(conversation.id)
+                    }}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <FiTrash2 size={20} />
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </div>
-        
+
         {/* Chat Area */}
         <div className={`w-full md:w-2/3 flex flex-col ${!mobileChatVisible ? 'hidden md:flex' : 'flex'}`}>
           {activeConversation ? (
@@ -153,10 +220,10 @@ export default function Messages() {
                     <FiChevronLeft size={20} />
                   </button>
                   <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-foreground">
-                    {conversations.find(c => c.id === activeConversation)?.user.charAt(0).toUpperCase()}
+                    {activeConv?.user.charAt(0).toUpperCase()}
                   </div>
                   <h3 className="font-medium">
-                    {conversations.find(c => c.id === activeConversation)?.user}
+                    {activeConv?.user}
                   </h3>
                 </div>
                 <button className="text-foreground/70">
