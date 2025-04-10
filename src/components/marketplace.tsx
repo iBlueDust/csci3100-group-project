@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { FiSearch, FiFilter, FiGrid, FiList, FiChevronDown, FiHeart, FiShoppingCart } from 'react-icons/fi'
+import { useState, useEffect } from 'react'
+import { FiSearch, FiFilter, FiGrid, FiList, FiChevronDown, FiHeart, FiShoppingCart, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 
 // Mock categories
 const categories = [
@@ -128,6 +128,11 @@ export default function Marketplace() {
   const [maxPrice, setMaxPrice] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(8)
+  const [totalPages, setTotalPages] = useState(1)
+  
   // Filter and sort listings
   const filteredListings = mockListings
     .filter(listing => {
@@ -157,6 +162,23 @@ export default function Marketplace() {
       }
       return 0;
     });
+
+  // Calculate total pages
+  useEffect(() => {
+    setTotalPages(Math.ceil(filteredListings.length / itemsPerPage));
+  }, [filteredListings, itemsPerPage]);
+
+  // Get current page items
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredListings.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Change page
+  const paginate = (pageNumber: number) => {
+    if (pageNumber < 1) pageNumber = 1;
+    if (pageNumber > totalPages) pageNumber = totalPages;
+    setCurrentPage(pageNumber);
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -304,7 +326,7 @@ export default function Marketplace() {
       {/* Item grid/list */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredListings.map(item => (
+          {currentItems.map(item => (
             <div 
               key={item.id} 
               className="bg-background-light border border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
@@ -349,7 +371,7 @@ export default function Marketplace() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredListings.map(item => (
+          {currentItems.map(item => (
             <div 
               key={item.id} 
               className="bg-background-light border border-foreground/10 rounded-lg p-4 flex gap-4 hover:shadow-md transition-shadow"
@@ -421,13 +443,74 @@ export default function Marketplace() {
       )}
       
       {/* Pagination */}
-      <div className="mt-8 flex justify-center">
-        <div className="flex border border-foreground/10 rounded-md overflow-hidden">
-          <button className="px-4 py-2 border-r border-foreground/10">Previous</button>
-          <button className="px-4 py-2 bg-foreground text-background">1</button>
-          <button className="px-4 py-2 border-l border-foreground/10">Next</button>
+      {filteredListings.length > 0 && (
+        <div className="mt-8 flex justify-center">
+          <div className="flex border border-foreground/10 rounded-md overflow-hidden">
+            <button 
+              onClick={() => paginate(currentPage - 1)} 
+              disabled={currentPage === 1}
+              className={`px-4 py-2 border-r border-foreground/10 flex items-center ${
+                currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              <FiChevronLeft className="mr-1" />
+              Previous
+            </button>
+            
+            <div className="flex">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button 
+                  key={i + 1} 
+                  onClick={() => paginate(i + 1)}
+                  className={`px-4 py-2 ${currentPage === i + 1 
+                    ? 'bg-foreground text-background' 
+                    : 'hover:bg-background-light'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              )).slice(
+                // Show a window of 5 pages or fewer if there aren't enough pages
+                Math.max(0, Math.min(currentPage - 3, totalPages - 5)),
+                Math.min(totalPages, Math.max(5, currentPage + 2))
+              )}
+            </div>
+            
+            <button 
+              onClick={() => paginate(currentPage + 1)} 
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 border-l border-foreground/10 flex items-center ${
+                currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              Next
+              <FiChevronRight className="ml-1" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+      
+      {/* Items per page selector */}
+      {filteredListings.length > 0 && (
+        <div className="mt-4 text-center flex justify-center items-center gap-2">
+          <span className="text-sm text-foreground/70">Items per page:</span>
+          <select 
+            value={itemsPerPage} 
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1); // Reset to first page when changing items per page
+            }}
+            className="px-2 py-1 border border-foreground/10 rounded-md"
+          >
+            <option value={8}>8</option>
+            <option value={16}>16</option>
+            <option value={32}>32</option>
+          </select>
+          <span className="text-sm text-foreground/70 ml-4">
+            Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredListings.length)} of {filteredListings.length} items
+          </span>
+        </div>
+      )}
     </div>
   )
 }

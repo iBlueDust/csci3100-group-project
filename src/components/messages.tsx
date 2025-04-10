@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { FiSend, FiMoreVertical, FiChevronLeft } from 'react-icons/fi'
+import { useState, useEffect } from 'react'
+import { FiChevronLeft, FiSend, FiPaperclip, FiChevronDown, FiChevronUp } from 'react-icons/fi'
 
 // Mock data for conversations
 const mockConversations = [
@@ -65,36 +65,40 @@ const mockMessages = {
 }
 
 export default function Messages() {
-  const [activeConversation, setActiveConversation] = useState<number | null>(null)
-  const [messageInput, setMessageInput] = useState('')
-  const [conversations, setConversations] = useState(mockConversations)
+  const [activeConversation, setActiveConversation] = useState<string | null>(null)
   const [mobileChatVisible, setMobileChatVisible] = useState(false)
+  const [message, setMessage] = useState('')
+  
+  // Pagination state for conversations
+  const [currentPage, setCurrentPage] = useState(1)
+  const [conversationsPerPage, setConversationsPerPage] = useState(10)
+  const [totalConversations, setTotalConversations] = useState(mockConversations.length)
+  
+  // Calculate total pages
+  const totalPages = Math.ceil(mockConversations.length / conversationsPerPage)
+  
+  // Get current page conversations
+  const indexOfLastConversation = currentPage * conversationsPerPage
+  const indexOfFirstConversation = indexOfLastConversation - conversationsPerPage
+  const currentConversations = mockConversations.slice(indexOfFirstConversation, indexOfLastConversation)
 
-  const handleSendMessage = () => {
-    if (!messageInput.trim() || !activeConversation) return
-    
-    // In a real app, you would send the message to an API
-    console.log('Sending message:', messageInput)
-    
-    // Reset input
-    setMessageInput('')
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
-    }
-  }
-
-  const openConversation = (id: number) => {
+  const openConversation = (id: string) => {
     setActiveConversation(id)
     setMobileChatVisible(true)
-    
-    // Mark conversation as read
-    setConversations(conversations.map(conv => 
-      conv.id === id ? { ...conv, unread: false } : conv
-    ))
+  }
+
+  const handleSend = () => {
+    if (message.trim()) {
+      console.log('Sending message:', message)
+      setMessage('')
+    }
+  }
+  
+  // Change page
+  const changePage = (pageNumber: number) => {
+    if (pageNumber < 1) pageNumber = 1
+    if (pageNumber > totalPages) pageNumber = totalPages
+    setCurrentPage(pageNumber)
   }
 
   return (
@@ -108,34 +112,51 @@ export default function Messages() {
             <h3 className="text-lg font-bold">Conversations</h3>
           </div>
           
-          <div className="overflow-y-auto h-[calc(100%-4rem)]">
-            {conversations.map((conversation) => (
+          <div className="overflow-y-auto h-[calc(100%-7rem)]">
+            {currentConversations.map((conversation) => (
               <div 
                 key={conversation.id}
-                onClick={() => openConversation(conversation.id)}
-                className={`p-4 border-b border-foreground/5 cursor-pointer hover:bg-background-dark/30 transition-colors ${
-                  activeConversation === conversation.id ? 'bg-background-dark/50' : ''
+                onClick={() => openConversation(String(conversation.id))}
+                className={`p-4 border-b border-foreground/5 hover:bg-background-dark/10 cursor-pointer ${
+                  activeConversation === String(conversation.id) ? 'bg-background-dark/20' : ''
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center text-foreground">
                     {conversation.user.charAt(0).toUpperCase()}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline">
-                      <h4 className="font-medium truncate">{conversation.user}</h4>
-                      <span className="text-xs text-foreground/70">{conversation.time}</span>
-                    </div>
-                    <p className={`text-sm truncate ${conversation.unread ? 'font-bold' : 'text-foreground/70'}`}>
-                      {conversation.lastMessage}
-                    </p>
+                  <div>
+                    <h4 className="font-medium">{conversation.user}</h4>
+                    <p className="text-sm text-foreground/70 truncate">{conversation.lastMessage}</p>
                   </div>
-                  {conversation.unread && (
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  )}
                 </div>
               </div>
             ))}
+          </div>
+          
+          {/* Pagination controls for conversations */}
+          <div className="h-12 flex items-center justify-center border-t border-foreground/10">
+            <div className="flex items-center">
+              <button 
+                onClick={() => changePage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`px-2 py-1 ${currentPage === 1 ? 'text-foreground/30 cursor-not-allowed' : 'text-foreground/70 hover:text-foreground'}`}
+              >
+                <FiChevronLeft />
+              </button>
+              
+              <span className="mx-2 text-sm">
+                {indexOfFirstConversation + 1}-{Math.min(indexOfLastConversation, mockConversations.length)} of {mockConversations.length}
+              </span>
+              
+              <button 
+                onClick={() => changePage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`px-2 py-1 ${currentPage === totalPages ? 'text-foreground/30 cursor-not-allowed' : 'text-foreground/70 hover:text-foreground'}`}
+              >
+                <FiChevronDown />
+              </button>
+            </div>
           </div>
         </div>
         
@@ -153,33 +174,33 @@ export default function Messages() {
                     <FiChevronLeft size={20} />
                   </button>
                   <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-foreground">
-                    {conversations.find(c => c.id === activeConversation)?.user.charAt(0).toUpperCase()}
+                    {mockConversations.find(c => c.id === Number(activeConversation))?.user.charAt(0).toUpperCase()}
                   </div>
                   <h3 className="font-medium">
-                    {conversations.find(c => c.id === activeConversation)?.user}
+                    {mockConversations.find(c => c.id === Number(activeConversation))?.user}
                   </h3>
                 </div>
                 <button className="text-foreground/70">
-                  <FiMoreVertical size={20} />
+                  <FiPaperclip size={20} />
                 </button>
               </div>
               
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {mockMessages[activeConversation as keyof typeof mockMessages]?.map((message) => (
+                {mockMessages[Number(activeConversation) as keyof typeof mockMessages]?.map((message) => (
                   <div 
                     key={message.id}
                     className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div 
-                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                      className={`max-w-[80%] rounded-xl px-4 py-2 ${
                         message.sender === 'me' 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-background-dark'
+                          ? 'bg-black text-white border-2 border-gray-100' 
+                          : 'bg-white text-black border-2 border-gray-100'
                       }`}
                     >
                       <p>{message.text}</p>
-                      <p className={`text-xs mt-1 ${message.sender === 'me' ? 'text-white/70' : 'text-foreground/50'}`}>
+                      <p className={`text-xs mt-1 ${message.sender === 'me' ? 'text-white/70' : 'text-black/50'}`}>
                         {message.time}
                       </p>
                     </div>
@@ -191,17 +212,16 @@ export default function Messages() {
               <div className="p-4 border-t border-foreground/10">
                 <div className="flex items-center gap-2">
                   <textarea
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    onKeyDown={handleKeyPress}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
                     placeholder="Type a message..."
                     className="flex-1 rounded-md border border-foreground/20 bg-background px-3 py-2 min-h-[2.5rem] max-h-[10rem] resize-none"
                     rows={1}
                   />
                   <button 
-                    onClick={handleSendMessage}
+                    onClick={handleSend}
                     className="h-10 w-10 rounded-full bg-blue-500 text-white flex items-center justify-center disabled:opacity-50"
-                    disabled={!messageInput.trim()}
+                    disabled={!message.trim()}
                   >
                     <FiSend size={18} />
                   </button>
