@@ -273,7 +273,7 @@ export default function Messages() {
                   />
                   <button 
                     onClick={handleSend}
-                    className="h-10 w-10 rounded-full bg-blue-500 text-white flex items-center justify-center disabled:opacity-50"
+                    className="h-10 w-10 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center disabled:opacity-50 border border-gray-200 dark:border-gray-700"
                     disabled={!message.trim()}
                   >
                     <FiSend size={18} />

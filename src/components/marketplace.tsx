@@ -500,7 +500,7 @@ export default function Marketplace() {
               setItemsPerPage(Number(e.target.value));
               setCurrentPage(1); // Reset to first page when changing items per page
             }}
-            className="px-2 py-1 border border-foreground/10 rounded-md"
+            className="px-2 py-1 border border-foreground/10 rounded-md text-black"
           >
             <option value={8}>8</option>
             <option value={16}>16</option>
