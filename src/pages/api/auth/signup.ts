@@ -27,7 +27,7 @@ async function POST(
 		passkey: Joi.string().base64().required(),
 		licenseKey: Joi.string()
 			.custom(key => {
-				if (!isLicenseKey) {
+				if (!isLicenseKey(key)) {
 					throw new Error('Invalid license key format')
 				}
 				return key
