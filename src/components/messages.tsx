@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FiChevronLeft, FiSend, FiPaperclip, FiChevronDown, FiChevronUp } from 'react-icons/fi'
+import { FiChevronLeft, FiSend, FiPaperclip, FiChevronDown, FiChevronUp, FiTrash2, FiAlertTriangle } from 'react-icons/fi'
 
 // Mock data for conversations
 const mockConversations = [
@@ -10,6 +10,7 @@ const mockConversations = [
     lastMessage: "I'm interested in your jade pendant",
     unread: true,
     time: '2h ago',
+    wasRequestedToDelete: false,
   },
   {
     id: 2,
@@ -18,6 +19,7 @@ const mockConversations = [
     lastMessage: 'Is the price negotiable?',
     unread: false,
     time: '1d ago',
+    wasRequestedToDelete: true,
   },
   {
     id: 3,
@@ -101,6 +103,33 @@ export default function Messages() {
     setCurrentPage(pageNumber)
   }
 
+  // Handle delete chat
+  const handleDeleteChat = () => {
+    if (activeConversation && window.confirm('Are you sure you want to delete this conversation? This action cannot be undone.')) {
+      // In a real app, we would make an API call to delete the chat
+      // For this mock, we'll just close the active conversation
+      setActiveConversation(null)
+      setMobileChatVisible(false)
+      
+      // In a real implementation, we would also need to remove the conversation from the list
+      // For now, we'll just leave it in the list since we're using mock data
+      console.log(`Deleted conversation: ${activeConversation}`)
+    }
+  }
+
+  // For demo purposes - toggle deletion status
+  const toggleChatDeletionStatus = (id: string) => {
+    // In a real app, this would be read-only data from the API
+    // This is just to demonstrate the UI behavior
+    const conversation = mockConversations.find(c => c.id === Number(id));
+    if (conversation) {
+      conversation.wasRequestedToDelete = !conversation.wasRequestedToDelete;
+      // Force re-render
+      setActiveConversation(null);
+      setTimeout(() => setActiveConversation(id), 10);
+    }
+  }
+
   return (
     <div className="h-[calc(100vh-7rem)] flex flex-col">
       <h2 className="text-3xl font-bold mb-4">Messages</h2>
@@ -180,10 +209,34 @@ export default function Messages() {
                     {mockConversations.find(c => c.id === Number(activeConversation))?.user}
                   </h3>
                 </div>
-                <button className="text-foreground/70">
-                  <FiPaperclip size={20} />
-                </button>
+                <div className="flex items-center gap-3">
+                  <button className="text-foreground/70 hover:text-red-500 transition-colors" onClick={handleDeleteChat}>
+                    <FiTrash2 size={20} />
+                  </button>
+                  <button className="text-foreground/70">
+                    <FiPaperclip size={20} />
+                  </button>
+                </div>
               </div>
+              
+              {/* Deletion Banner */}
+              {mockConversations.find(c => c.id === Number(activeConversation))?.wasRequestedToDelete && (
+                <div className="bg-amber-50 border-l-4 border-amber-400 p-4 text-amber-800 flex items-center gap-2">
+                  <FiAlertTriangle size={20} />
+                  <div>
+                    <p className="font-medium">This conversation has been deleted by the other person.</p>
+                    <p className="text-sm">You can still view these messages, but they can no longer reply.</p>
+                  </div>
+                  
+                  {/* For demo purposes only - this button would not exist in production */}
+                  <button 
+                    className="ml-auto text-xs text-amber-800 underline"
+                    onClick={() => toggleChatDeletionStatus(activeConversation)}
+                  >
+                    Toggle Status (Demo)
+                  </button>
+                </div>
+              )}
               
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -195,8 +248,8 @@ export default function Messages() {
                     <div 
                       className={`max-w-[80%] rounded-xl px-4 py-2 ${
                         message.sender === 'me' 
-                          ? 'bg-black text-white border-2 border-gray-100' 
-                          : 'bg-white text-black border-2 border-gray-100'
+                          ? 'bg-black text-white border border-gray-700' 
+                          : 'bg-white text-black border border-gray-700'
                       }`}
                     >
                       <p>{message.text}</p>
