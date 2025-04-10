@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FiSearch, FiFilter, FiGrid, FiList, FiChevronDown, FiHeart, FiShoppingCart, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiGrid, FiList, FiChevronDown, FiHeart, FiShoppingCart, FiChevronLeft, FiChevronRight, FiMessageCircle, FiX, FiPaperclip } from 'react-icons/fi'
 
 // Mock categories
 const categories = [
@@ -180,6 +180,68 @@ export default function Marketplace() {
     setCurrentPage(pageNumber);
   };
 
+  // Chat bubble state
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<typeof mockListings[0] | null>(null);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatMessages, setChatMessages] = useState<Array<{type: 'text' | 'attachment' | 'listing', content: string, sender: 'user' | 'other', listing?: typeof mockListings[0]}>>([]);
+  
+  // Open chat with a specific listing
+  const openChat = (item: typeof mockListings[0]) => {
+    setSelectedListing(item);
+    setIsChatOpen(true);
+    
+    // Demo: Add the listing as a message in the chat
+    setChatMessages([
+      ...chatMessages,
+      {
+        type: 'listing',
+        content: `I'm interested in ${item.title}`,
+        sender: 'user',
+        listing: item
+      }
+    ]);
+  };
+  
+  // Send a message in the chat
+  const sendChatMessage = () => {
+    if (chatMessage.trim()) {
+      setChatMessages([
+        ...chatMessages,
+        {
+          type: 'text',
+          content: chatMessage,
+          sender: 'user'
+        }
+      ]);
+      setChatMessage('');
+      
+      // Demo: Mock response from the seller
+      setTimeout(() => {
+        setChatMessages(prev => [
+          ...prev,
+          {
+            type: 'text',
+            content: `Thanks for your interest in my item! Would you like more information?`,
+            sender: 'other'
+          }
+        ]);
+      }, 1000);
+    }
+  };
+  
+  // Simulate sending an attachment
+  const sendAttachment = () => {
+    setChatMessages([
+      ...chatMessages,
+      {
+        type: 'attachment',
+        content: 'image_attachment.jpg',
+        sender: 'user'
+      }
+    ]);
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="mb-6">
@@ -358,12 +420,21 @@ export default function Marketplace() {
                   Seller: {item.seller}
                 </p>
                 
-                <div className="flex justify-between items-center mt-4">
-                  <span className="text-xs text-foreground/50">{item.listed}</span>
-                  <button className="button-primary py-1 px-3 h-auto flex items-center gap-1">
-                    <FiShoppingCart size={14} />
-                    <span>Buy</span>
-                  </button>
+                <div className="flex flex-col mt-4">
+                  <span className="text-xs text-foreground/50 mb-2">{item.listed}</span>
+                  <div className="flex justify-between">
+                    <button 
+                      className="button py-1 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center"
+                      onClick={() => openChat(item)}
+                    >
+                      <FiMessageCircle size={14} />
+                      <span>Chat</span>
+                    </button>
+                    <button className="button-primary py-1 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center">
+                      <FiShoppingCart size={14} />
+                      <span>Buy</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -409,9 +480,13 @@ export default function Marketplace() {
                   </span>
                 </div>
                 
-                <div className="flex justify-end mt-2 gap-2">
-                  <button className="button py-1 px-3 h-auto">
-                    Message
+                <div className="flex mt-3 gap-2">
+                  <button 
+                    className="button py-1 px-3 h-auto flex items-center gap-1"
+                    onClick={() => openChat(item)}
+                  >
+                    <FiMessageCircle size={14} />
+                    <span>Chat</span>
                   </button>
                   <button className="button-primary py-1 px-3 h-auto flex items-center gap-1">
                     <FiShoppingCart size={14} />
@@ -509,6 +584,93 @@ export default function Marketplace() {
           <span className="text-sm text-foreground/70 ml-4">
             Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredListings.length)} of {filteredListings.length} items
           </span>
+        </div>
+      )}
+      
+      {/* Floating Chat Bubble */}
+      {isChatOpen && selectedListing && (
+        <div className="fixed bottom-4 right-4 w-80 md:w-96 h-96 bg-background border border-foreground/10 rounded-lg shadow-lg flex flex-col">
+          {/* Chat Header */}
+          <div className="flex justify-between items-center p-3 border-b border-foreground/10 bg-background-light">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-foreground">
+                {selectedListing.seller.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p className="font-medium text-sm">{selectedListing.seller}</p>
+                <p className="text-xs text-foreground/70 truncate">{selectedListing.title}</p>
+              </div>
+            </div>
+            <button onClick={() => setIsChatOpen(false)} className="text-foreground/70 hover:text-foreground">
+              <FiX size={20} />
+            </button>
+          </div>
+          
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            {chatMessages.map((msg, i) => (
+              <div 
+                key={i}
+                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div 
+                  className={`max-w-[80%] rounded-xl px-3 py-2 ${
+                    msg.sender === 'user' 
+                      ? 'bg-black text-white border border-gray-700' 
+                      : 'bg-white text-black border border-gray-700'
+                  }`}
+                >
+                  {msg.type === 'text' && (
+                    <p className="text-sm">{msg.content}</p>
+                  )}
+                  
+                  {msg.type === 'attachment' && (
+                    <div className="flex items-center gap-2 bg-background-light rounded p-2">
+                      <FiPaperclip size={14} />
+                      <span className="text-sm">{msg.content}</span>
+                    </div>
+                  )}
+                  
+                  {msg.type === 'listing' && msg.listing && (
+                    <div className="bg-background-light rounded p-2 space-y-1">
+                      <div className="flex justify-between">
+                        <p className="text-sm font-medium">{msg.listing.title}</p>
+                        <p className="text-sm font-mono font-bold">{msg.listing.price}</p>
+                      </div>
+                      <div className="h-16 bg-foreground/5 flex items-center justify-center text-xs text-foreground/30">
+                        Item Image
+                      </div>
+                      <p className="text-xs">{msg.content}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Chat Input */}
+          <div className="p-3 border-t border-foreground/10 flex gap-2">
+            <button 
+              onClick={sendAttachment} 
+              className="p-2 text-foreground/70 hover:text-foreground"
+            >
+              <FiPaperclip size={20} />
+            </button>
+            <input 
+              type="text" 
+              value={chatMessage} 
+              onChange={(e) => setChatMessage(e.target.value)}
+              placeholder="Type a message..." 
+              className="flex-1 py-2 px-3 border border-foreground/20 rounded-full bg-background"
+            />
+            <button 
+              onClick={sendChatMessage} 
+              className="h-8 w-8 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-50"
+              disabled={!chatMessage.trim()}
+            >
+              <FiMessageCircle size={16} />
+            </button>
+          </div>
         </div>
       )}
     </div>
