@@ -11,6 +11,17 @@ const categories = [
   { id: 'gems', name: 'Precious Gems' }
 ]
 
+// Extract unique countries from listings
+const countries = [
+  { id: 'all', name: 'All Countries' },
+  { id: 'Hong Kong', name: 'Hong Kong' },
+  { id: 'Beijing', name: 'Beijing' },
+  { id: 'Shanghai', name: 'Shanghai' },
+  { id: 'Taiwan', name: 'Taiwan' },
+  { id: 'Singapore', name: 'Singapore' },
+  { id: 'Macau', name: 'Macau' }
+]
+
 // Mock marketplace listings
 const mockListings = [
   {
@@ -122,6 +133,7 @@ const mockListings = [
 export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedCountry, setSelectedCountry] = useState('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortOption, setSortOption] = useState('newest')
   const [minPrice, setMinPrice] = useState('')
@@ -143,11 +155,14 @@ export default function Marketplace() {
       // Category filter
       const matchesCategory = selectedCategory === 'all' || listing.category === selectedCategory;
 
+      // Country filter
+      const matchesCountry = selectedCountry === 'all' || listing.location === selectedCountry;
+
       // Price filter
       const matchesMinPrice = !minPrice || parseFloat(listing.price.substring(1).replace(',', '')) >= parseFloat(minPrice);
       const matchesMaxPrice = !maxPrice || parseFloat(listing.price.substring(1).replace(',', '')) <= parseFloat(maxPrice);
 
-      return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice;
+      return matchesSearch && matchesCategory && matchesCountry && matchesMinPrice && matchesMaxPrice;
     })
     .sort((a, b) => {
       // Sort options
@@ -326,6 +341,25 @@ export default function Marketplace() {
               </div>
 
               <div>
+                <h4 className="font-medium mb-2">Location</h4>
+                <div className="space-y-2">
+                  {countries.map(country => (
+                    <div key={country.id} className="flex items-center">
+                      <input
+                        type="radio"
+                        id={`country-${country.id}`}
+                        name="country"
+                        checked={selectedCountry === country.id}
+                        onChange={() => setSelectedCountry(country.id)}
+                        className="mr-2"
+                      />
+                      <label htmlFor={`country-${country.id}`}>{country.name}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
                 <h4 className="font-medium mb-2">Price Range</h4>
                 <div className="flex items-center gap-2">
                   <input
@@ -346,10 +380,11 @@ export default function Marketplace() {
                 </div>
               </div>
 
-              <div className="flex items-end">
+              <div className="flex items-end md:col-span-3">
                 <button
                   onClick={() => {
                     setSelectedCategory('all');
+                    setSelectedCountry('all');
                     setMinPrice('');
                     setMaxPrice('');
                   }}

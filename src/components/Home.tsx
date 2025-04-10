@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useState } from 'react'
+import CreateListingForm from './CreateListingForm'
 
 const recentListings = [
   {
@@ -35,6 +36,14 @@ const recentListings = [
 export interface HomeProps {}
 
 const Home: React.FC<HomeProps> = ({}) => {
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  
+  const handleCreateSuccess = (listingId: string) => {
+    setShowCreateForm(false)
+    // In a real app, you might want to refresh the listings or show a success message
+    console.log(`Listing created with ID: ${listingId}`)
+  }
+  
   return (
     <div>
       <div className='mb-6'>
@@ -80,7 +89,10 @@ const Home: React.FC<HomeProps> = ({}) => {
               <span className='font-mono font-bold'>5</span>
             </div>
           </div>
-          <button className='mt-4 button-primary w-full'>
+          <button 
+            onClick={() => setShowCreateForm(true)}
+            className='mt-4 button-primary w-full'
+          >
             Create New Listing
           </button>
         </div>
@@ -121,6 +133,14 @@ const Home: React.FC<HomeProps> = ({}) => {
           </table>
         </div>
       </div>
+      
+      {/* Create Listing Form Modal */}
+      {showCreateForm && (
+        <CreateListingForm 
+          onClose={() => setShowCreateForm(false)}
+          onSuccess={handleCreateSuccess}
+        />
+      )}
     </div>
   )
 }
