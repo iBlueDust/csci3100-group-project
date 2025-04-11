@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FiUser, FiLock, FiCreditCard, FiEye, FiEyeOff, FiGlobe, FiShield } from 'react-icons/fi'
+import { countries } from '@/utils/countries'
 
 // Tab interfaces - removed 'notifications'
 type SettingsTab = 'profile' | 'security' | 'payment' | 'privacy'
@@ -402,12 +403,11 @@ export default function Settings() {
                   className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
                   defaultValue="HK"
                 >
-                  <option value="HK">Hong Kong</option>
-                  <option value="CN">China</option>
-                  <option value="SG">Singapore</option>
-                  <option value="TW">Taiwan</option>
-                  <option value="US">United States</option>
-                  <option value="UK">United Kingdom</option>
+                  {countries.filter(country => country.id !== 'all').map(country => (
+                    <option key={country.id} value={country.id}>
+                      {country.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

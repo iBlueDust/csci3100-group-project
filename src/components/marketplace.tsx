@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { FiSearch, FiFilter, FiGrid, FiList, FiChevronDown, FiHeart, FiShoppingCart, FiChevronLeft, FiChevronRight, FiMessageCircle, FiX, FiPaperclip, FiCreditCard, FiCheckCircle } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiGrid, FiList, FiChevronDown, FiHeart, FiShoppingCart, FiChevronLeft, FiChevronRight, FiMessageCircle, FiX, FiPaperclip, FiCreditCard, FiCheckCircle, FiMapPin } from 'react-icons/fi'
+import { countries, getFeaturedCountries } from '@/utils/countries'
 
 // Mock categories
 const categories = [
@@ -10,17 +11,7 @@ const categories = [
   { id: 'art', name: 'Artwork' },
   { id: 'gems', name: 'Precious Gems' }
 ]
-
-// Extract unique countries from listings
-const countries = [
-  { id: 'all', name: 'All Countries' },
-  { id: 'Hong Kong', name: 'Hong Kong' },
-  { id: 'Beijing', name: 'Beijing' },
-  { id: 'Shanghai', name: 'Shanghai' },
-  { id: 'Taiwan', name: 'Taiwan' },
-  { id: 'Singapore', name: 'Singapore' },
-  { id: 'Macau', name: 'Macau' }
-]
+  // Countries are now imported from @/utils/countries
 
 // Mock marketplace listings
 const mockListings = [
@@ -372,20 +363,45 @@ export default function Marketplace() {
 
               <div>
                 <h4 className="font-medium mb-2">Location</h4>
-                <div className="space-y-2">
-                  {countries.map(country => (
-                    <div key={country.id} className="flex items-center">
-                      <input
-                        type="radio"
-                        id={`country-${country.id}`}
-                        name="country"
-                        checked={selectedCountry === country.id}
-                        onChange={() => setSelectedCountry(country.id)}
-                        className="mr-2"
-                      />
-                      <label htmlFor={`country-${country.id}`}>{country.name}</label>
-                    </div>
-                  ))}
+                <div className="relative">
+                  <div className="flex items-center">
+                    <FiMapPin className="absolute left-3 top-2.5 text-foreground/50" />
+                    <select 
+                      value={selectedCountry} 
+                      onChange={(e) => setSelectedCountry(e.target.value)}
+                      className="w-full p-2 pl-10 border-2 border-foreground/10 rounded-md appearance-none bg-background pr-10"
+                    >
+                      {countries.map(country => (
+                        <option key={country.id} value={country.id}>
+                          {country.name}
+                        </option>
+                      ))}
+                    </select>
+                    <FiChevronDown className="absolute right-3 top-3 pointer-events-none text-foreground/50" />
+                  </div>
+                </div>
+                
+                {/* Featured regions section for quick selection */}
+                <div className="mt-4">
+                  <h5 className="text-sm text-foreground/70 mb-2">Featured Regions</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {['HK', 'CN', 'TW', 'SG', 'US', 'GB'].map(code => {
+                      const country = countries.find(c => c.id === code);
+                      return country ? (
+                        <button
+                          key={code}
+                          onClick={() => setSelectedCountry(code)}
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            selectedCountry === code 
+                            ? 'bg-foreground text-background' 
+                            : 'bg-background-light border-2 border-foreground/10'
+                          }`}
+                        >
+                          {country.name}
+                        </button>
+                      ) : null;
+                    })}
+                  </div>
                 </div>
               </div>
 

@@ -1,14 +1,6 @@
 import React, { useState } from 'react'
 import { FiX, FiUpload, FiTrash2 } from 'react-icons/fi'
-
-// The same countries list as in the marketplace component
-const countries = [
-  { id: 'hk', name: 'Hong Kong' },
-  { id: 'cn', name: 'China' },
-  { id: 'tw', name: 'Taiwan' },
-  { id: 'sg', name: 'Singapore' },
-  { id: 'mo', name: 'Macau' }
-]
+import { countries } from '@/utils/countries'
 
 // The same categories from the marketplace component
 const categories = [
@@ -184,7 +176,7 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({ onClose, onSucces
                 className="w-full p-2 border-2 border-foreground/10 rounded-md bg-background"
                 required
               >
-                {countries.map(country => (
+                {countries.filter(country => country.id !== 'all').map(country => (
                   <option key={country.id} value={country.id}>
                     {country.name}
                   </option>
