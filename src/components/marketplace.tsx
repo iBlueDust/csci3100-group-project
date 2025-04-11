@@ -136,56 +136,22 @@ export default function Marketplace() {
   const [itemsPerPage, setItemsPerPage] = useState(8)
   const [totalPages, setTotalPages] = useState(1)
 
-  // Filter and sort listings
-  const filteredListings = mockListings
-    .filter(listing => {
-      // Search filter
-      const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        listing.description.toLowerCase().includes(searchQuery.toLowerCase());
+  // Add state for detailed listing modal
+  const [detailedListing, setDetailedListing] = useState<typeof mockListings[0] | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
-      // Category filter
-      const matchesCategory = selectedCategory === 'all' || listing.category === selectedCategory;
-
-      // Country filter
-      const matchesCountry = selectedCountry === 'all' || listing.location === selectedCountry;
-
-      // Price filter
-      const matchesMinPrice = !minPrice || parseFloat(listing.price.substring(1).replace(',', '')) >= parseFloat(minPrice);
-      const matchesMaxPrice = !maxPrice || parseFloat(listing.price.substring(1).replace(',', '')) <= parseFloat(maxPrice);
-
-      return matchesSearch && matchesCategory && matchesCountry && matchesMinPrice && matchesMaxPrice;
-    })
-    .sort((a, b) => {
-      // Sort options
-      if (sortOption === 'newest') {
-        return a.id < b.id ? 1 : -1; // Using ID as a proxy for newest for this mock
-      } else if (sortOption === 'price_low') {
-        return parseFloat(a.price.substring(1).replace(',', '')) - parseFloat(b.price.substring(1).replace(',', ''));
-      } else if (sortOption === 'price_high') {
-        return parseFloat(b.price.substring(1).replace(',', '')) - parseFloat(a.price.substring(1).replace(',', ''));
-      } else if (sortOption === 'rating') {
-        return b.rating - a.rating;
-      }
-      return 0;
-    });
-
-  // Calculate total pages
-  useEffect(() => {
-    setTotalPages(Math.ceil(filteredListings.length / itemsPerPage));
-  }, [filteredListings, itemsPerPage]);
-
-  // Get current page items
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredListings.slice(indexOfFirstItem, indexOfLastItem);
-
-  // Change page
-  const paginate = (pageNumber: number) => {
-    if (pageNumber < 1) pageNumber = 1;
-    if (pageNumber > totalPages) pageNumber = totalPages;
-    setCurrentPage(pageNumber);
+  // Function to open detailed listing modal
+  const openDetailModal = (item: typeof mockListings[0]) => {
+    setDetailedListing(item);
+    setIsDetailModalOpen(true);
   };
 
+  // Function to close detailed listing modal
+  const closeDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setDetailedListing(null);
+  };
+  
   // Chat bubble state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<typeof mockListings[0] | null>(null);
@@ -275,6 +241,59 @@ export default function Marketplace() {
         // Show success message or notification
         alert('Purchase completed successfully!');
       }, 2000);
+    }
+  };
+
+  // Filter and sort listings
+  const filteredListings = mockListings
+    .filter(listing => {
+      // Search filter
+      const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           listing.description.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Category filter
+      const matchesCategory = selectedCategory === 'all' || listing.category === selectedCategory;
+      
+      // Country filter
+      const matchesCountry = selectedCountry === 'all' || listing.location.toLowerCase().includes(selectedCountry.toLowerCase());
+      
+      // Price filter
+      const matchesMinPrice = !minPrice || parseFloat(listing.price.substring(1).replace(',', '')) >= parseFloat(minPrice);
+      const matchesMaxPrice = !maxPrice || parseFloat(listing.price.substring(1).replace(',', '')) <= parseFloat(maxPrice);
+      
+      return matchesSearch && matchesCategory && matchesCountry && matchesMinPrice && matchesMaxPrice;
+    })
+    .sort((a, b) => {
+      // Sort options
+      if (sortOption === 'newest') {
+        return a.id < b.id ? 1 : -1; // Using ID as a proxy for newest for this mock
+      } else if (sortOption === 'price_low') {
+        return parseFloat(a.price.substring(1).replace(',', '')) - parseFloat(b.price.substring(1).replace(',', ''));
+      } else if (sortOption === 'price_high') {
+        return parseFloat(b.price.substring(1).replace(',', '')) - parseFloat(a.price.substring(1).replace(',', ''));
+      } else if (sortOption === 'rating') {
+        return b.rating - a.rating;
+      }
+      return 0;
+    });
+
+  // Pagination calculations
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredListings.slice(indexOfFirstItem, indexOfLastItem);
+  
+  // Update total pages when filtered listings change
+  useEffect(() => {
+    setTotalPages(Math.max(1, Math.ceil(filteredListings.length / itemsPerPage)));
+    if (currentPage > Math.ceil(filteredListings.length / itemsPerPage) && filteredListings.length > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredListings, itemsPerPage]);
+
+  // Change page
+  const paginate = (pageNumber: number) => {
+    if (pageNumber > 0 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
     }
   };
 
@@ -471,7 +490,8 @@ export default function Marketplace() {
           {currentItems.map(item => (
             <div 
               key={item.id} 
-              className="bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+              className="bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => openDetailModal(item)}
             >
               {/* Image placeholder */}
               <div className="h-48 bg-foreground/5 flex items-center justify-center">
@@ -481,7 +501,13 @@ export default function Marketplace() {
               <div className="p-4">
                 <div className="flex justify-between items-start">
                   <h3 className="font-medium">{item.title}</h3>
-                  <button className="text-foreground/50 hover:text-red-500">
+                  <button 
+                    className="text-foreground/50 hover:text-red-500"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering parent onClick
+                      // Add to favorites logic
+                    }}
+                  >
                     <FiHeart />
                   </button>
                 </div>
@@ -505,14 +531,20 @@ export default function Marketplace() {
                   <div className="flex justify-between">
                     <button
                       className="button py-1 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center"
-                      onClick={() => openChat(item)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering parent onClick
+                        openChat(item);
+                      }}
                     >
                       <FiMessageCircle size={14} />
                       <span>Chat</span>
                     </button>
                     <button 
                       className="button-primary py-1 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
-                      onClick={() => openBuyModal(item)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering parent onClick
+                        openBuyModal(item);
+                      }}
                     >
                       <FiShoppingCart size={14} />
                       <span>Buy</span>
@@ -923,6 +955,155 @@ export default function Marketplace() {
             >
               <FiMessageCircle size={16} />
             </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Detailed Listing Modal */}
+      {isDetailModalOpen && detailedListing && (
+        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-background rounded-lg max-w-4xl w-full shadow-xl border-2 border-foreground/10 my-8">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b border-foreground/10">
+              <h2 className="text-2xl font-bold">{detailedListing.title}</h2>
+              <button 
+                onClick={closeDetailModal} 
+                className="p-1 hover:bg-background-dark rounded-full"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+                {/* Image Gallery */}
+                <div className="md:col-span-3 space-y-4">
+                  {/* Main Image */}
+                  <div className="bg-foreground/5 rounded-lg h-80 flex items-center justify-center">
+                    <span className="text-foreground/30 text-lg">Item Images</span>
+                  </div>
+                  
+                  {/* Thumbnail Row */}
+                  <div className="grid grid-cols-5 gap-2">
+                    {[...Array(5)].map((_, i) => (
+                      <div 
+                        key={i} 
+                        className="bg-foreground/5 rounded-md h-16 flex items-center justify-center cursor-pointer hover:border-2 hover:border-foreground/30"
+                      >
+                        <span className="text-foreground/30 text-xs">{i + 1}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Item Details */}
+                <div className="md:col-span-2 flex flex-col">
+                  {/* Price and Actions */}
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <p className="text-3xl font-mono font-bold">{detailedListing.price}</p>
+                      <button className="text-foreground/50 hover:text-red-500">
+                        <FiHeart size={24} />
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <button 
+                        onClick={() => {
+                          closeDetailModal();
+                          openBuyModal(detailedListing);
+                        }}
+                        className="button-primary w-full py-3 flex items-center justify-center gap-2"
+                      >
+                        <FiShoppingCart size={18} />
+                        Buy Now
+                      </button>
+                      
+                      <button 
+                        onClick={() => {
+                          closeDetailModal();
+                          openChat(detailedListing);
+                        }}
+                        className="button w-full py-3 flex items-center justify-center gap-2"
+                      >
+                        <FiMessageCircle size={18} />
+                        Message Seller
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Seller Info */}
+                  <div className="mb-6 p-4 border-2 border-foreground/10 rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center">
+                        {detailedListing.seller.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium">{detailedListing.seller}</p>
+                        <div className="flex items-center text-sm text-foreground/70">
+                          <span className="flex items-center">★ {detailedListing.rating}</span>
+                          <span className="mx-1">•</span>
+                          <span>{detailedListing.reviews} reviews</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-sm text-foreground/70">Member since January 2023</p>
+                  </div>
+                  
+                  {/* Item Details */}
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-foreground/70">Category</p>
+                      <p className="font-medium capitalize">{detailedListing.category}</p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm text-foreground/70">Location</p>
+                      <p className="font-medium">{detailedListing.location}</p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm text-foreground/70">Listed</p>
+                      <p className="font-medium">{detailedListing.listed}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Description */}
+              <div className="mt-8 border-t border-foreground/10 pt-8">
+                <h3 className="text-xl font-bold mb-4">Description</h3>
+                <p className="whitespace-pre-line text-foreground/90">{detailedListing.description}</p>
+              </div>
+              
+              {/* Related Items */}
+              <div className="mt-8 border-t border-foreground/10 pt-8">
+                <h3 className="text-xl font-bold mb-4">More from this seller</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {mockListings
+                    .filter(item => item.seller === detailedListing.seller && item.id !== detailedListing.id)
+                    .slice(0, 4)
+                    .map(item => (
+                      <div 
+                        key={item.id} 
+                        className="border-2 border-foreground/10 rounded-lg overflow-hidden cursor-pointer hover:shadow-md"
+                        onClick={() => {
+                          setDetailedListing(item);
+                        }}
+                      >
+                        <div className="h-32 bg-foreground/5 flex items-center justify-center">
+                          <span className="text-foreground/30 text-xs">Image</span>
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-medium text-sm truncate">{item.title}</h4>
+                          <p className="font-mono font-bold">{item.price}</p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
