@@ -99,7 +99,7 @@ export default function Settings() {
                     name="name"
                     value={profileForm.name}
                     onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                   />
                 </div>
                 
@@ -111,7 +111,7 @@ export default function Settings() {
                     name="email"
                     value={profileForm.email}
                     onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                   />
                 </div>
                 
@@ -123,7 +123,7 @@ export default function Settings() {
                     name="username"
                     value={profileForm.username}
                     onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                   />
                 </div>
                 
@@ -135,7 +135,7 @@ export default function Settings() {
                     name="location"
                     value={profileForm.location}
                     onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                   />
                 </div>
                 
@@ -147,7 +147,7 @@ export default function Settings() {
                     name="website"
                     value={profileForm.website}
                     onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                   />
                 </div>
                 
@@ -159,7 +159,7 @@ export default function Settings() {
                     value={profileForm.bio}
                     onChange={handleProfileChange}
                     rows={4}
-                    className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                   ></textarea>
                 </div>
               </div>
@@ -184,7 +184,7 @@ export default function Settings() {
                     <input
                       type={showCurrentPassword ? "text" : "password"}
                       id="currentPassword"
-                      className="w-full px-3 py-2 border border-foreground/10 rounded-md pr-10 text-black"
+                      className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md pr-10 text-black"
                     />
                     <button 
                       type="button" 
@@ -202,7 +202,7 @@ export default function Settings() {
                     <input
                       type={showNewPassword ? "text" : "password"}
                       id="newPassword"
-                      className="w-full px-3 py-2 border border-foreground/10 rounded-md pr-10 text-black"
+                      className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md pr-10 text-black"
                     />
                     <button 
                       type="button" 
@@ -220,7 +220,7 @@ export default function Settings() {
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       id="confirmPassword"
-                      className="w-full px-3 py-2 border border-foreground/10 rounded-md pr-10 text-black"
+                      className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md pr-10 text-black"
                     />
                     <button 
                       type="button" 
@@ -241,8 +241,8 @@ export default function Settings() {
             <div>
               <h3 className="text-xl font-bold mb-4">Login Sessions</h3>
               
-              <div className="bg-background-light border border-foreground/10 rounded-lg">
-                <div className="p-4 border-b border-foreground/10">
+              <div className="bg-background-light border-2 border-foreground/10 rounded-lg">
+                <div className="p-4 border-b-2 border-foreground/10">
                   <div className="flex justify-between">
                     <div>
                       <p className="font-medium">Current Session</p>
@@ -252,7 +252,7 @@ export default function Settings() {
                   </div>
                 </div>
                 
-                <div className="p-4 border-b border-foreground/10">
+                <div className="p-4 border-b-2 border-foreground/10">
                   <div className="flex justify-between">
                     <div>
                       <p className="font-medium">iOS Device</p>
@@ -275,7 +275,7 @@ export default function Settings() {
           <div className="space-y-6">
             <h3 className="text-xl font-bold mb-4">Payment Methods</h3>
             
-            <div className="bg-background-light border border-foreground/10 rounded-lg divide-y divide-foreground/10">
+            <div className="bg-background-light border-2 border-foreground/10 rounded-lg divide-y divide-foreground/10">
               {paymentMethods.map(method => (
                 <div key={method.id} className="p-4 flex justify-between items-center">
                   <div className="flex items-center">
@@ -326,7 +326,7 @@ export default function Settings() {
                 <input
                   type="text"
                   id="addressName"
-                  className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                   defaultValue={profileForm.name}
                 />
               </div>
@@ -336,7 +336,7 @@ export default function Settings() {
                 <input
                   type="text"
                   id="addressLine1"
-                  className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                 />
               </div>
               
@@ -345,7 +345,7 @@ export default function Settings() {
                 <input
                   type="text"
                   id="addressLine2"
-                  className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                 />
               </div>
               
@@ -354,7 +354,7 @@ export default function Settings() {
                 <input
                   type="text"
                   id="city"
-                  className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                 />
               </div>
               
@@ -363,7 +363,7 @@ export default function Settings() {
                 <input
                   type="text"
                   id="state"
-                  className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                 />
               </div>
               
@@ -372,7 +372,7 @@ export default function Settings() {
                 <input
                   type="text"
                   id="zipCode"
-                  className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                 />
               </div>
               
@@ -380,7 +380,7 @@ export default function Settings() {
                 <label htmlFor="country" className="block text-sm font-medium mb-1">Country</label>
                 <select
                   id="country"
-                  className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                   defaultValue="HK"
                 >
                   {countries.filter(country => country.id !== 'all').map(country => (
@@ -404,11 +404,11 @@ export default function Settings() {
             <h3 className="text-xl font-bold mb-4">Privacy Settings</h3>
             
             <div className="space-y-6">
-              <div className="bg-background-light p-4 border border-foreground/10 rounded-lg">
+              <div className="bg-background-light p-4 border-2 border-foreground/10 rounded-lg">
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">Profile Visibility</label>
                   <select
-                    className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                     value={privacySettings.profileVisibility}
                     onChange={(e) => setPrivacySettings({...privacySettings, profileVisibility: e.target.value})}
                   >
@@ -421,7 +421,7 @@ export default function Settings() {
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">Activity Visibility</label>
                   <select
-                    className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                     value={privacySettings.activityVisibility}
                     onChange={(e) => setPrivacySettings({...privacySettings, activityVisibility: e.target.value})}
                   >
@@ -434,7 +434,7 @@ export default function Settings() {
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">Who Can Message You</label>
                   <select
-                    className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                     value={privacySettings.allowMessages}
                     onChange={(e) => setPrivacySettings({...privacySettings, allowMessages: e.target.value})}
                   >
@@ -449,7 +449,7 @@ export default function Settings() {
                     <p className="font-medium">Show Location</p>
                     <p className="text-sm text-foreground/70">Display your location on your profile</p>
                   </div>
-                  <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                  <div className="toggle-button">
                     <input 
                       type="checkbox" 
                       id="showLocation" 
@@ -459,17 +459,15 @@ export default function Settings() {
                     />
                     <label 
                       htmlFor="showLocation"
-                      className={`block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer ${privacySettings.showLocation ? 'bg-green-500' : ''}`}
+                      className=""
                     >
-                      <span 
-                        className={`block h-6 w-6 rounded-full bg-white shadow transform transition-transform ${privacySettings.showLocation ? 'translate-x-4' : 'translate-x-0'}`}
-                      ></span>
+                      <span></span>
                     </label>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-background-light p-4 border border-foreground/10 rounded-lg">
+              <div className="bg-background-light p-4 border-2 border-foreground/10 rounded-lg">
                 <h4 className="font-bold mb-4 flex items-center gap-2">
                   <FiShield />
                   <span>Security Preferences</span>
@@ -480,7 +478,7 @@ export default function Settings() {
                     <p className="font-medium">Login Notifications</p>
                     <p className="text-sm text-foreground/70">Get notified when someone logs into your account</p>
                   </div>
-                  <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                  <div className="toggle-button">
                     <input 
                       type="checkbox" 
                       id="loginNotifications" 
@@ -488,17 +486,15 @@ export default function Settings() {
                     />
                     <label 
                       htmlFor="loginNotifications"
-                      className="block overflow-hidden h-6 rounded-full bg-foreground/10 cursor-pointer"
+                      className=""
                     >
-                      <span 
-                        className="block h-6 w-6 rounded-full bg-white shadow transform transition-transform translate-x-0"
-                      ></span>
+                      <span></span>
                     </label>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-background-light p-4 border border-foreground/10 rounded-lg">
+              <div className="bg-background-light p-4 border-2 border-foreground/10 rounded-lg">
                 <h4 className="font-bold mb-4">Data & Privacy</h4>
                 
                 <button className="button mb-2 w-full justify-start text-left">Export Your Data</button>
@@ -526,7 +522,7 @@ export default function Settings() {
       <h2 className="text-3xl font-bold mb-6">Settings</h2>
       
       {/* Tabs Navigation - removed the notifications tab */}
-      <div className="flex border-b border-foreground/10 mb-6 overflow-x-auto hide-scrollbar">
+      <div className="flex border-b-2 border-foreground/10 mb-6 overflow-x-auto hide-scrollbar">
         <button
           onClick={() => setActiveTab('profile')}
           className={`flex items-center gap-1 px-4 py-2 border-b-2 font-medium transition-colors ${
@@ -592,7 +588,7 @@ export default function Settings() {
                 type="text" 
                 value={deleteConfirmation}
                 onChange={(e) => setDeleteConfirmation(e.target.value)}
-                className="w-full px-3 py-2 border border-foreground/10 rounded-md text-black"
+                className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
                 placeholder={`Type ${profileForm.username} to confirm`}
               />
             </div>
