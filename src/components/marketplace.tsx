@@ -915,26 +915,26 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
       
       {/* Detailed Listing Modal */}
       {isDetailModalOpen && detailedListing && (
-        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-background rounded-lg max-w-4xl w-full shadow-xl border-2 border-foreground/10 my-8">
+        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg max-w-3xl w-full shadow-xl border-2 border-foreground/10 max-h-[90vh] flex flex-col">
             {/* Modal Header */}
-            <div className="flex justify-between items-center p-6 border-b border-foreground/10">
-              <h2 className="text-2xl font-bold">{detailedListing.title}</h2>
+            <div className="flex justify-between items-center p-4 border-b border-foreground/10 shrink-0">
+              <h2 className="text-xl font-bold truncate">{detailedListing.title}</h2>
               <button 
                 onClick={closeDetailModal} 
                 className="p-1 hover:bg-background-dark rounded-full"
               >
-                <FiX size={24} />
+                <FiX size={20} />
               </button>
             </div>
             
-            {/* Modal Body */}
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+            {/* Modal Body - Scrollable */}
+            <div className="p-4 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Image Gallery */}
-                <div className="md:col-span-3 space-y-4">
+                <div className="md:col-span-2 space-y-3">
                   {/* Main Image */}
-                  <div className="bg-foreground/5 rounded-lg h-80 flex items-center justify-center">
+                  <div className="bg-foreground/5 rounded-lg h-64 flex items-center justify-center">
                     <span className="text-foreground/30 text-lg">Item Images</span>
                   </div>
                   
@@ -943,7 +943,7 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                     {[...Array(5)].map((_, i) => (
                       <div 
                         key={i} 
-                        className="bg-foreground/5 rounded-md h-16 flex items-center justify-center cursor-pointer hover:border-2 hover:border-foreground/30"
+                        className="bg-foreground/5 rounded-md h-12 flex items-center justify-center cursor-pointer hover:border-2 hover:border-foreground/30"
                       >
                         <span className="text-foreground/30 text-xs">{i + 1}</span>
                       </div>
@@ -952,25 +952,25 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                 </div>
                 
                 {/* Item Details */}
-                <div className="md:col-span-2 flex flex-col">
+                <div className="md:col-span-1 flex flex-col">
                   {/* Price and Actions */}
-                  <div className="mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <p className="text-3xl font-mono font-bold">{detailedListing.price}</p>
+                  <div className="mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <p className="text-2xl font-mono font-bold">{detailedListing.price}</p>
                       <button className="text-foreground/50 hover:text-red-500">
-                        <FiHeart size={24} />
+                        <FiHeart size={20} />
                       </button>
                     </div>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <button 
                         onClick={() => {
                           closeDetailModal();
                           openBuyModal(detailedListing);
                         }}
-                        className="button-primary w-full py-3 flex items-center justify-center gap-2"
+                        className="button-primary w-full py-2 flex items-center justify-center gap-2 text-sm"
                       >
-                        <FiShoppingCart size={18} />
+                        <FiShoppingCart size={16} />
                         Buy Now
                       </button>
                       
@@ -979,46 +979,46 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                           closeDetailModal();
                           openChat(detailedListing);
                         }}
-                        className="button w-full py-3 flex items-center justify-center gap-2"
+                        className="button w-full py-2 flex items-center justify-center gap-2 text-sm"
                       >
-                        <FiMessageCircle size={18} />
+                        <FiMessageCircle size={16} />
                         Message Seller
                       </button>
                     </div>
                   </div>
                   
                   {/* Seller Info */}
-                  <div className="mb-6 p-4 border-2 border-foreground/10 rounded-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center">
+                  <div className="mb-4 p-3 border-2 border-foreground/10 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-sm">
                         {detailedListing.seller.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-medium">{detailedListing.seller}</p>
-                        <div className="flex items-center text-sm text-foreground/70">
+                        <p className="font-medium text-sm">{detailedListing.seller}</p>
+                        <div className="flex items-center text-xs text-foreground/70">
                           <span className="flex items-center">★ {detailedListing.rating}</span>
                           <span className="mx-1">•</span>
                           <span>{detailedListing.reviews} reviews</span>
                         </div>
                       </div>
                     </div>
-                    <p className="text-sm text-foreground/70">Member since January 2023</p>
+                    <p className="text-xs text-foreground/70">Member since January 2023</p>
                   </div>
                   
                   {/* Item Details */}
-                  <div className="space-y-4">
+                  <div className="space-y-2 text-sm">
                     <div>
-                      <p className="text-sm text-foreground/70">Category</p>
+                      <p className="text-xs text-foreground/70">Category</p>
                       <p className="font-medium capitalize">{detailedListing.category}</p>
                     </div>
                     
                     <div>
-                      <p className="text-sm text-foreground/70">Location</p>
+                      <p className="text-xs text-foreground/70">Location</p>
                       <p className="font-medium">{detailedListing.location}</p>
                     </div>
                     
                     <div>
-                      <p className="text-sm text-foreground/70">Listed</p>
+                      <p className="text-xs text-foreground/70">Listed</p>
                       <p className="font-medium">{detailedListing.listed}</p>
                     </div>
                   </div>
@@ -1026,36 +1026,9 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
               </div>
               
               {/* Description */}
-              <div className="mt-8 border-t border-foreground/10 pt-8">
-                <h3 className="text-xl font-bold mb-4">Description</h3>
-                <p className="whitespace-pre-line text-foreground/90">{detailedListing.description}</p>
-              </div>
-              
-              {/* Related Items */}
-              <div className="mt-8 border-t border-foreground/10 pt-8">
-                <h3 className="text-xl font-bold mb-4">More from this seller</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {mockListings
-                    .filter(item => item.seller === detailedListing.seller && item.id !== detailedListing.id)
-                    .slice(0, 4)
-                    .map(item => (
-                      <div 
-                        key={item.id} 
-                        className="border-2 border-foreground/10 rounded-lg overflow-hidden cursor-pointer hover:shadow-md"
-                        onClick={() => {
-                          setDetailedListing(item);
-                        }}
-                      >
-                        <div className="h-32 bg-foreground/5 flex items-center justify-center">
-                          <span className="text-foreground/30 text-xs">Image</span>
-                        </div>
-                        <div className="p-3">
-                          <h4 className="font-medium text-sm truncate">{item.title}</h4>
-                          <p className="font-mono font-bold">{item.price}</p>
-                        </div>
-                      </div>
-                    ))}
-                </div>
+              <div className="mt-6 border-t border-foreground/10 pt-6">
+                <h3 className="text-lg font-bold mb-3">Description</h3>
+                <p className="whitespace-pre-line text-foreground/90 text-sm">{detailedListing.description}</p>
               </div>
             </div>
           </div>
