@@ -869,8 +869,8 @@ export default function Marketplace() {
               >
                 <div
                   className={`max-w-[80%] rounded-xl px-3 py-2 ${msg.sender === 'user'
-                      ? 'bg-black text-white border-2 border-[#343434]'
-                      : 'bg-white text-black border-2 border-[#343434]'
+                      ? 'bg-black text-white border-2 border-foreground/20'
+                      : 'bg-white text-black border-2 border-foreground/20'
                     }`}
                 >
                   {msg.type === 'text' && (
@@ -887,13 +887,13 @@ export default function Marketplace() {
                   {msg.type === 'listing' && msg.listing && (
                     <div className="bg-background-light rounded p-2 space-y-1">
                       <div className="flex justify-between">
-                        <p className="text-sm font-medium">{msg.listing.title}</p>
-                        <p className="text-sm font-mono font-bold">{msg.listing.price}</p>
+                        <p className="text-sm font-medium text-foreground">{msg.listing.title}</p>
+                        <p className="text-sm font-mono font-bold text-foreground">{msg.listing.price}</p>
                       </div>
                       <div className="h-16 bg-foreground/5 flex items-center justify-center text-xs text-foreground/30">
                         Item Image
                       </div>
-                      <p className="text-xs">{msg.content}</p>
+                      <p className="text-xs text-foreground">{msg.content}</p>
                     </div>
                   )}
                 </div>
