@@ -58,8 +58,6 @@ const mockMessages = {
       type: MessageType.Attachment, 
       content: 'certificate-of-authenticity.pdf', 
       fileUrl: 'https://example.com/files/certificate.pdf',
-      previewUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/PDF_file_icon.svg/1200px-PDF_file_icon.svg.png',
-      fileType: 'pdf',
       time: '1 hour ago' 
     },
     { id: 6, sender: 'jade_collector', type: MessageType.Text, content: "I'm interested in your jade pendant. Would you consider $50 less than your asking price?", time: '1 hour ago' },
@@ -77,9 +75,7 @@ const mockMessages = {
       sender: 'me', 
       type: MessageType.Attachment, 
       content: 'shipping_receipt.pdf', 
-      fileUrl: 'https://example.com/files/receipt.pdf',
-      previewUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/PDF_file_icon.svg/1200px-PDF_file_icon.svg.png',
-      fileType: 'pdf',
+      fileUrl: 'https://example.com/files/receipt.pdf', 
       time: '4 days ago' 
     },
     { id: 3, sender: 'treasure_hunter', type: MessageType.Text, content: 'Got it, thank you!', time: '3 days ago' },
@@ -93,9 +89,7 @@ const mockMessages = {
       sender: 'gem_specialist', 
       type: MessageType.Attachment, 
       content: 'jade_inquiry.jpg',
-      fileUrl: 'https://example.com/files/jade_photo.jpg',
-      previewUrl: 'https://www.cmog.org/sites/default/files/collections/chinese_jade_pendant_7.jpg',
-      fileType: 'image',
+      fileUrl: 'https://example.com/files/jade_photo.jpg', 
       time: '1 week ago' 
     },
     { id: 4, sender: 'gem_specialist', type: MessageType.Text, content: 'Do you have any more items like this?', time: '1 week ago' },
@@ -212,12 +206,8 @@ export default function Messages() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center text-foreground overflow-hidden">
-                    {conversation.avatar ? (
-                      <img src={conversation.avatar} alt={conversation.user} className="w-full h-full object-cover" />
-                    ) : (
-                      conversation.user.charAt(0).toUpperCase()
-                    )}
+                  <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center text-foreground">
+                    {conversation.user.charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <h4 className="font-medium">{conversation.user}</h4>

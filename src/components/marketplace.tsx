@@ -442,9 +442,15 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
               className="bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => openDetailModal(item)}
             >
-              {/* Image placeholder */}
-              <div className="h-48 bg-foreground/5 flex items-center justify-center">
-                <span className="text-foreground/30">Item Image</span>
+              {/* Item image */}
+              <div className="h-48 bg-foreground/5 overflow-hidden">
+                {item.image ? (
+                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="h-full flex items-center justify-center">
+                    <span className="text-foreground/30">Item Image</span>
+                  </div>
+                )}
               </div>
 
               <div className="p-4">
@@ -516,9 +522,15 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
               key={item.id} 
               className="bg-background-light border-2 border-foreground/10 rounded-lg p-4 flex gap-4 hover:shadow-md transition-shadow"
             >
-              {/* Image placeholder */}
-              <div className="h-24 w-24 bg-foreground/5 flex items-center justify-center shrink-0">
-                <span className="text-foreground/30">Image</span>
+              {/* Item image */}
+              <div className="h-24 w-24 bg-foreground/5 shrink-0 overflow-hidden">
+                {item.image ? (
+                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center">
+                    <span className="text-foreground/30">Image</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 min-w-0">
@@ -682,10 +694,15 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
             {purchaseStep === 'confirm' && (
               <div className="space-y-4">
                 <div className="flex gap-4 items-start">
-                  {/* Image placeholder */}
-                  <div className="h-24 w-24 bg-foreground/5 flex items-center justify-center shrink-0">
-                    <span className="text-foreground/30">Image</span>
-                  </div>
+                  {/* Image placeholder */}                <div className="h-24 w-24 bg-foreground/5 shrink-0 overflow-hidden">
+                  {buyingListing.image ? (
+                    <img src={buyingListing.image} alt={buyingListing.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <span className="text-foreground/30">Image</span>
+                    </div>
+                  )}
+                </div>
                   
                   <div>
                     <h3 className="font-medium text-lg">{buyingListing.title}</h3>
