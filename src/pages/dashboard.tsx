@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import classNames from 'classnames'
@@ -7,7 +7,12 @@ import { FiHome, FiPackage, FiMessageSquare, FiSettings } from 'react-icons/fi'
 import { geistMono, geistSans } from '@/styles/fonts'
 import Sidebar from '@/components/Sidebar'
 import type { PageWithLayout } from '@/data/types/layout'
-import { ApiProvider } from '@/utils/frontend/api'
+import { ApiProvider, useApi } from '@/utils/frontend/api'
+import { useQueryClient } from '@tanstack/react-query'
+import { QueryKeys } from '@/data/types/queries'
+import { getChats } from '@/data/frontend/queries/getChats'
+import { searchMarketListings } from '@/data/frontend/queries/searchMarketListings'
+import { useRouter } from 'next/router'
 
 // TODO: Add loading component
 const Home = dynamic(() => import('@/components/Home'), { ssr: false })
@@ -48,8 +53,29 @@ const navItems = [
 ]
 
 const Dashboard: PageWithLayout = () => {
-  const [activePage, setActivePage] = useState(Page.HOME)
+  const router = useRouter()
+  const api = useApi()
   // Mock data for recent listings/trades
+
+  const queryClient = useQueryClient()
+  useEffect(() => {
+    if (!api) {
+      console.warn('Not logged in. Returning to home screen...')
+      router.replace('/')
+    }
+
+    queryClient.prefetchQuery({
+      queryKey: [QueryKeys.CHATS],
+      queryFn: () => getChats(api),
+    })
+    queryClient.prefetchQuery({
+      queryKey: [QueryKeys.MARKET_LISTINGS],
+      queryFn: () => searchMarketListings(api),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api])
+
+  const [activePage, setActivePage] = useState(Page.HOME)
 
   return (
     <div
