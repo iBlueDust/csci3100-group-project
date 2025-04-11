@@ -311,7 +311,7 @@ export default function Messages() {
                         <p>{message.content}</p>
                       ) : (
                         <a 
-                          href={message.fileUrl} 
+                          href={'fileUrl' in message ? message.fileUrl : '#'} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="flex items-center gap-2 hover:bg-foreground/10 p-2 rounded-lg transition-colors"
