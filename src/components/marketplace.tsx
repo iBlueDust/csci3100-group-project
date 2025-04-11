@@ -136,6 +136,10 @@ export default function Marketplace() {
   const [itemsPerPage, setItemsPerPage] = useState(8)
   const [totalPages, setTotalPages] = useState(1)
 
+  // Favorites state
+  const [favorites, setFavorites] = useState<typeof mockListings>([])
+  const [showFavorites, setShowFavorites] = useState(false)
+
   // Add state for detailed listing modal
   const [detailedListing, setDetailedListing] = useState<typeof mockListings[0] | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
@@ -289,6 +293,43 @@ export default function Marketplace() {
       setCurrentPage(1);
     }
   }, [filteredListings, itemsPerPage]);
+
+  // Event listeners for favorites functionality from the header button
+  useEffect(() => {
+    const handleToggleFavorites = () => {
+      setShowFavorites(prev => !prev);
+    };
+
+    const handleShowFavorites = () => {
+      setShowFavorites(true);
+    };
+
+    window.addEventListener('toggle-favorites', handleToggleFavorites);
+    window.addEventListener('show-favorites', handleShowFavorites);
+
+    return () => {
+      window.removeEventListener('toggle-favorites', handleToggleFavorites);
+      window.removeEventListener('show-favorites', handleShowFavorites);
+    };
+  }, []);
+
+  // Local storage for favorites persistence
+  useEffect(() => {
+    // Load favorites from localStorage on component mount
+    const storedFavorites = localStorage.getItem('marketplace-favorites');
+    if (storedFavorites) {
+      try {
+        setFavorites(JSON.parse(storedFavorites));
+      } catch (e) {
+        console.error('Failed to parse favorites from localStorage', e);
+      }
+    }
+  }, []);
+
+  // Save favorites to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('marketplace-favorites', JSON.stringify(favorites));
+  }, [favorites]);
 
   // Change page
   const paginate = (pageNumber: number) => {
@@ -502,13 +543,18 @@ export default function Marketplace() {
                 <div className="flex justify-between items-start">
                   <h3 className="font-medium">{item.title}</h3>
                   <button 
-                    className="text-foreground/50 hover:text-red-500"
+                    className={`${favorites.find(fav => fav.id === item.id) ? 'text-red-500' : 'text-foreground/50 hover:text-red-500'}`}
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent triggering parent onClick
                       // Add to favorites logic
+                      if (favorites.find(fav => fav.id === item.id)) {
+                        setFavorites(favorites.filter(fav => fav.id !== item.id));
+                      } else {
+                        setFavorites([...favorites, item]);
+                      }
                     }}
                   >
-                    <FiHeart />
+                    <FiHeart className={favorites.find(fav => fav.id === item.id) ? 'fill-current' : ''} />
                   </button>
                 </div>
 
@@ -1103,6 +1149,134 @@ export default function Marketplace() {
                     ))}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Favorites Modal */}
+      {showFavorites && (
+        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-background rounded-lg max-w-4xl w-full shadow-xl border-2 border-foreground/10 my-8">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b border-foreground/10">
+              <h2 className="text-2xl font-bold">Favorites</h2>
+              <button 
+                onClick={() => setShowFavorites(false)} 
+                className="p-1 hover:bg-background-dark rounded-full"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6">
+              {favorites.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {favorites.map(item => (
+                      <div 
+                        key={item.id} 
+                        className="bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => {
+                          setDetailedListing(item);
+                          setIsDetailModalOpen(true);
+                          setShowFavorites(false);
+                        }}
+                      >
+                        {/* Image placeholder */}
+                        <div className="h-48 bg-foreground/5 flex items-center justify-center">
+                          <span className="text-foreground/30">Item Image</span>
+                        </div>
+
+                        <div className="p-4">
+                          <div className="flex justify-between items-start">
+                            <h3 className="font-medium">{item.title}</h3>
+                            <button 
+                              className="text-red-500"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent triggering parent onClick
+                                setFavorites(favorites.filter(fav => fav.id !== item.id));
+                              }}
+                            >
+                              <FiHeart className="fill-current" />
+                            </button>
+                          </div>
+
+                          <p className="text-lg font-mono font-bold mt-1">{item.price}</p>
+
+                          <div className="flex items-center text-sm mt-1 text-foreground/70">
+                            <span className="flex items-center">
+                              ★ {item.rating}
+                            </span>
+                            <span className="mx-1">•</span>
+                            <span>{item.reviews} reviews</span>
+                          </div>
+
+                          <p className="text-sm mt-1 text-foreground/70">
+                            Seller: {item.seller}
+                          </p>
+
+                          <div className="flex flex-col mt-4">
+                            <span className="text-xs text-foreground/50 mb-2">{item.listed}</span>
+                            <div className="flex justify-between">
+                              <button
+                                className="button py-1 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent triggering parent onClick
+                                  openChat(item);
+                                  setShowFavorites(false);
+                                }}
+                              >
+                                <FiMessageCircle size={14} />
+                                <span>Chat</span>
+                              </button>
+                              <button 
+                                className="button-primary py-1 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent triggering parent onClick
+                                  openBuyModal(item);
+                                  setShowFavorites(false);
+                                }}
+                              >
+                                <FiShoppingCart size={14} />
+                                <span>Buy</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex justify-end mt-6">
+                    <button 
+                      onClick={() => {
+                        if (confirm('Are you sure you want to clear all favorites?')) {
+                          setFavorites([]);
+                        }
+                      }}
+                      className="button text-red-500"
+                    >
+                      Clear All Favorites
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-10">
+                  <FiHeart size={64} className="mx-auto mb-4 text-foreground/30" />
+                  <h3 className="text-xl font-bold mb-2">No favorites yet</h3>
+                  <p className="text-foreground/70 mb-6">
+                    Items you favorite will appear here for easy access
+                  </p>
+                  <button 
+                    onClick={() => setShowFavorites(false)}
+                    className="button-primary"
+                  >
+                    Browse Marketplace
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
