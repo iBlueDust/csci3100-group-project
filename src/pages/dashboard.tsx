@@ -54,11 +54,11 @@ export default function Dashboard() {
       className={classNames(
         geistSans.variable,
         geistMono.variable,
-        'min-h-screen font-body bg-background',
+        'min-h-screen font-body bg-background flex flex-col',
       )}
     >
-      {/* Header */}
-      <header className='h-16 px-6 border-b-2 border-foreground/10 flex items-center justify-between'>
+      {/* Fixed Header */}
+      <header className='h-16 px-6 border-b-2 border-foreground/10 flex items-center justify-between fixed top-0 left-0 right-0 bg-background z-10'>
         <Link href='/' className='font-bold text-xl'>
           The Jade Trail
         </Link>
@@ -69,16 +69,18 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className='flex'>
-        {/* Sidebar */}
-        <Sidebar
-          navItems={navItems}
-          value={activePage}
-          onChange={setActivePage as (value: string | number) => void}
-        />
+      <div className='flex pt-16'> {/* Add padding top to account for fixed header */}
+        {/* Fixed Sidebar */}
+        <div className="fixed left-0 top-16 bottom-0">
+          <Sidebar
+            navItems={navItems}
+            value={activePage}
+            onChange={setActivePage as (value: string | number) => void}
+          />
+        </div>
 
-        {/* Main content */}
-        <main className='flex-1 p-6'>
+        {/* Main content with left margin to account for sidebar width */}
+        <main className='flex-1 p-6 ml-16 sm:ml-64'>
           {activePage === Page.HOME && <Home />}
 
           {activePage === Page.MESSAGES && <Messages />}

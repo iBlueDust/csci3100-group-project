@@ -267,26 +267,6 @@ export default function Settings() {
                 </div>
               </div>
             </div>
-            
-            <div>
-              <h3 className="text-xl font-bold mb-4">Account Actions</h3>
-              
-              <div className="flex items-center justify-between p-4 bg-background-light border border-foreground/10 rounded-lg">
-                <div>
-                  <p className="font-medium">Delete your account</p>
-                  <p className="text-sm text-foreground/70">
-                    Permanently remove your account and all associated data from The Jade Trail.
-                  </p>
-                </div>
-                
-                <button 
-                  className="button text-red-500 px-4 py-2"
-                  onClick={() => setShowDeleteModal(true)}
-                >
-                  Delete Account
-                </button>
-              </div>
-            </div>
           </div>
         )
         
@@ -542,7 +522,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="h-full">
+    <div className="h-full flex flex-col">
       <h2 className="text-3xl font-bold mb-6">Settings</h2>
       
       {/* Tabs Navigation - removed the notifications tab */}
@@ -589,8 +569,10 @@ export default function Settings() {
       </div>
       
       {/* Tab Content */}
-      <div className="bg-background rounded-lg">
-        {renderTabContent()}
+      <div className="bg-background rounded-lg flex-1 overflow-y-auto">
+        <div className="p-6">
+          {renderTabContent()}
+        </div>
       </div>
 
       {/* Delete Account Confirmation Modal */}
