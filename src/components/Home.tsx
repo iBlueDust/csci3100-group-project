@@ -1,9 +1,57 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import CreateListingForm from './CreateListingForm'
 import { mockListings, getRecentListings } from '@/data/mock/listings'
 
 // Get recent listings (first 4)
 const recentListings = getRecentListings(4)
+
+// Calculate market statistics
+const calculateMarketStats = () => {
+  const totalListings = mockListings.length;
+  
+  // Calculate completed trades (just a mock example - approximately 30% of listings)
+  const completedTrades = Math.floor(totalListings * 0.3);
+  
+  // Calculate average price
+  const totalValue = mockListings.reduce((sum, item) => {
+    return sum + parseFloat(item.price.replace('$', '').replace(',', ''));
+  }, 0);
+  
+  const averagePrice = Math.round(totalValue / totalListings);
+  const tradeVolume = Math.round(totalValue * 0.3); // Assuming 30% of items were traded
+  
+  // Calculate category distribution
+  const categories: Record<string, number> = {};
+  mockListings.forEach(item => {
+    if (categories[item.category]) {
+      categories[item.category]++;
+    } else {
+      categories[item.category] = 1;
+    }
+  });
+  
+  const categoryPercentages: Record<string, number> = {};
+  Object.keys(categories).forEach(cat => {
+    categoryPercentages[cat] = Math.round((categories[cat] / totalListings) * 100);
+  });
+  
+  // Get top categories
+  const topCategories = Object.entries(categoryPercentages)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
+  
+  // Approximate new accounts - just a mock example
+  const newAccounts = Math.floor(totalListings * 0.1);
+  
+  return {
+    totalListings,
+    completedTrades,
+    averagePrice,
+    tradeVolume,
+    topCategories,
+    newAccounts
+  };
+};
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface HomeProps {
@@ -12,6 +60,13 @@ export interface HomeProps {
 
 // Stats popup component
 const StatsPopup: React.FC<{onClose: () => void}> = ({ onClose }) => {
+  const stats = calculateMarketStats();
+  
+  // Format number with commas
+  const formatNumber = (num: number): string => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+  
   return (
     <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-background rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
@@ -32,19 +87,19 @@ const StatsPopup: React.FC<{onClose: () => void}> = ({ onClose }) => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span>Active Listings</span>
-                <span className="font-mono font-bold">1,245</span>
+                <span className="font-mono font-bold">{formatNumber(stats.totalListings)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Completed Trades</span>
-                <span className="font-mono font-bold">289</span>
+                <span className="font-mono font-bold">{formatNumber(stats.completedTrades)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Trade Volume (7d)</span>
-                <span className="font-mono font-bold">$121,430</span>
+                <span className="font-mono font-bold">${formatNumber(stats.tradeVolume)}</span>
               </div>
               <div className="flex justify-between">
                 <span>New Accounts</span>
-                <span className="font-mono font-bold">47</span>
+                <span className="font-mono font-bold">{formatNumber(stats.newAccounts)}</span>
               </div>
             </div>
           </div>
@@ -52,30 +107,13 @@ const StatsPopup: React.FC<{onClose: () => void}> = ({ onClose }) => {
           <div className="border-2 border-foreground/10 rounded-lg p-4">
             <h3 className="font-bold mb-3">Top Categories</h3>
             <div className="space-y-3">
-              <div className="flex justify-between">
-                <span>Artifacts</span>
-                <span className="font-mono font-bold">32%</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Collectibles</span>
-                <span className="font-mono font-bold">28%</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Jewelry</span>
-                <span className="font-mono font-bold">21%</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Others</span>
-                <span className="font-mono font-bold">19%</span>
-              </div>
+              {stats.topCategories.map(([category, percentage], index) => (
+                <div key={index} className="flex justify-between">
+                  <span className="capitalize">{category}</span>
+                  <span className="font-mono font-bold">{percentage}%</span>
+                </div>
+              ))}
             </div>
-          </div>
-        </div>
-        
-        <div className="border-2 border-foreground/10 rounded-lg p-4">
-          <h3 className="font-bold mb-3">Price History (30 Days)</h3>
-          <div className="h-40 bg-background-dark/30 flex items-center justify-center">
-            <p className="text-foreground/50">Graph visualization would appear here</p>
           </div>
         </div>
         
@@ -117,18 +155,26 @@ const Home: React.FC<HomeProps> = ({ navigateToMarketplace }) => {
         <div className='bg-background-light p-6 rounded-lg border-2 border-foreground/10 shadow-sm'>
           <h3 className='text-xl font-bold mb-4'>Market Summary</h3>
           <div className='space-y-2'>
-            <div className='flex justify-between'>
-              <span>Active Listings</span>
-              <span className='font-mono font-bold'>1,245</span>
-            </div>
-            <div className='flex justify-between'>
-              <span>Completed Trades</span>
-              <span className='font-mono font-bold'>289</span>
-            </div>
-            <div className='flex justify-between'>
-              <span>Average Trade Value</span>
-              <span className='font-mono font-bold'>$420</span>
-            </div>
+            {/* Using useMemo to avoid recalculating on every render */}
+            {useMemo(() => {
+              const stats = calculateMarketStats();
+              return (
+                <>
+                  <div className='flex justify-between'>
+                    <span>Active Listings</span>
+                    <span className='font-mono font-bold'>{stats.totalListings}</span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span>Completed Trades</span>
+                    <span className='font-mono font-bold'>{stats.completedTrades}</span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span>Average Trade Value</span>
+                    <span className='font-mono font-bold'>${stats.averagePrice}</span>
+                  </div>
+                </>
+              );
+            }, [])}
           </div>
           <button 
             className='mt-4 button w-full'
@@ -164,9 +210,8 @@ const Home: React.FC<HomeProps> = ({ navigateToMarketplace }) => {
       </div>
 
       <div className='bg-background-light p-6 rounded-lg border-2 border-foreground/10 shadow-sm'>
-        <div className='flex justify-between items-center mb-4'>
+        <div className='mb-4'>
           <h3 className='text-xl font-bold'>Recent Listings</h3>
-          <button className='text-sm link'>View All</button>
         </div>
         <div className='overflow-x-auto'>
           <table className='min-w-full'>
@@ -176,7 +221,6 @@ const Home: React.FC<HomeProps> = ({ navigateToMarketplace }) => {
                 <th className='py-3 text-left'>Price</th>
                 <th className='py-3 text-left'>Seller</th>
                 <th className='py-3 text-left'>Listed</th>
-                <th className='py-3 text-right'>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -189,12 +233,6 @@ const Home: React.FC<HomeProps> = ({ navigateToMarketplace }) => {
                   <td className='py-3 font-mono'>{item.price}</td>
                   <td className='py-3'>{item.seller}</td>
                   <td className='py-3 text-foreground/70'>{item.listed}</td>
-                  <td className='py-3 text-right'>
-                    <button 
-                      className='button py-1 px-3 h-auto'
-                      onClick={() => handleViewListing(item.id)}
-                    >View</button>
-                  </td>
                 </tr>
               ))}
             </tbody>
