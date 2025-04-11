@@ -39,30 +39,60 @@ const mockConversations = [
   },
 ]
 
+// Message types
+enum MessageType {
+  Text = 'text',
+  Attachment = 'attachment',
+}
+
 // Mock message history
 const mockMessages = {
   1: [
-    { id: 1, sender: 'jade_collector', text: 'Hello, I saw your jade pendant listing. Is it still available?', time: '2 hours ago' },
-    { id: 2, sender: 'me', text: "Yes, it's still available!", time: '2 hours ago' },
-    { id: 3, sender: 'jade_collector', text: "Great! I'm interested in buying it. Can you tell me more about its history?", time: '2 hours ago' },
-    { id: 4, sender: 'me', text: 'Of course! This pendant is from the Ming Dynasty period and has been authenticated by experts.', time: '1 hour ago' },
-    { id: 5, sender: 'jade_collector', text: "I'm interested in your jade pendant. Would you consider $50 less than your asking price?", time: '1 hour ago' },
+    { id: 1, sender: 'jade_collector', type: MessageType.Text, content: 'Hello, I saw your jade pendant listing. Is it still available?', time: '2 hours ago' },
+    { id: 2, sender: 'me', type: MessageType.Text, content: "Yes, it's still available!", time: '2 hours ago' },
+    { id: 3, sender: 'jade_collector', type: MessageType.Text, content: "Great! I'm interested in buying it. Can you tell me more about its history?", time: '2 hours ago' },
+    { id: 4, sender: 'me', type: MessageType.Text, content: 'Of course! This pendant is from the Ming Dynasty period and has been authenticated by experts.', time: '1 hour ago' },
+    { 
+      id: 5, 
+      sender: 'me', 
+      type: MessageType.Attachment, 
+      content: 'certificate-of-authenticity.pdf', 
+      fileUrl: 'https://example.com/files/certificate.pdf',
+      time: '1 hour ago' 
+    },
+    { id: 6, sender: 'jade_collector', type: MessageType.Text, content: "I'm interested in your jade pendant. Would you consider $50 less than your asking price?", time: '1 hour ago' },
   ],
   2: [
-    { id: 1, sender: 'antique_lover', text: "Hi there, I'm interested in your vintage item.", time: '1 day ago' },
-    { id: 2, sender: 'me', text: 'Hello! Thanks for your interest.', time: '1 day ago' },
-    { id: 3, sender: 'antique_lover', text: 'Is the price negotiable?', time: '1 day ago' },
-    { id: 4, sender: 'me', text: "I can offer a 5% discount if you're seriously interested.", time: '1 day ago' },
+    { id: 1, sender: 'antique_lover', type: MessageType.Text, content: "Hi there, I'm interested in your vintage item.", time: '1 day ago' },
+    { id: 2, sender: 'me', type: MessageType.Text, content: 'Hello! Thanks for your interest.', time: '1 day ago' },
+    { id: 3, sender: 'antique_lover', type: MessageType.Text, content: 'Is the price negotiable?', time: '1 day ago' },
+    { id: 4, sender: 'me', type: MessageType.Text, content: "I can offer a 5% discount if you're seriously interested.", time: '1 day ago' },
   ],
   3: [
-    { id: 1, sender: 'me', text: 'Your package has been shipped! Tracking: JT123456', time: '4 days ago' },
-    { id: 2, sender: 'treasure_hunter', text: 'Got it, thank you!', time: '3 days ago' },
-    { id: 3, sender: 'treasure_hunter', text: 'Just received the package. Thanks for the quick delivery!', time: '3 days ago' },
+    { id: 1, sender: 'me', type: MessageType.Text, content: 'Your package has been shipped! Tracking: JT123456', time: '4 days ago' },
+    { 
+      id: 2, 
+      sender: 'me', 
+      type: MessageType.Attachment, 
+      content: 'shipping_receipt.pdf', 
+      fileUrl: 'https://example.com/files/receipt.pdf', 
+      time: '4 days ago' 
+    },
+    { id: 3, sender: 'treasure_hunter', type: MessageType.Text, content: 'Got it, thank you!', time: '3 days ago' },
+    { id: 4, sender: 'treasure_hunter', type: MessageType.Text, content: 'Just received the package. Thanks for the quick delivery!', time: '3 days ago' },
   ],
   4: [
-    { id: 1, sender: 'gem_specialist', text: 'The quality of your jade items is impressive.', time: '1 week ago' },
-    { id: 2, sender: 'me', text: 'Thank you! I try to ensure all items are of the highest quality.', time: '1 week ago' },
-    { id: 3, sender: 'gem_specialist', text: 'Do you have any more items like this?', time: '1 week ago' },
+    { id: 1, sender: 'gem_specialist', type: MessageType.Text, content: 'The quality of your jade items is impressive.', time: '1 week ago' },
+    { id: 2, sender: 'me', type: MessageType.Text, content: 'Thank you! I try to ensure all items are of the highest quality.', time: '1 week ago' },
+    { 
+      id: 3, 
+      sender: 'gem_specialist', 
+      type: MessageType.Attachment, 
+      content: 'jade_inquiry.jpg',
+      fileUrl: 'https://example.com/files/jade_photo.jpg', 
+      time: '1 week ago' 
+    },
+    { id: 4, sender: 'gem_specialist', type: MessageType.Text, content: 'Do you have any more items like this?', time: '1 week ago' },
   ],
 }
 
@@ -70,6 +100,8 @@ export default function Messages() {
   const [activeConversation, setActiveConversation] = useState<string | null>(null)
   const [mobileChatVisible, setMobileChatVisible] = useState(false)
   const [message, setMessage] = useState('')
+  const [attachment, setAttachment] = useState<File | null>(null)
+  const [showAttachmentPreview, setShowAttachmentPreview] = useState(false)
   
   // Pagination state for conversations
   const [currentPage, setCurrentPage] = useState(1)
@@ -90,10 +122,33 @@ export default function Messages() {
   }
 
   const handleSend = () => {
-    if (message.trim()) {
-      console.log('Sending message:', message)
+    if (message.trim() || attachment) {
+      if (attachment) {
+        console.log('Sending attachment:', attachment.name, 'File size:', attachment.size)
+        // In a real app, you would upload the file to a server here
+      }
+      if (message.trim()) {
+        console.log('Sending message:', message)
+      }
+      
+      // Reset inputs
       setMessage('')
+      setAttachment(null)
+      setShowAttachmentPreview(false)
     }
+  }
+  
+  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      setAttachment(file)
+      setShowAttachmentPreview(true)
+    }
+  }
+  
+  const cancelAttachment = () => {
+    setAttachment(null)
+    setShowAttachmentPreview(false)
   }
   
   // Change page
@@ -210,11 +265,11 @@ export default function Messages() {
                   </h3>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button className="text-foreground/70 hover:text-red-500 transition-colors" onClick={handleDeleteChat}>
-                    <FiTrash2 size={20} />
-                  </button>
-                  <button className="text-foreground/70">
-                    <FiPaperclip size={20} />
+                  <button 
+                    className="h-10 w-10 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20 hover:text-red-500 transition-colors" 
+                    onClick={handleDeleteChat}
+                  >
+                    <FiTrash2 size={18} />
                   </button>
                 </div>
               </div>
@@ -252,7 +307,24 @@ export default function Messages() {
                           : 'bg-white text-black border-2 border-[#343434]'
                       }`}
                     >
-                      <p>{message.text}</p>
+                      {message.type === MessageType.Text ? (
+                        <p>{message.content}</p>
+                      ) : (
+                        <a 
+                          href={message.fileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 hover:bg-foreground/10 p-2 rounded-lg transition-colors"
+                        >
+                          <div className="bg-foreground/5 p-2 rounded-lg">
+                            <FiPaperclip size={18} />
+                          </div>
+                          <div className="overflow-hidden">
+                            <p className="truncate">{message.content}</p>
+                            <p className="text-xs text-foreground/70">Click to open</p>
+                          </div>
+                        </a>
+                      )}
                       <p className={`text-xs mt-1 ${message.sender === 'me' ? 'text-white/70' : 'text-black/50'}`}>
                         {message.time}
                       </p>
@@ -263,6 +335,27 @@ export default function Messages() {
               
               {/* Message Input */}
               <div className="p-4 border-t-2 border-foreground/10">
+                {/* Attachment preview */}
+                {showAttachmentPreview && attachment && (
+                  <div className="mb-2 p-2 border-2 border-foreground/10 rounded-lg bg-background-dark/10 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-foreground/5 p-2 rounded-lg">
+                        <FiPaperclip size={18} />
+                      </div>
+                      <div>
+                        <p className="text-sm truncate">{attachment.name}</p>
+                        <p className="text-xs text-foreground/70">{(attachment.size / 1024).toFixed(1)} KB</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={cancelAttachment} 
+                      className="text-foreground/70 hover:text-red-500 transition-colors"
+                    >
+                      <FiTrash2 size={16} />
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2">
                   <textarea
                     value={message}
@@ -271,10 +364,18 @@ export default function Messages() {
                     className="flex-1 rounded-md border-2 border-foreground/20 bg-background px-3 py-2 min-h-[2.5rem] max-h-[10rem] resize-none"
                     rows={1}
                   />
+                  <label className="h-10 w-10 rounded-full bg-foreground/10 flex items-center justify-center cursor-pointer hover:bg-foreground/20 transition-colors">
+                    <FiPaperclip size={18} />
+                    <input 
+                      type="file"
+                      onChange={handleAttachmentChange} 
+                      className="hidden"
+                    />
+                  </label>
                   <button 
                     onClick={handleSend}
                     className="h-10 w-10 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center disabled:opacity-50 border-2 border-gray-200 dark:border-gray-700"
-                    disabled={!message.trim()}
+                    disabled={!message.trim() && !attachment}
                   >
                     <FiSend size={18} />
                   </button>
