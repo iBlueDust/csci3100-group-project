@@ -1,9 +1,12 @@
-import React, { useState } from 'react'
-import { FiX, FiUpload, FiTrash2 } from 'react-icons/fi'
+import React from 'react'
+import { FiX } from 'react-icons/fi'
 import { countries } from '@/utils/countries'
+import { useListingForm } from '@/hooks/useListingForm'
+import { InputField, TextAreaField, SelectField, ImageUploadField } from '@/components/ui/FormComponents'
+import { CategoryOption } from '@/types/marketplace'
 
 // The same categories from the marketplace component
-const categories = [
+const categories: CategoryOption[] = [
   { id: 'jade', name: 'Jade Items' },
   { id: 'antiques', name: 'Antiques' },
   { id: 'collectibles', name: 'Collectibles' },
@@ -17,83 +20,16 @@ interface CreateListingFormProps {
 }
 
 const CreateListingForm: React.FC<CreateListingFormProps> = ({ onClose, onSuccess }) => {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    priceInCents: '',
-    category: 'jade',
-    country: 'hk'
-  })
-  const [images, setImages] = useState<File[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData({
-      ...formData,
-      [name]: value
-    })
-  }
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      // Limit to 5 images
-      const newImages = Array.from(e.target.files).slice(0, 5 - images.length)
-      setImages([...images, ...newImages])
-    }
-  }
-
-  const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setIsSubmitting(true)
-
-    try {
-      // Convert price to cents
-      const priceInCents = Math.round(parseFloat(formData.priceInCents) * 100)
-      
-      // Create a FormData object for the API request
-      const apiFormData = new FormData()
-      apiFormData.append('title', formData.title)
-      apiFormData.append('description', formData.description)
-      apiFormData.append('priceInCents', priceInCents.toString())
-      apiFormData.append('countries[]', formData.country)
-      
-      // Add images
-      images.forEach(image => {
-        apiFormData.append('pictures', image)
-      })
-      
-      // In a real app, you'd make an API call like this:
-      // const response = await fetch('/api/market/listings', {
-      //   method: 'POST',
-      //   body: apiFormData,
-      //   // No Content-Type header as browser sets it with boundary for FormData
-      // })
-      
-      // Mock success response for now
-      console.log('Creating listing with data:', { formData, images })
-      
-      // Simulate API response
-      setTimeout(() => {
-        setIsSubmitting(false)
-        const mockListingId = 'list_' + Math.random().toString(36).substring(2, 15)
-        
-        if (onSuccess) {
-          onSuccess(mockListingId)
-        }
-      }, 1500)
-    } catch (err) {
-      setIsSubmitting(false)
-      setError('An error occurred while creating the listing. Please try again.')
-      console.error('Error creating listing:', err)
-    }
-  }
+  const { 
+    formData, 
+    images, 
+    isSubmitting, 
+    error,
+    handleChange,
+    handleImageChange,
+    removeImage,
+    handleSubmit 
+  } = useListingForm({ onSuccess })
 
   return (
     <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex justify-center items-center z-50 p-4">
@@ -108,148 +44,74 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({ onClose, onSucces
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[70vh]">
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[70vh] flex flex-col gap-6">
           {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+            <div className="p-3 bg-red-100 text-red-700 rounded-md">
               {error}
             </div>
           )}
           
-          <div className="mb-4">
-            <label htmlFor="title" className="block text-sm font-medium mb-1">
-              Title
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
+          <InputField
+            id="title"
+            name="title"
+            label="Title"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            maxLength={100}
+          />
+          
+          <TextAreaField
+            id="description"
+            name="description"
+            label="Description"
+            value={formData.description}
+            onChange={handleChange}
+            required
+            maxLength={1000}
+          />
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <InputField
+              id="priceInCents"
+              name="priceInCents"
+              label="Price ($)"
+              value={formData.priceInCents}
               onChange={handleChange}
-              className="w-full p-2 border-2 border-foreground/10 rounded-md"
+              type="number"
+              step="0.01"
+              min="0"
               required
-              maxLength={100}
+            />
+            
+            <SelectField
+              id="country"
+              name="country"
+              label="Country"
+              value={formData.country}
+              onChange={handleChange}
+              options={countries.filter(country => country.id !== 'all')}
+              required
             />
           </div>
           
-          <div className="mb-4">
-            <label htmlFor="description" className="block text-sm font-medium mb-1">
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className="w-full p-2 border-2 border-foreground/10 rounded-md h-32"
-              required
-              maxLength={1000}
-            />
-          </div>
+          <SelectField
+            id="category"
+            name="category"
+            label="Category"
+            value={formData.category}
+            onChange={handleChange}
+            options={categories}
+            required
+          />
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label htmlFor="priceInCents" className="block text-sm font-medium mb-1">
-                Price ($)
-              </label>
-              <input
-                type="number"
-                id="priceInCents"
-                name="priceInCents"
-                value={formData.priceInCents}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                className="w-full p-2 border-2 border-foreground/10 rounded-md"
-                required
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="country" className="block text-sm font-medium mb-1">
-                Country
-              </label>
-              <select
-                id="country"
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
-                className="w-full p-2 border-2 border-foreground/10 rounded-md bg-background"
-                required
-              >
-                {countries.filter(country => country.id !== 'all').map(country => (
-                  <option key={country.id} value={country.id}>
-                    {country.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          
-          <div className="mb-6">
-            <label htmlFor="category" className="block text-sm font-medium mb-1">
-              Category
-            </label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full p-2 border-2 border-foreground/10 rounded-md bg-background"
-              required
-            >
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-sm font-medium mb-1">
-              Images (up to 5)
-            </label>
-            
-            {images.length < 5 && (
-              <label className="block border-2 border-dashed border-foreground/30 rounded-md p-8 text-center cursor-pointer hover:bg-background-dark transition-colors mb-2">
-                <FiUpload className="mx-auto mb-2" size={24} />
-                <span className="block text-foreground/70">
-                  Click to upload images
-                </span>
-                <input
-                  type="file"
-                  onChange={handleImageChange}
-                  multiple
-                  accept="image/*"
-                  className="hidden"
-                />
-              </label>
-            )}
-            
-            {images.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-2">
-                {images.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <div className="aspect-square bg-background-dark border border-foreground/10 rounded flex items-center justify-center overflow-hidden">
-                      <img
-                        src={URL.createObjectURL(image)}
-                        alt={`Preview ${index + 1}`}
-                        className="object-cover h-full w-full"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-1 right-1 bg-foreground text-background rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <FiTrash2 size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
+          <ImageUploadField 
+            images={images}
+            maxImages={5}
+            onChange={handleImageChange}
+            onRemove={removeImage}
+          />
+
           <div className="flex gap-3 justify-end">
             <button
               type="button"
@@ -272,5 +134,6 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({ onClose, onSucces
     </div>
   )
 }
+
 
 export default CreateListingForm
