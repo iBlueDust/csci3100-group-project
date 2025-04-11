@@ -1,39 +1,14 @@
 import React, { useState } from 'react'
 import CreateListingForm from './CreateListingForm'
+import { mockListings, getRecentListings } from '@/data/mock/listings'
 
-const recentListings = [
-  {
-    id: 1,
-    title: 'Collectible Item',
-    price: '$250',
-    seller: 'user123',
-    time: '2 hours ago',
-  },
-  {
-    id: 2,
-    title: 'Rare Artifact',
-    price: '$1,200',
-    seller: 'jade_collector',
-    time: '5 hours ago',
-  },
-  {
-    id: 3,
-    title: 'Vintage Item',
-    price: '$800',
-    seller: 'antique_lover',
-    time: '1 day ago',
-  },
-  {
-    id: 4,
-    title: 'Limited Edition',
-    price: '$450',
-    seller: 'treasure_hunter',
-    time: '2 days ago',
-  },
-]
+// Get recent listings (first 4)
+const recentListings = getRecentListings(4)
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface HomeProps {}
+export interface HomeProps {
+  navigateToMarketplace?: (listingId: number) => void;
+}
 
 // Stats popup component
 const StatsPopup: React.FC<{onClose: () => void}> = ({ onClose }) => {
@@ -112,7 +87,7 @@ const StatsPopup: React.FC<{onClose: () => void}> = ({ onClose }) => {
   );
 };
 
-const Home: React.FC<HomeProps> = ({}) => {
+const Home: React.FC<HomeProps> = ({ navigateToMarketplace }) => {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [showStatsPopup, setShowStatsPopup] = useState(false)
   
@@ -120,6 +95,12 @@ const Home: React.FC<HomeProps> = ({}) => {
     setShowCreateForm(false)
     // In a real app, you might want to refresh the listings or show a success message
     console.log(`Listing created with ID: ${listingId}`)
+  }
+  
+  const handleViewListing = (listingId: number) => {
+    if (navigateToMarketplace) {
+      navigateToMarketplace(listingId);
+    }
   }
   
   return (
@@ -207,9 +188,12 @@ const Home: React.FC<HomeProps> = ({}) => {
                   <td className='py-3'>{item.title}</td>
                   <td className='py-3 font-mono'>{item.price}</td>
                   <td className='py-3'>{item.seller}</td>
-                  <td className='py-3 text-foreground/70'>{item.time}</td>
+                  <td className='py-3 text-foreground/70'>{item.listed}</td>
                   <td className='py-3 text-right'>
-                    <button className='button py-1 px-3 h-auto'>View</button>
+                    <button 
+                      className='button py-1 px-3 h-auto'
+                      onClick={() => handleViewListing(item.id)}
+                    >View</button>
                   </td>
                 </tr>
               ))}

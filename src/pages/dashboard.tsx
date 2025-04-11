@@ -47,7 +47,13 @@ const navItems = [
 
 export default function Dashboard() {
   const [activePage, setActivePage] = useState(Page.HOME)
-  // Mock data for recent listings/trades
+  const [selectedListingId, setSelectedListingId] = useState<number | null>(null)
+  
+  // Function to navigate to marketplace with selected listing
+  const navigateToMarketplace = (listingId: number) => {
+    setSelectedListingId(listingId);
+    setActivePage(Page.MARKETPLACE);
+  }
 
   return (
     <div
@@ -100,11 +106,11 @@ export default function Dashboard() {
 
         {/* Main content with left margin to account for sidebar width */}
         <main className='flex-1 p-6 ml-16 sm:ml-64'>
-          {activePage === Page.HOME && <Home />}
+          {activePage === Page.HOME && <Home navigateToMarketplace={navigateToMarketplace} />}
 
           {activePage === Page.MESSAGES && <Messages />}
 
-          {activePage === Page.MARKETPLACE && <Marketplace />}
+          {activePage === Page.MARKETPLACE && <Marketplace initialSelectedListingId={selectedListingId} />}
 
           {activePage === Page.SETTINGS && <Settings />}
         </main>

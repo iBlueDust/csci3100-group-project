@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { FiSearch, FiFilter, FiGrid, FiList, FiChevronDown, FiHeart, FiShoppingCart, FiChevronLeft, FiChevronRight, FiMessageCircle, FiX, FiPaperclip, FiCreditCard, FiCheckCircle, FiMapPin } from 'react-icons/fi'
 import { countries, getFeaturedCountries } from '@/utils/countries'
+import { mockListings } from '@/data/mock/listings'
 
 // Mock categories
 const categories = [
@@ -13,115 +14,12 @@ const categories = [
 ]
   // Countries are now imported from @/utils/countries
 
-// Mock marketplace listings
-const mockListings = [
-  {
-    id: 1,
-    title: 'Ancient Jade Pendant',
-    description: 'Beautiful hand-carved jade pendant from the Ming Dynasty era. Certified authentic.',
-    price: '$850',
-    seller: 'jade_master',
-    rating: 4.8,
-    reviews: 32,
-    image: '', // In a real app, you'd add image URLs
-    category: 'jade',
-    location: 'Hong Kong',
-    listed: '3 days ago'
-  },
-  {
-    id: 2,
-    title: 'Vintage Porcelain Vase',
-    description: 'Elegant blue and white porcelain vase from the Qing Dynasty. Excellent condition.',
-    price: '$1,200',
-    seller: 'antique_collector',
-    rating: 4.9,
-    reviews: 45,
-    image: '',
-    category: 'antiques',
-    location: 'Beijing',
-    listed: '1 week ago'
-  },
-  {
-    id: 3,
-    title: 'Emerald Bracelet',
-    description: 'Stunning emerald bracelet with silver setting. Professionally appraised.',
-    price: '$950',
-    seller: 'gem_trader',
-    rating: 4.7,
-    reviews: 18,
-    image: '',
-    category: 'gems',
-    location: 'Shanghai',
-    listed: '2 days ago'
-  },
-  {
-    id: 4,
-    title: 'Bronze Buddha Statue',
-    description: 'Detailed bronze Buddha statue with gold leaf accents. Ming Dynasty style.',
-    price: '$750',
-    seller: 'history_buff',
-    rating: 4.6,
-    reviews: 12,
-    image: '',
-    category: 'antiques',
-    location: 'Taiwan',
-    listed: '5 days ago'
-  },
-  {
-    id: 5,
-    title: 'Jade Elephant Figurine',
-    description: 'Hand-carved jade elephant with intricate details. Symbol of good fortune.',
-    price: '$420',
-    seller: 'jade_enthusiast',
-    rating: 4.9,
-    reviews: 27,
-    image: '',
-    category: 'jade',
-    location: 'Singapore',
-    listed: '1 day ago'
-  },
-  {
-    id: 6,
-    title: 'Calligraphy Scroll',
-    description: 'Beautiful handwritten calligraphy on traditional rice paper. Signed by the artist.',
-    price: '$350',
-    seller: 'art_collector',
-    rating: 4.8,
-    reviews: 15,
-    image: '',
-    category: 'art',
-    location: 'Hong Kong',
-    listed: '4 days ago'
-  },
-  {
-    id: 7,
-    title: 'Sapphire Pendant',
-    description: 'Elegant sapphire pendant with diamond accents. Great for special occasions.',
-    price: '$1,100',
-    seller: 'gem_specialist',
-    rating: 5.0,
-    reviews: 22,
-    image: '',
-    category: 'gems',
-    location: 'Macau',
-    listed: '3 days ago'
-  },
-  {
-    id: 8,
-    title: 'Coin Collection',
-    description: 'Rare collection of ancient Chinese coins from various dynasties. Great investment.',
-    price: '$2,200',
-    seller: 'numismatist',
-    rating: 4.9,
-    reviews: 31,
-    image: '',
-    category: 'collectibles',
-    location: 'Beijing',
-    listed: '1 week ago'
-  }
-]
+// Add interface for the Marketplace component props
+interface MarketplaceProps {
+  initialSelectedListingId?: number | null;
+}
 
-export default function Marketplace() {
+export default function Marketplace({ initialSelectedListingId }: MarketplaceProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedCountry, setSelectedCountry] = useState('all')
@@ -330,6 +228,16 @@ export default function Marketplace() {
   useEffect(() => {
     localStorage.setItem('marketplace-favorites', JSON.stringify(favorites));
   }, [favorites]);
+  
+  // Handle initialSelectedListingId to open detailed listing view when navigating from Home
+  useEffect(() => {
+    if (initialSelectedListingId) {
+      const listing = mockListings.find(item => item.id === initialSelectedListingId);
+      if (listing) {
+        openDetailModal(listing);
+      }
+    }
+  }, [initialSelectedListingId]);
 
   // Change page
   const paginate = (pageNumber: number) => {
