@@ -7,6 +7,7 @@ import dbConnect from "@/data/db/mongo"
 import User from "@/data/db/mongo/models/user"
 import { sessionStore, sessionToCookie } from "@/data/session"
 import { UserRole } from "@/data/types/auth"
+import { isLicenseKey, isValidLicenseKey } from "@/data/licenses"
 
 type Data = {
 	id: string
@@ -23,13 +24,30 @@ async function POST(
 ) {
 	const schema = Joi.object({
 		username: Joi.string().pattern(/^[a-zA-Z0-9.-]{1,64}$/).required(),
-		passkey: Joi.string().base64().required(), // all ascii printables
+		passkey: Joi.string().base64().required(),
+		licenseKey: Joi.string()
+			.custom(key => {
+				if (!isLicenseKey(key)) {
+					throw new Error('Invalid license key format')
+				}
+				return key
+			})
+			.required()
 	})
 
 	const { value: body, error } = schema.validate(req.body)
 
 	if (error) {
 		res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
+		return
+	}
+
+	if (!isValidLicenseKey(body.licenseKey)) {
+		res.status(403).json({
+			code: 'INVALID_LICENSE_KEY',
+			message: 'Invalid license key'
+		})
+		return
 	}
 
 	await dbConnect()
