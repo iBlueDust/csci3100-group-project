@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import classNames from 'classnames'
@@ -75,7 +75,31 @@ const Dashboard: PageWithLayout = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api])
 
-  const [activePage, setActivePage] = useState(Page.HOME)
+  const pageKeys: (string | undefined)[] = [
+    undefined,
+    Page.MARKETPLACE,
+    Page.MESSAGES,
+    Page.SETTINGS,
+  ]
+  // Only
+  // /dashboard
+  // /dashboard/marketplace
+  // /dashboard/messages
+  // /dashboard/settings
+  // are recognized. No nested routes.
+  const activePage =
+    pageKeys.includes(router.query.page?.[0]) &&
+    (!router.query.page || router.query.page.length === 1)
+      ? router.query.page?.[0] || Page.HOME
+      : null // 404
+
+  // Redirect to /dashboard if activePage is null (invalid route)
+  useEffect(() => {
+    if (activePage == null) {
+      router.replace('/dashboard')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router])
 
   return (
     <div
@@ -101,8 +125,8 @@ const Dashboard: PageWithLayout = () => {
         {/* Sidebar */}
         <Sidebar
           navItems={navItems}
-          value={activePage}
-          onChange={setActivePage as (value: string | number) => void}
+          value={activePage ?? ''}
+          onChange={(page) => router.replace(`/dashboard/${page}`)}
         />
 
         {/* Main content */}
