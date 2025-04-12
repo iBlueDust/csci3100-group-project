@@ -114,10 +114,14 @@ const Dashboard: PageWithLayout = () => {
         <Link href='/' className='font-bold text-xl'>
           The Jade Trail
         </Link>
-        <div className='flex items-center'>
+        <div className='flex items-center cursor-default'>
           {/* User Avatar or Placeholder */}
-          <div className='w-8 h-8 rounded-full bg-foreground/10 mr-2' />
-          <span>Username</span>
+          <div className='w-8 h-8 rounded-full bg-foreground/10 mr-3 flex justify-center items-center'>
+            <span className='font-bold'>
+              {api.user?.username.charAt(0) ?? ''}
+            </span>
+          </div>
+          <span>{api.user?.username ?? '--'}</span>
         </div>
       </header>
 
