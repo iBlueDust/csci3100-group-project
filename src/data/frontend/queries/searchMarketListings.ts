@@ -5,7 +5,7 @@ import type { Api } from "@/utils/frontend/api"
 
 export async function searchMarketListings(
 	api: Api,
-	options: SearchMarketListingsOptions,
+	options: SearchMarketListingsOptions = {},
 ): Promise<PaginatedResult<MarketListingSearchResult>> {
 	const params = new URLSearchParams()
 	if (options.query) params.append('query', options.query)
