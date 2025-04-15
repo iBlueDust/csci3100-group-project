@@ -10,6 +10,7 @@ import { toPasskey } from '@/utils/frontend/e2e/auth'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { PageWithLayout } from '@/data/types/layout'
 import { exportKey, generateUserEncryptionKey } from '@/utils/frontend/e2e'
+import { isDev } from '@/utils/frontend/env'
 
 const SignUp: PageWithLayout = () => {
   const router = useRouter()
@@ -117,6 +118,7 @@ const SignUp: PageWithLayout = () => {
           username: data.username,
           passkey: await toPasskey(data.username, data.password),
           publicKey: jwk,
+          licenseKey: '2222-2222-2222-2222',
         }
 
         const response = await api.fetch('/auth/signup', {
@@ -183,6 +185,7 @@ const SignUp: PageWithLayout = () => {
             type='text'
             name='username'
             label='Username'
+            autoComplete='off'
             error={formErrors.username}
             required
           />
@@ -191,6 +194,7 @@ const SignUp: PageWithLayout = () => {
             type='password'
             name='password'
             label='Password'
+            autoComplete={isDev ? undefined : 'new-password'}
             error={formErrors.password}
             required
           />
@@ -199,6 +203,7 @@ const SignUp: PageWithLayout = () => {
             type='password'
             name='confirmPassword'
             label='Confirm Password'
+            autoComplete={isDev ? undefined : 'new-password'}
             error={formErrors.confirmPassword}
             required
           />
