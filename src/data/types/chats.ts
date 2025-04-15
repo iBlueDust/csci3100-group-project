@@ -36,6 +36,7 @@ export interface ClientChat {
 	participants: {
 		id: string
 		username: string
+		publicKey: JsonWebKey
 	}[]
 	lastMessage?: {
 		id: string
@@ -63,6 +64,8 @@ export interface ClientChatMessage {
 	type: ChatMessageType
 	content: string | Buffer
 	contentFilename?: string
-	e2e: unknown
+	e2e?: {
+		iv: string
+	}
 	sentAt: string
 }

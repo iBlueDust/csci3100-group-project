@@ -1,21 +1,32 @@
 import { ChatMessageType } from "@/data/types/chats"
+import { ab2base64 } from "@/utils"
 import type { Api } from "@/utils/frontend/api"
 
-export interface SendChatMessagePayload {
+export interface SendChatMessagePayload<
+	TContent extends string | ArrayBufferLike = ArrayBuffer,
+> {
 	type: ChatMessageType
-	content: string | Buffer
+	content: TContent
 	contentFilename?: string
-	e2e?: object
+	e2e?: {
+		iv: ArrayBuffer
+	}
 }
 
 export async function sendChatMessage(
 	api: Api,
 	chatId: string,
-	message: SendChatMessagePayload,
+	message: SendChatMessagePayload<ArrayBuffer>,
 ): Promise<{ id: string }> {
 	const formData = new FormData()
 	formData.set('type', 'text')
-	formData.set('content', message.content as string)
+	formData.set('content', ab2base64(message.content))
+	if (message.e2e) {
+		formData.set('e2e', JSON.stringify({
+			...message.e2e,
+			iv: ab2base64(message.e2e.iv),
+		}))
+	}
 
 	const response = await api.fetch(`/chats/${chatId}/messages`, {
 		method: 'POST',

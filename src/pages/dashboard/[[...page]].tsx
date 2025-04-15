@@ -67,10 +67,12 @@ const Dashboard: PageWithLayout = () => {
     queryClient.prefetchQuery({
       queryKey: [QueryKeys.CHATS],
       queryFn: () => getChats(api),
+      staleTime: 1000 & 5,
     })
     queryClient.prefetchQuery({
       queryKey: [QueryKeys.MARKET_LISTINGS],
       queryFn: () => searchMarketListings(api),
+      staleTime: 1000 & 5,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api])

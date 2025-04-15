@@ -9,12 +9,13 @@ export const makeChatClientFriendly = (chat: any): ChatWithPopulatedFields => {
 		id: chat._id ?? chat.id,
 		wasRequestedToDelete: chat.wasRequestedToDelete ?? false,
 		participants: chat.participants.map((participant: mongoose.Types.ObjectId) => {
+			const participantDoc = chat.participantLookups.find(
+				(p: { _id: mongoose.Types.ObjectId }) => p._id.equals(participant)
+			)
 			return {
 				id: participant,
-				username: chat.participantLookups
-					.find(
-						(p: { _id: mongoose.Types.ObjectId }) => p._id.equals(participant)
-					).username,
+				username: participantDoc.username,
+				publicKey: participantDoc.publicKey,
 			}
 		}),
 		lastMessage: chat.lastMessage
@@ -35,7 +36,10 @@ export const makeChatMessageClientFriendly = (message: any) => {
 			? message.content.toString('base64')
 			: message.content,
 		contentFilename: message.contentFilename?.toString('base64'),
-		e2e: message.e2e,
+		e2e: message.e2e ? {
+			...message.e2e,
+			iv: message.e2e.iv?.toString('base64'),
+		} : undefined,
 		sentAt: message.sentAt.toISOString(),
 	}
 }

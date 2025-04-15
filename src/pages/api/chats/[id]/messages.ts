@@ -208,13 +208,20 @@ async function POST(
 	await dbConnect()
 
 	if (body.type === ChatMessageType.Text) {
-		const doc = await ChatMessage.create({
+		const doc = new ChatMessage({
 			chatId,
 			sender: auth.data.userId,
 			content: body.content,
 			type: body.type,
-			e2e: body.e2e,
 		})
+		if (body.e2e) {
+			doc.e2e = {
+				...body.e2e,
+				iv: body.e2e.iv ? Buffer.from(body.e2e.iv, 'base64') : undefined,
+			}
+		}
+
+		await doc.save()
 
 		return res.status(200).send({ id: doc.id })
 	} else if (body.type === ChatMessageType.Attachment) {

@@ -157,7 +157,6 @@ const Messages: PageWithLayout = () => {
             <ChatThread
               className='h-full'
               chat={activeChat}
-              currentUserId={api.user?.id ?? ''}
               onMobileCloseClick={() => {
                 setActiveChatId(null)
                 setMobileChatVisible(false)

@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -26,41 +27,74 @@ import {
   sendChatMessage,
   SendChatMessagePayload,
 } from '@/data/frontend/queries/sendChatMessage'
+import { deriveKey, importKey } from '@/utils/frontend/e2e'
+import {
+  decryptChatMessages,
+  encryptChatMessage,
+} from '@/utils/frontend/e2e/chat'
+import { isDev } from '@/utils/frontend/env'
 
 export interface ChatThreadProps {
   className?: string
   chat: ClientChat
-  currentUserId: string
   onMobileCloseClick?: () => void
 }
 
 const ChatThread: React.FC<ChatThreadProps> = ({
   className,
   chat,
-  currentUserId,
   onMobileCloseClick,
 }) => {
   const api = useApi()
   const queryClient = useQueryClient()
 
+  const otherParty = useMemo(
+    () =>
+      chat.participants.find((participant) => participant.id !== api.user?.id),
+    [chat, api],
+  )
+
+  // const { data: sharedKey, promise: sharedKeyPromise } = useQuery({
+  //   queryKey: [QueryKeys.SHARED_KEY, chat.id],
+  //   queryFn: async () => {
+  //     if (!api.uek || !otherParty?.publicKey) {
+  //       return undefined
+  //     }
+
+  //     const theirPublicKey = await importKey(otherParty.publicKey)
+  //     return await deriveKey(theirPublicKey, api.uek.privateKey)
+  //   },
+  //   enabled: !!api.user && !!otherParty,
+  // })
+
   const { data: messages } = useQuery<PaginatedResult<ClientChatMessage>>({
     queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
     queryFn: async () => {
-      const payload: PaginatedResult<ClientChatMessage> = await getChatMessages(
-        api,
-        chat.id,
-      )
+      const payload = await getChatMessages(api, chat.id)
+      payload.data.reverse()
+
+      const theirPublicKey = await importKey(otherParty!.publicKey, 'jwk', [])
+      console.log('theirPublicKey', theirPublicKey)
+      const sharedKey = await deriveKey(theirPublicKey, api.uek!.privateKey)
+      console.log('sharedKey', sharedKey)
+
       return {
-        data: payload.data.toReversed(),
+        data: await decryptChatMessages(payload.data, sharedKey),
         meta: payload.meta,
       }
     },
-    enabled: !!api.user,
+    throwOnError: isDev,
+    enabled: !!api.user && !!api.uek && !!otherParty,
   })
 
   const mutation = useMutation({
-    mutationFn: (arg: SendChatMessagePayload) =>
-      sendChatMessage(api, chat.id, arg),
+    mutationFn: async (arg: SendChatMessagePayload<string>) => {
+      const theirPublicKey = await importKey(otherParty!.publicKey, 'jwk', [])
+      const sharedKey = await deriveKey(theirPublicKey, api.uek!.privateKey)
+
+      const encrypted = await encryptChatMessage(arg, sharedKey!)
+      await sendChatMessage(api, chat.id, encrypted)
+    },
     onSuccess: () => {
       // Handle success
       queryClient.invalidateQueries({
@@ -75,15 +109,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   const messageInputRef = useRef<HTMLTextAreaElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
-  const otherParty = useCallback(
-    (chat: ClientChat) =>
-      chat.participants.find((participant) => participant.id !== currentUserId),
-    [currentUserId],
-  )
-
   const handleSendMessage = useCallback(async () => {
     const messageInput = messageInputRef.current?.value || ''
-    console.log({ messageInput })
     if (!messageInput.trim()) {
       console.warn('Message input is empty')
       return
@@ -95,8 +122,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     }
 
     // In a real app, you would send the message to an API
-    console.log('Sending message:', messageInput)
-    const message: SendChatMessagePayload = {
+    const message: SendChatMessagePayload<string> = {
       type: ChatMessageType.Text,
       content: messageInput,
     }
@@ -160,9 +186,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             <FiChevronLeft size={20} />
           </button>
           <div className='w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-foreground'>
-            {otherParty(chat)?.username.charAt(0).toUpperCase()}
+            {otherParty?.username.charAt(0).toUpperCase()}
           </div>
-          <h3 className='font-medium'>{otherParty(chat!)?.username}</h3>
+          <h3 className='font-medium'>{otherParty?.username}</h3>
         </div>
         <button className='text-foreground/70'>
           <FiMoreVertical size={20} />
@@ -185,7 +211,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             <p
               className={classNames(
                 'text-xs mt-1',
-                message.sender === currentUserId
+                message.sender === api.user?.id
                   ? 'text-white/70'
                   : 'text-foreground/50',
               )}
