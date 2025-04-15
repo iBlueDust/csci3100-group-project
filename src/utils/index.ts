@@ -21,3 +21,41 @@ export function zip<T extends any[][]>(...arrays: T): { [K in keyof T]: T[K] ext
 
 	return result as { [K in keyof T]: T[K] extends (infer U)[] ? U : never }[]
 }
+
+/*
+Convert a string into an ArrayBuffer (browser-friendly)
+from https://developers.google.com/web/updates/2012/06/How-to-convert-ArrayBuffer-to-and-from-String
+*/
+export function str2ab(str: string) {
+	const buf = new ArrayBuffer(str.length)
+	const bufView = new Uint8Array(buf)
+	for (let i = 0, strLen = str.length; i < strLen; i++) {
+		bufView[i] = str.charCodeAt(i)
+	}
+	return buf
+}
+
+export function ab2str(buf: ArrayBuffer) {
+	return String.fromCharCode(...new Uint8Array(buf))
+}
+
+export function ab2base64(bytes: ArrayBuffer): string {
+	const binary = String.fromCharCode(...new Uint8Array(bytes))
+	const base64 = btoa(binary)
+	return base64
+}
+
+export function ab2hex(buffer: ArrayBuffer) {
+	return [...new Uint8Array(buffer)]
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('')
+}
+
+export function hex2base64url(hex: string) {
+	const binary = hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16))
+	if (!binary) return ''
+	// convert to base64
+	const b64 = btoa(String.fromCharCode(...(binary as number[])))
+	// convert to base64url
+	return b64.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+}
