@@ -50,4 +50,4 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Validate docker-compose config
-        run: docker compose -f docker-compose.dev.yml config
+        run: docker compose -f docker-compose.dev.yaml config
