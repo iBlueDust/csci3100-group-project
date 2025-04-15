@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -20,49 +21,46 @@ import { FiChevronLeft, FiMoreVertical, FiSend } from 'react-icons/fi'
 import classNames from 'classnames'
 import { useApi } from '@/utils/frontend/api'
 import { QueryKeys } from '@/data/types/queries'
-import { getChatMessages } from '@/data/frontend/queries/getChatMessages'
 import { PaginatedResult } from '@/data/types/common'
-import {
-  sendChatMessage,
-  SendChatMessagePayload,
-} from '@/data/frontend/queries/sendChatMessage'
+import { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
+import { isDev } from '@/utils/frontend/env'
+import { queryChatMessages } from '@/data/frontend/queries/queryChatMessages'
+import { sendChatMessage } from '@/data/frontend/mutations/sendChatMessage'
 
 export interface ChatThreadProps {
   className?: string
   chat: ClientChat
-  currentUserId: string
+  sharedKey: CryptoKey
   onMobileCloseClick?: () => void
 }
 
 const ChatThread: React.FC<ChatThreadProps> = ({
   className,
   chat,
-  currentUserId,
+  sharedKey,
   onMobileCloseClick,
 }) => {
   const api = useApi()
   const queryClient = useQueryClient()
 
+  const otherParty = useMemo(
+    () =>
+      chat.participants.find((participant) => participant.id !== api.user?.id),
+    [chat, api],
+  )
+
   const { data: messages } = useQuery<PaginatedResult<ClientChatMessage>>({
     queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
-    queryFn: async () => {
-      const payload: PaginatedResult<ClientChatMessage> = await getChatMessages(
-        api,
-        chat.id,
-      )
-      return {
-        data: payload.data.toReversed(),
-        meta: payload.meta,
-      }
-    },
-    enabled: !!api.user,
+    queryFn: async () => queryChatMessages(api, chat.id, sharedKey),
+    throwOnError: isDev,
+    enabled: !!api.user && !!sharedKey,
   })
 
   const mutation = useMutation({
-    mutationFn: (arg: SendChatMessagePayload) =>
-      sendChatMessage(api, chat.id, arg),
+    mutationFn: async (arg: PostChatMessagePayload<string>) =>
+      sendChatMessage(api, chat.id, arg, sharedKey),
     onSuccess: () => {
-      // Handle success
+      // Reload chat messages
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
       })
@@ -75,15 +73,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   const messageInputRef = useRef<HTMLTextAreaElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
-  const otherParty = useCallback(
-    (chat: ClientChat) =>
-      chat.participants.find((participant) => participant.id !== currentUserId),
-    [currentUserId],
-  )
-
   const handleSendMessage = useCallback(async () => {
     const messageInput = messageInputRef.current?.value || ''
-    console.log({ messageInput })
     if (!messageInput.trim()) {
       console.warn('Message input is empty')
       return
@@ -95,8 +86,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     }
 
     // In a real app, you would send the message to an API
-    console.log('Sending message:', messageInput)
-    const message: SendChatMessagePayload = {
+    const message: PostChatMessagePayload<string> = {
       type: ChatMessageType.Text,
       content: messageInput,
     }
@@ -160,9 +150,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             <FiChevronLeft size={20} />
           </button>
           <div className='w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-foreground'>
-            {otherParty(chat)?.username.charAt(0).toUpperCase()}
+            {otherParty?.username.charAt(0).toUpperCase()}
           </div>
-          <h3 className='font-medium'>{otherParty(chat!)?.username}</h3>
+          <h3 className='font-medium'>{otherParty?.username}</h3>
         </div>
         <button className='text-foreground/70'>
           <FiMoreVertical size={20} />
@@ -185,7 +175,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             <p
               className={classNames(
                 'text-xs mt-1',
-                message.sender === currentUserId
+                message.sender === api.user?.id
                   ? 'text-white/70'
                   : 'text-foreground/50',
               )}

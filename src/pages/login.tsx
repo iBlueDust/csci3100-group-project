@@ -9,6 +9,7 @@ import SubmitButton from '@/components/SubmitButton'
 import { toPasskey } from '@/utils/frontend/e2e/auth'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { PageWithLayout } from '@/data/types/layout'
+import { generateUserEncryptionKey } from '@/utils/frontend/e2e'
 
 const Login: PageWithLayout = () => {
   const router = useRouter()
@@ -91,6 +92,12 @@ const Login: PageWithLayout = () => {
         const body = await response.json()
         console.log('Logged in as user', body.id)
 
+        const uek = await generateUserEncryptionKey(
+          data.username,
+          data.password,
+        )
+
+        api.setUek(uek)
         api.setUser({
           id: body.id,
           username: data.username,
@@ -129,7 +136,7 @@ const Login: PageWithLayout = () => {
           <Input type='password' name='password' label='Password' required />
 
           {formErrors.general && (
-            <p className='max-w-96 text-center text-red-500 text-sm'>
+            <p className='max-w-96 mx-auto text-center text-red-500 text-sm'>
               {formErrors.general}
             </p>
           )}
@@ -149,7 +156,7 @@ const Login: PageWithLayout = () => {
         <div className='text-center pt-2'>
           <p>
             Don&apos;t have an account?{' '}
-            <Link href='/signup' className='link'>
+            <Link href='/signup' className='link underline underline-offset-4'>
               Sign up
             </Link>
           </p>

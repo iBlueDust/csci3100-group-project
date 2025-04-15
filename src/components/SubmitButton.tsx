@@ -13,9 +13,15 @@ export interface SubmitButtonProps extends HTMLButtonProps {
 const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
   const look = props.look ?? 'default'
 
+  const buttonProps = { ...props }
+  delete buttonProps.look
+  delete buttonProps.loading
+  delete buttonProps.className
+  delete buttonProps.children
+
   return (
     <button
-      {...props}
+      {...buttonProps}
       disabled={props.loading || props.disabled}
       className={classNames(
         look === 'primary' ? 'button-primary' : 'button',

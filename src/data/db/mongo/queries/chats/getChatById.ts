@@ -34,7 +34,7 @@ export const getChatById = async (
 				localField: 'participants',
 				foreignField: '_id',
 				as: 'participantLookups',
-				pipeline: [{ $project: { _id: 1, username: 1 } }],
+				pipeline: [{ $project: { _id: 1, username: 1, publicKey: 1 } }],
 			},
 		},
 		{

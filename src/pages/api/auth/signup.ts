@@ -19,6 +19,16 @@ type Error = {
 	message?: string
 }
 
+const jwkSchema = Joi.object({
+	kty: Joi.string().valid('EC').required(),
+	crv: Joi.string().valid('P-521').required(),
+	x: Joi.string().base64({ urlSafe: true, paddingRequired: false }).required(),
+	y: Joi.string().base64({ urlSafe: true, paddingRequired: false }).required(),
+	ext: Joi.boolean().valid(true).required(),
+	key_ops: Joi.array().items(Joi.string().valid('deriveKey', 'deriveBits')).optional(),
+	d: Joi.forbidden(), // private key not allowed in this context
+})
+
 async function POST(
 	req: NextApiRequest,
 	res: NextApiResponse<Data | Error>,
@@ -33,7 +43,8 @@ async function POST(
 				}
 				return key
 			})
-			.required()
+			.required(),
+		publicKey: jwkSchema.required(),
 	})
 
 	const { value: body, error } = schema.validate(req.body)
@@ -55,7 +66,12 @@ async function POST(
 
 	let user: Awaited<ReturnType<typeof User.createWithPasskey>>
 	try {
-		user = await User.createWithPasskey(body.username, body.passkey, [UserRole.USER])
+		user = await User.createWithPasskey(
+			body.username,
+			body.passkey,
+			[UserRole.USER],
+			body.publicKey,
+		)
 	} catch (error) {
 		if (
 			error instanceof MongoServerError
@@ -65,6 +81,8 @@ async function POST(
 				.status(409)
 				.json({ code: 'USERNAME_TAKEN', message: 'Username is already taken' })
 		}
+
+		console.error('Error creating user:', error)
 		return res
 			.status(500)
 			.json({

@@ -9,6 +9,7 @@ import SubmitButton from '@/components/SubmitButton'
 import { toPasskey } from '@/utils/frontend/e2e/auth'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { PageWithLayout } from '@/data/types/layout'
+import { exportKey, generateUserEncryptionKey } from '@/utils/frontend/e2e'
 
 const SignUp: PageWithLayout = () => {
   const router = useRouter()
@@ -105,9 +106,17 @@ const SignUp: PageWithLayout = () => {
       setIsLoading(true)
 
       try {
+        const uek = await generateUserEncryptionKey(
+          data.username,
+          data.password,
+        )
+        const jwk = await exportKey(uek.publicKey)
+        api.setUek(uek)
+
         const payload = {
           username: data.username,
           passkey: await toPasskey(data.username, data.password),
+          publicKey: jwk,
         }
 
         const response = await api.fetch('/auth/signup', {
@@ -215,7 +224,7 @@ const SignUp: PageWithLayout = () => {
         <div className='text-center pt-2'>
           <p>
             Already have an account?{' '}
-            <Link href='/login' className='link'>
+            <Link href='/login' className='link underline underline-offset-4'>
               Log in
             </Link>
           </p>
