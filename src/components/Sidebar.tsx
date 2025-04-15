@@ -36,6 +36,9 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems, value, onChange }) => {
         return
       }
 
+      api.setUser(undefined)
+      api.setTokenExpiresAt(undefined)
+      api.setUek(undefined)
       router.replace('/')
     } catch (error) {
       console.error('Logout error:', error)
