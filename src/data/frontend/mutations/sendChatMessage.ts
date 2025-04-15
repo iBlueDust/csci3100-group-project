@@ -8,6 +8,6 @@ export async function sendChatMessage(
 	message: PostChatMessagePayload<string>,
 	sharedKey: CryptoKey,
 ) {
-	const encryptedMessage = await encryptChatMessage(message, sharedKey!)
+	const encryptedMessage = await encryptChatMessage(message, sharedKey)
 	await postChatMessage(api, chatId, encryptedMessage)
 }

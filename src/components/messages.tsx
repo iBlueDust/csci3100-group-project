@@ -12,7 +12,6 @@ import type { ClientChat } from '@/data/types/chats'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { QueryKeys } from '@/data/types/queries'
 import { isDev } from '@/utils/frontend/env'
-import { hash } from '@/utils/frontend/e2e/hash'
 import { queryChats } from '@/data/frontend/queries/queryChats'
 
 const ChatThread = dynamic(() => import('@/components/ChatThread'), {
