@@ -1,8 +1,75 @@
-import { ChatMessageType, ClientChatMessage } from "@/data/types/chats"
+import { ChatMessageType, ClientChat, ClientChatMessage } from "@/data/types/chats"
 import { str2ab } from "@/utils"
 import { SendChatMessagePayload } from "@/data/frontend/queries/sendChatMessage"
-import { decryptMessage, encryptMessage } from "."
+import { decryptMessage, deriveKey, encryptMessage, importKey } from "."
 
+
+export async function decryptChat(
+	chat: ClientChat,
+	myUserId: string,
+	myPrivateKey: CryptoKey
+): Promise<ClientChat> {
+	if (!chat.lastMessage?.e2e) {
+		throw new Error("Chat message is not encrypted")
+		return chat
+	}
+
+	const otherParty = chat.participants.find(
+		(participant) => participant.id !== myUserId
+	)
+	if (!otherParty?.publicKey) {
+		throw new Error("Could not find other party's public key")
+		return chat
+	}
+
+	const theirPublicKey = await importKey(otherParty!.publicKey, 'jwk', [])
+	const sharedKey = await deriveKey(theirPublicKey, myPrivateKey)
+	console.log('derived shared key', sharedKey)
+
+	return {
+		...chat,
+		lastMessage: await decryptChatMessage(chat.lastMessage, sharedKey),
+	}
+}
+
+export async function decryptChats(
+	chats: ClientChat[],
+	myUserId: string,
+	myPrivateKey: CryptoKey,
+): Promise<ClientChat[]> {
+	const result = new Array(chats.length).fill(null)
+
+	await Promise.all(
+		chats.map(async (chat, index) => {
+			result[index] = await decryptChat(chat, myUserId, myPrivateKey)
+		})
+	)
+
+	return result
+}
+
+export async function decryptChatMessage(
+	message: ClientChatMessage,
+	sharedKey: CryptoKey,
+): Promise<ClientChatMessage> {
+	if (message.type === ChatMessageType.Attachment) {
+		throw new Error("Attachment messages are not supported yet")
+	}
+
+	if (!message.e2e) {
+		return message
+	}
+
+	const cipher = str2ab(atob(message.content as string))
+
+	const iv = str2ab(atob(message.e2e.iv))
+	const content = await decryptMessage(cipher, new Uint8Array(iv), sharedKey)
+	const newMessage: ClientChatMessage = {
+		...message,
+		content: new TextDecoder().decode(content),
+	}
+	return newMessage
+}
 
 export async function decryptChatMessages(
 	messages: ClientChatMessage[],
@@ -12,20 +79,7 @@ export async function decryptChatMessages(
 
 	await Promise.all(
 		messages.map(async (message, index) => {
-			if (!message.e2e) {
-				result[index] = message
-				return
-			}
-
-			const cipher = str2ab(atob(message.content as string))
-
-			const iv = str2ab(atob(message.e2e.iv))
-			const content = await decryptMessage(cipher, new Uint8Array(iv), sharedKey)
-			const newMessage: ClientChatMessage = {
-				...message,
-				content: new TextDecoder().decode(content),
-			}
-			result[index] = newMessage
+			result[index] = await decryptChatMessage(message, sharedKey)
 		})
 	)
 

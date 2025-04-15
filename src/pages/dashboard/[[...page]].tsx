@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import classNames from 'classnames'
 import { FiHome, FiPackage, FiMessageSquare, FiSettings } from 'react-icons/fi'
 
@@ -12,7 +13,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { QueryKeys } from '@/data/types/queries'
 import { getChats } from '@/data/frontend/queries/getChats'
 import { searchMarketListings } from '@/data/frontend/queries/searchMarketListings'
-import { useRouter } from 'next/router'
 
 // TODO: Add loading component
 const Home = dynamic(() => import('@/components/Home'), { ssr: false })
@@ -64,15 +64,15 @@ const Dashboard: PageWithLayout = () => {
       router.replace('/')
     }
 
-    queryClient.prefetchQuery({
-      queryKey: [QueryKeys.CHATS],
-      queryFn: () => getChats(api),
-      staleTime: 1000 & 5,
-    })
+    // queryClient.prefetchQuery({
+    //   queryKey: [QueryKeys.CHATS],
+    //   queryFn: () => getChats(api),
+    //   staleTime: 1000 * 5,
+    // })
     queryClient.prefetchQuery({
       queryKey: [QueryKeys.MARKET_LISTINGS],
       queryFn: () => searchMarketListings(api),
-      staleTime: 1000 & 5,
+      staleTime: 1000 * 5,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api])

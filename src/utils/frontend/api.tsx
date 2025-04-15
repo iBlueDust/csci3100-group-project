@@ -114,7 +114,9 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
           importKey(uekPublicKey, 'jwk', []).then(
             (key) => (uek.publicKey = key),
           ),
-          importKey(uekPrivateKey, 'jwk').then((key) => (uek.privateKey = key)),
+          importKey(uekPrivateKey, 'jwk', ['deriveKey']).then(
+            (key) => (uek.privateKey = key),
+          ),
         ])
 
         _setUek(uek as CryptoKeyPair)

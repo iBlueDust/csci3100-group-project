@@ -102,7 +102,7 @@ export async function importKey(
 export async function importKey(
 	encodedKey: BufferSource | JsonWebKey,
 	format: KeyFormat = 'jwk',
-	keyUsages: KeyUsage[] = ['deriveKey'],
+	keyUsages: KeyUsage[] = [],
 ): Promise<CryptoKey> {
 	const extractable = true
 	return await crypto.subtle.importKey(

@@ -10,24 +10,9 @@ export interface ChatWithPopulatedFields {
 	participants: {
 		id: mongoose.Types.ObjectId
 		username: string
+		publicKey: JsonWebKey
 	}[]
-	lastMessage?: {
-		id: mongoose.Types.ObjectId
-		sender: string
-		content: string
-		sentAt: string
-		e2e: unknown
-	}
-	& (
-		{
-			type: ChatMessageType.Text
-			contentFilename?: never
-		}
-		| {
-			type: ChatMessageType.Attachment
-			contentFilename: string
-		}
-	)
+	lastMessage?: ClientChatMessage
 	wasRequestedToDelete: boolean
 }
 
@@ -38,34 +23,28 @@ export interface ClientChat {
 		username: string
 		publicKey: JsonWebKey
 	}[]
-	lastMessage?: {
-		id: string
-		sender: string
-		content: string
-		sentAt: string
-		e2e: unknown
-	} & (
-		| {
-			type: ChatMessageType.Text
-			contentFilename?: never
-		}
-		| {
-			type: ChatMessageType.Attachment
-			contentFilename: string
-		}
-	)
+	lastMessage?: ClientChatMessage
 	wasRequestedToDelete: boolean
 }
 
-export interface ClientChatMessage {
+interface BaseClientChatMessage {
 	id: string
-	// chatId: string // client already knows
 	sender: string
-	type: ChatMessageType
-	content: string | Buffer
-	contentFilename?: string
 	e2e?: {
 		iv: string
 	}
 	sentAt: string
 }
+
+export interface ClientTextChatMessage extends BaseClientChatMessage {
+	type: ChatMessageType.Text
+	content: string
+}
+
+export interface ClientAttachmentChatMessage extends BaseClientChatMessage {
+	type: ChatMessageType.Attachment
+	content: Buffer
+	contentFilename: string
+}
+
+export type ClientChatMessage = ClientTextChatMessage | ClientAttachmentChatMessage

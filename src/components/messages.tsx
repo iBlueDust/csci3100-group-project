@@ -1,5 +1,8 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/router'
+import classNames from 'classnames'
+import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
@@ -7,61 +10,47 @@ dayjs.extend(relativeTime)
 import type { PageWithLayout } from '@/data/types/layout'
 import type { ClientChat } from '@/data/types/chats'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
-import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '@/data/types/queries'
 import { getChats } from '@/data/frontend/queries/getChats'
-import classNames from 'classnames'
+import { decryptChats } from '@/utils/frontend/e2e/chat'
+import { isDev } from '@/utils/frontend/env'
+import { hash } from '@/utils/frontend/e2e/hash'
 
 const ChatThread = dynamic(() => import('@/components/ChatThread'), {
   ssr: false,
 })
 
-// Mock data for conversations
-// const mockConversations = [
-//   {
-//     id: 1,
-//     user: 'jade_collector',
-//     avatar: '',
-//     lastMessage: "I'm interested in your jade pendant",
-//     unread: true,
-//     time: '2h ago',
-//   },
-//   {
-//     id: 2,
-//     user: 'antique_lover',
-//     avatar: '',
-//     lastMessage: 'Is the price negotiable?',
-//     unread: false,
-//     time: '1d ago',
-//   },
-//   {
-//     id: 3,
-//     user: 'treasure_hunter',
-//     avatar: '',
-//     lastMessage: 'Thanks for the quick delivery!',
-//     unread: false,
-//     time: '3d ago',
-//   },
-//   {
-//     id: 4,
-//     user: 'gem_specialist',
-//     avatar: '',
-//     lastMessage: 'Do you have any more items like this?',
-//     unread: true,
-//     time: '1w ago',
-//   },
-// ]
-
 const Messages: PageWithLayout = () => {
   const api = useApi()
+  const router = useRouter()
+
+  hash('hello world')
 
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [mobileChatVisible, setMobileChatVisible] = useState(false)
 
   const { data: chats } = useQuery({
     queryKey: [QueryKeys.CHATS],
-    queryFn: () => getChats(api),
-    enabled: !!api.user,
+    queryFn: async () => {
+      console.log('queryFn')
+      const chats = await getChats(api)
+      console.log('got chats', chats)
+
+      if (!api.user || !api.uek) throw new Error('User or key not found')
+      const decryptedChats = await decryptChats(
+        chats.data,
+        api.user!.id,
+        api.uek!.privateKey,
+      )
+
+      return {
+        data: decryptedChats,
+        meta: chats.meta,
+      } as typeof chats
+    },
+    enabled: !!api.user && !!api.uek,
+    throwOnError: isDev,
+    staleTime: 5 * 1000,
   })
 
   const activeChat = useMemo(() => {
@@ -85,6 +74,15 @@ const Messages: PageWithLayout = () => {
     setActiveChatId(id)
     setMobileChatVisible(true)
   }
+
+  useLayoutEffect(() => {
+    if (!api.user) {
+      router.replace('/')
+      return
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className='h-[calc(100vh-7rem)] flex flex-col'>
