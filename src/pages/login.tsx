@@ -132,7 +132,7 @@ const Login: PageWithLayout = () => {
         </h1>
 
         <form onSubmit={handleSubmit} className='w-full space-y-4'>
-          <Input type='username' name='username' label='Username' required />
+          <Input type='text' name='username' label='Username' required />
           <Input type='password' name='password' label='Password' required />
 
           {formErrors.general && (
