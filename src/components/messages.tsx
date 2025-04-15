@@ -23,8 +23,6 @@ const Messages: PageWithLayout = () => {
   const api = useApi()
   const router = useRouter()
 
-  hash('hello world')
-
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [mobileChatVisible, setMobileChatVisible] = useState(false)
 
