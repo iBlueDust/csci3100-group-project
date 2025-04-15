@@ -1,28 +1,160 @@
 import Link from 'next/link'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import classNames from 'classnames'
+import { useRouter } from 'next/router'
+
 import { geistMono, geistSans } from '@/styles/fonts'
+import Input from '@/components/Input'
+import SubmitButton from '@/components/SubmitButton'
+import { toPasskey } from '@/utils/frontend/e2e/auth'
+import { ApiProvider, useApi } from '@/utils/frontend/api'
+import { PageWithLayout } from '@/data/types/layout'
 
-export default function SignUp() {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  })
+const SignUp: PageWithLayout = () => {
+  const router = useRouter()
+  const api = useApi()
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Add your signup logic here
-    console.log('Signup form submitted:', formData)
-  }
+  const [formErrors, setFormErrors] = useState<{
+    general?: string
+    username?: string
+    email?: string
+    password?: string
+    confirmPassword?: string
+  }>({})
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+
+      setFormErrors({})
+
+      const formData = new FormData(e.target as HTMLFormElement)
+
+      const data = {
+        username: formData.get('username') as string,
+        password: formData.get('password') as string,
+        confirmPassword: formData.get('confirmPassword') as string,
+      }
+
+      let isValid = true
+
+      if (!/^[a-zA-Z0-9.-]{1,64}$/.test(data.username)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          username: 'Username must be alphanumeric and between 1-64 characters',
+        }))
+        isValid = false
+      }
+
+      // password must be ascii readable
+      if (!/^[!-~]+$/.test(data.password)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password:
+            'Password must compose of English letters, numbers, and symbols',
+        }))
+        isValid = false
+      } else if (data.password.length < 12 || data.password.length > 64) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password:
+            'Password must be 12-64 characters long and contain an uppercase letter, a lowercase letter, a number, and a symbol',
+        }))
+        isValid = false
+      } else if (!/[A-Z]/.test(data.password)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password: 'Password must contain at least one uppercase letter',
+        }))
+        isValid = false
+      } else if (!/[a-z]/.test(data.password)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password: 'Password must contain at least one lowercase letter',
+        }))
+        isValid = false
+      } else if (!/[0-9]/.test(data.password)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password: 'Password must contain at least one number',
+        }))
+        isValid = false
+      } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(data.password)) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password: 'Password must contain at least one special character',
+        }))
+        isValid = false
+      }
+
+      if (data.password !== data.confirmPassword) {
+        setFormErrors((prev) => ({
+          ...prev,
+          confirmPassword: 'Passwords do not match',
+        }))
+        isValid = false
+      }
+
+      if (!isValid) {
+        setIsLoading(false)
+        return
+      }
+
+      setIsLoading(true)
+
+      try {
+        const payload = {
+          username: data.username,
+          passkey: await toPasskey(data.username, data.password),
+        }
+
+        const response = await api.fetch('/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (response.status === 409) {
+          // 409 Conflict
+          setFormErrors((prev) => ({
+            ...prev,
+            username: 'Username is already taken',
+          }))
+          return
+        }
+
+        if (!response.ok) {
+          setFormErrors((prev) => ({
+            ...prev,
+            general: 'An unexpected error occurred',
+          }))
+          return
+        }
+
+        const body = await response.json()
+        console.log('Logged in as user', body.id)
+
+        api.setUser({
+          id: body.id,
+          username: data.username,
+        })
+        api.setTokenExpiresAt(new Date(body.expiresAt))
+
+        router.push('/dashboard')
+      } catch (error) {
+        console.error('Error signing up:', error)
+        setFormErrors((prev) => ({
+          ...prev,
+          general: 'An unexpected error occurred',
+        }))
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [router, api],
+  )
 
   return (
     <div
@@ -36,71 +168,54 @@ export default function SignUp() {
         <h1 className='text-4xl font-bold border-b border-foreground font-mono'>
           Sign Up
         </h1>
-        
+
         <form onSubmit={handleSubmit} className='w-full space-y-4'>
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div className="pt-4">
-            <button type="submit" className="button-primary w-full">
+          <Input
+            type='text'
+            name='username'
+            label='Username'
+            error={formErrors.username}
+            required
+          />
+
+          <Input
+            type='password'
+            name='password'
+            label='Password'
+            error={formErrors.password}
+            required
+          />
+
+          <Input
+            type='password'
+            name='confirmPassword'
+            label='Confirm Password'
+            error={formErrors.confirmPassword}
+            required
+          />
+
+          {formErrors.general && (
+            <p className='text-red-500 text-center max-w-96 mx-auto text-sm'>
+              {formErrors.general}
+            </p>
+          )}
+
+          <div className='pt-4'>
+            <SubmitButton
+              look='primary'
+              type='submit'
+              className='w-full'
+              loading={isLoading}
+            >
               Create Account
-            </button>
+            </SubmitButton>
           </div>
         </form>
-        
-        <div className="text-center pt-2">
+
+        <div className='text-center pt-2'>
           <p>
             Already have an account?{' '}
-            <Link href="/login" className="link">
+            <Link href='/login' className='link'>
               Log in
             </Link>
           </p>
@@ -109,3 +224,9 @@ export default function SignUp() {
     </div>
   )
 }
+
+SignUp.PageLayout = function SignUpLayout({ children }) {
+  return <ApiProvider>{children}</ApiProvider>
+}
+
+export default SignUp

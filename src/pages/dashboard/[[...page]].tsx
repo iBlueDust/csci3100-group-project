@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import classNames from 'classnames'
@@ -6,6 +6,13 @@ import { FiHome, FiPackage, FiMessageSquare, FiSettings } from 'react-icons/fi'
 
 import { geistMono, geistSans } from '@/styles/fonts'
 import Sidebar from '@/components/Sidebar'
+import type { PageWithLayout } from '@/data/types/layout'
+import { ApiProvider, useApi } from '@/utils/frontend/api'
+import { useQueryClient } from '@tanstack/react-query'
+import { QueryKeys } from '@/data/types/queries'
+import { getChats } from '@/data/frontend/queries/getChats'
+import { searchMarketListings } from '@/data/frontend/queries/searchMarketListings'
+import { useRouter } from 'next/router'
 
 // TODO: Add loading component
 const Home = dynamic(() => import('@/components/Home'), { ssr: false })
@@ -45,9 +52,54 @@ const navItems = [
   },
 ]
 
-export default function Dashboard() {
-  const [activePage, setActivePage] = useState(Page.HOME)
+const Dashboard: PageWithLayout = () => {
+  const router = useRouter()
+  const api = useApi()
   // Mock data for recent listings/trades
+
+  const queryClient = useQueryClient()
+  useEffect(() => {
+    if (!api) {
+      console.warn('Not logged in. Returning to home screen...')
+      router.replace('/')
+    }
+
+    queryClient.prefetchQuery({
+      queryKey: [QueryKeys.CHATS],
+      queryFn: () => getChats(api),
+    })
+    queryClient.prefetchQuery({
+      queryKey: [QueryKeys.MARKET_LISTINGS],
+      queryFn: () => searchMarketListings(api),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api])
+
+  const pageKeys: (string | undefined)[] = [
+    undefined,
+    Page.MARKETPLACE,
+    Page.MESSAGES,
+    Page.SETTINGS,
+  ]
+  // Only
+  // /dashboard
+  // /dashboard/marketplace
+  // /dashboard/messages
+  // /dashboard/settings
+  // are recognized. No nested routes.
+  const activePage =
+    pageKeys.includes(router.query.page?.[0]) &&
+    (!router.query.page || router.query.page.length === 1)
+      ? router.query.page?.[0] || Page.HOME
+      : null // 404
+
+  // Redirect to /dashboard if activePage is null (invalid route)
+  useEffect(() => {
+    if (activePage == null) {
+      router.replace('/dashboard')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router])
 
   return (
     <div
@@ -73,8 +125,8 @@ export default function Dashboard() {
         {/* Sidebar */}
         <Sidebar
           navItems={navItems}
-          value={activePage}
-          onChange={setActivePage as (value: string | number) => void}
+          value={activePage ?? ''}
+          onChange={(page) => router.replace(`/dashboard/${page}`)}
         />
 
         {/* Main content */}
@@ -91,3 +143,9 @@ export default function Dashboard() {
     </div>
   )
 }
+
+Dashboard.PageLayout = function DashboardLayout({ children }) {
+  return <ApiProvider>{children}</ApiProvider>
+}
+
+export default Dashboard

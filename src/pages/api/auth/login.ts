@@ -10,6 +10,7 @@ import { sleep } from "@/utils"
 
 type Data = {
 	id: string
+	expiresAt: string
 }
 
 type Error = {
@@ -45,7 +46,9 @@ async function POST(
 
 	// httpOnly cookies
 	res.setHeader('Set-Cookie', sessionToCookie(session))
-	res.status(200).send({ id: user.id })
+	res
+		.status(200)
+		.send({ id: user.id, expiresAt: session.expiresAt.toISOString() })
 }
 
 export default async function handler(

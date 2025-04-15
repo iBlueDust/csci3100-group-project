@@ -1,33 +1,115 @@
 import Link from 'next/link'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import classNames from 'classnames'
+import { useRouter } from 'next/router'
+
 import { geistMono, geistSans } from '@/styles/fonts'
+import Input from '@/components/Input'
+import SubmitButton from '@/components/SubmitButton'
+import { toPasskey } from '@/utils/frontend/e2e/auth'
+import { ApiProvider, useApi } from '@/utils/frontend/api'
+import { PageWithLayout } from '@/data/types/layout'
 
-export default function Login() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
+const Login: PageWithLayout = () => {
+  const router = useRouter()
+  const api = useApi()
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // In a real app, you would validate credentials here
-    console.log('Login form submitted:', formData)
-    
-    // Redirect to dashboard after successful login
-    window.location.href = '/dashboard'
-    
-    // Or using Next.js router (import { useRouter } from 'next/router' first)
-    // const router = useRouter()
-    // router.push('/dashboard')
-  }
+  const [formErrors, setFormErrors] = useState<{
+    general?: string
+    username?: string
+    password?: string
+  }>({})
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+
+      setFormErrors({})
+
+      const formData = new FormData(e.target as HTMLFormElement)
+      const data = {
+        username: formData.get('username') as string,
+        password: formData.get('password') as string,
+      }
+
+      let isValid = true
+
+      if (!data.username) {
+        setFormErrors((prev) => ({
+          ...prev,
+          username: 'Username is required',
+        }))
+        isValid = false
+      }
+
+      if (!data.password) {
+        setFormErrors((prev) => ({
+          ...prev,
+          password: 'Password is required',
+        }))
+        isValid = false
+      }
+
+      if (!isValid) {
+        setIsLoading(false)
+        return
+      }
+
+      setIsLoading(true)
+
+      try {
+        const payload = {
+          username: data.username,
+          passkey: await toPasskey(data.username, data.password),
+        }
+
+        const response = await api.fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (response.status === 401) {
+          // 401 Unauthorized
+          setFormErrors((prev) => ({
+            ...prev,
+            general: 'Invalid username or password',
+          }))
+          return
+        }
+
+        if (!response.ok) {
+          setFormErrors((prev) => ({
+            ...prev,
+            general: 'An unexpected error occurred',
+          }))
+          return
+        }
+
+        const body = await response.json()
+        console.log('Logged in as user', body.id)
+
+        api.setUser({
+          id: body.id,
+          username: data.username,
+        })
+        api.setTokenExpiresAt(new Date(body.expiresAt))
+
+        router.push('/dashboard')
+      } catch (error) {
+        console.error('Login error:', error)
+        setFormErrors((prev) => ({
+          ...prev,
+          general: 'Invalid username or password',
+        }))
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [router, api],
+  )
 
   return (
     <div
@@ -41,65 +123,33 @@ export default function Login() {
         <h1 className='text-4xl font-bold border-b border-foreground font-mono'>
           Log In
         </h1>
-        
+
         <form onSubmit={handleSubmit} className='w-full space-y-4'>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm">
-                Remember me
-              </label>
-            </div>
-            
-            <div className="text-sm">
-              <Link href="/forgot-password" className="link">
-                Forgot your password?
-              </Link>
-            </div>
-          </div>
-          
-          <div className="pt-4">
-            <button type="submit" className="button-primary w-full">
+          <Input type='username' name='username' label='Username' required />
+          <Input type='password' name='password' label='Password' required />
+
+          {formErrors.general && (
+            <p className='max-w-96 text-center text-red-500 text-sm'>
+              {formErrors.general}
+            </p>
+          )}
+
+          <div className='pt-4'>
+            <SubmitButton
+              look='primary'
+              type='submit'
+              className='w-full'
+              loading={isLoading}
+            >
               Log In
-            </button>
+            </SubmitButton>
           </div>
         </form>
-        
-        <div className="text-center pt-2">
+
+        <div className='text-center pt-2'>
           <p>
-            Don't have an account?{' '}
-            <Link href="/signup" className="link">
+            Don&apos;t have an account?{' '}
+            <Link href='/signup' className='link'>
               Sign up
             </Link>
           </p>
@@ -108,3 +158,9 @@ export default function Login() {
     </div>
   )
 }
+
+Login.PageLayout = function LoginLayout({ children }) {
+  return <ApiProvider>{children}</ApiProvider>
+}
+
+export default Login

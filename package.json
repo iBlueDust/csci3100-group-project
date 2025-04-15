@@ -12,7 +12,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.72.1",
     "classnames": "^2.5.1",
+    "dayjs": "^1.11.13",
     "formidable": "^3.5.2",
     "joi": "^17.13.3",
     "minio": "^8.0.5",
@@ -21,6 +23,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
+    "react-textarea-autosize": "^8.5.9",
     "redis": "^4.7.0",
     "uuid": "^11.1.0"
   },

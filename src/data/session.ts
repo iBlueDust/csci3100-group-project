@@ -2,6 +2,7 @@ import { createClient as createRedisClient } from "redis"
 
 import { UserRole } from "./types/auth"
 import { generateRefreshToken, generateToken, verifyRefreshToken, verifyToken } from "@/utils/api/auth"
+import env from "@/env"
 
 export interface TokenData<TId = string> {
 	userId: TId
@@ -22,16 +23,8 @@ export interface Session {
 	token: string
 	refreshToken: string
 	issuedAt: Date
+	expiresAt: Date
 }
-
-export const AUTH_TOKEN_EXPIRATION_SECONDS =
-	!Number.isNaN(parseInt(process.env.AUTH_TOKEN_EXPIRATION_SECONDS ?? '')) ?
-		parseInt(process.env.AUTH_TOKEN_EXPIRATION_SECONDS ?? '') :
-		60 * 5 // 5 minutes
-export const AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS =
-	!Number.isNaN(parseInt(process.env.AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS ?? '')) ?
-		parseInt(process.env.AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS ?? '') :
-		60 * 60 * 6 // 6 hours
 
 export type Awaitable<T> = T | Promise<T>
 
@@ -51,7 +44,7 @@ export abstract class SessionStore {
 		RefreshTokenData | null
 	>
 
-	abstract reissueToken(userId: string, roles: string[]): Awaitable<string>
+	abstract reissueToken(userId: string, roles: string[]): Awaitable<TokenData>
 
 	abstract revokeUserSessions(userId: string): Awaitable<void>
 }
@@ -131,13 +124,16 @@ export class InMemorySessionStore extends SessionStore {
 		} while (await this.checkRefreshToken(refreshToken))
 
 		const issuedAt = new Date()
+		const tokenExpiresAt = new Date(
+			Date.now() + 1000 * env.AUTH_TOKEN_EXPIRATION_SECONDS
+		)
 
 		const tokenData: TokenData = {
 			userId,
 			roles,
 			token,
 			issuedAt,
-			expiresAt: new Date(Date.now() + 1000 * AUTH_TOKEN_EXPIRATION_SECONDS), // 30 days
+			expiresAt: tokenExpiresAt,
 		}
 		this.insertToken(tokenData)
 
@@ -145,11 +141,13 @@ export class InMemorySessionStore extends SessionStore {
 			userId,
 			refreshToken,
 			issuedAt,
-			expiresAt: new Date(Date.now() + 1000 * AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS), // 30 days
+			expiresAt: new Date(
+				Date.now() + 1000 * env.AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS
+			),
 		}
 		this.insertRefreshToken(refreshTokenData)
 
-		return { token, refreshToken, issuedAt }
+		return { token, refreshToken, issuedAt, expiresAt: tokenExpiresAt }
 	}
 
 	revokeUserSessions(userId: string): Awaitable<void> {
@@ -159,21 +157,21 @@ export class InMemorySessionStore extends SessionStore {
 		if (refreshToken) this.deleteRefreshToken(refreshToken)
 	}
 
-	async reissueToken(userId: string, roles: UserRole[]): Promise<string> {
+	async reissueToken(userId: string, roles: UserRole[]): Promise<TokenData> {
 		this.deleteToken(userId)
 
-		let newToken: string
+		let newTokenStr: string
 		do {
-			newToken = generateToken()
-		} while (await this.checkToken(newToken))
-		const newTokenData: TokenData = {
+			newTokenStr = generateToken()
+		} while (await this.checkToken(newTokenStr))
+		const newToken: TokenData = {
 			userId: userId,
 			roles: roles,
-			token: newToken,
+			token: newTokenStr,
 			issuedAt: new Date(),
-			expiresAt: new Date(Date.now() + 1000 * AUTH_TOKEN_EXPIRATION_SECONDS), // 30 days
+			expiresAt: new Date(Date.now() + 1000 * env.AUTH_TOKEN_EXPIRATION_SECONDS), // 30 days
 		}
-		this.insertToken(newTokenData)
+		this.insertToken(newToken)
 		return newToken
 	}
 
@@ -227,13 +225,16 @@ export class RedisSessionStore extends SessionStore {
 		} while (await this.checkRefreshToken(refreshToken))
 
 		const issuedAt = new Date()
+		const tokenExpiresAt = new Date(
+			Date.now() + 1000 * env.AUTH_TOKEN_EXPIRATION_SECONDS
+		)
 
 		const tokenData: TokenData = {
 			userId,
 			roles,
 			token,
 			issuedAt,
-			expiresAt: new Date(Date.now() + 1000 * AUTH_TOKEN_EXPIRATION_SECONDS), // 30 days
+			expiresAt: tokenExpiresAt,
 		}
 		await this.insertToken(tokenData)
 
@@ -241,11 +242,13 @@ export class RedisSessionStore extends SessionStore {
 			userId,
 			refreshToken,
 			issuedAt,
-			expiresAt: new Date(Date.now() + 1000 * AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS), // 30 days
+			expiresAt: new Date(
+				Date.now() + 1000 * env.AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS
+			),
 		}
 		await this.insertRefreshToken(refreshTokenData)
 
-		return { token, refreshToken, issuedAt }
+		return { token, refreshToken, issuedAt, expiresAt: tokenExpiresAt }
 	}
 
 	async getSession(userId: string): Promise<TokenData | null> {
@@ -294,37 +297,31 @@ export class RedisSessionStore extends SessionStore {
 	> {
 		await this.redisConnect
 
-		const data = await this.client.get(`refresh/token/${refreshToken}`)
-		if (!data) {
+		const value = await this.client.get(`refresh/token/${refreshToken}`)
+		if (!value) {
 			return null
 		}
 
-		return JSON.parse(data)
+		const data = JSON.parse(value)
+		return {
+			...data,
+			issuedAt: new Date(data.issuedAt),
+		}
 	}
 
-	async reissueToken(userId: string, roles: UserRole[]): Promise<string> {
+	async reissueToken(userId: string, roles: UserRole[]): Promise<TokenData> {
 		await this.redisConnect
-
-		const token = await this.client.get(`session/userId/${userId}`)
-		if (!token) {
-			return ''
-		}
 
 		const newToken = {
 			userId,
 			roles,
 			token: generateToken(),
 			issuedAt: new Date(),
-			expiresAt: new Date(Date.now() + 1000 * AUTH_TOKEN_EXPIRATION_SECONDS),
+			expiresAt: new Date(Date.now() + 1000 * env.AUTH_TOKEN_EXPIRATION_SECONDS),
 		}
-		const data = await this.client.get(`session/token/${token}`)
-		if (!data) {
-			return ''
-		}
-
 		await this.insertToken(newToken)
 
-		return newToken.token
+		return newToken
 	}
 
 	async revokeUserSessions(userId: string): Promise<void> {
@@ -345,7 +342,7 @@ export class RedisSessionStore extends SessionStore {
 	private async insertToken(data: TokenData): Promise<void> {
 		await this.redisConnect
 
-		const EX = AUTH_TOKEN_EXPIRATION_SECONDS
+		const EX = env.AUTH_TOKEN_EXPIRATION_SECONDS
 		await Promise.all([
 			this.client.set(`session/token/${data.token}`, JSON.stringify(data), { EX }),
 			this.client.set(`session/userId/${data.userId}`, data.token, { EX }),
@@ -355,7 +352,7 @@ export class RedisSessionStore extends SessionStore {
 	private async insertRefreshToken(data: RefreshTokenData): Promise<void> {
 		await this.redisConnect
 
-		const EX = AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS
+		const EX = env.AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS
 		await Promise.all([
 			this.client.set(`refresh/token/${data.refreshToken}`, JSON.stringify(data), { EX }),
 			this.client.set(`refresh/userId/${data.userId}`, data.refreshToken, { EX }),
@@ -365,8 +362,8 @@ export class RedisSessionStore extends SessionStore {
 
 export function sessionToCookie(session: Session): readonly string[] {
 	return [
-		`token=${session.token}; HttpOnly; Path=/; Max-Age=${AUTH_TOKEN_EXPIRATION_SECONDS}`,
-		`refreshToken=${session.refreshToken}; HttpOnly; Path=/; Max-Age=${AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS}`,
+		`token=${session.token}; HttpOnly; Path=/; Max-Age=${env.AUTH_TOKEN_EXPIRATION_SECONDS}`,
+		`refreshToken=${session.refreshToken}; HttpOnly; Path=/; Max-Age=${env.AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS}`,
 	]
 }
 

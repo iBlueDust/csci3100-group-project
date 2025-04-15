@@ -57,8 +57,8 @@ async function GET(
 
 	listing.pictures = listing.pictures.map(
 		(picture: string) =>
-			`${process.env.MINIO_PUBLIC_ENDPOINT || 'localhost:9000'}/`
-			+ `${process.env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS || 'market-listing-attachments'}/`
+			`${env.MINIO_PUBLIC_ENDPOINT}/`
+			+ `${env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS}/`
 			+ `${picture.toString()}`
 	)
 
