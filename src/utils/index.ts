@@ -51,6 +51,13 @@ export function ab2hex(buffer: ArrayBuffer) {
 		.join('')
 }
 
+export function hex2ab(hex: string): ArrayBuffer {
+	const hexPairs = hex.match(/[\da-f]{2}/gi)
+	if (!hexPairs) throw new Error('Invalid hex string')
+	const bytes = new Uint8Array(hexPairs.map(h => parseInt(h, 16)))
+	return bytes.buffer
+}
+
 export function hex2base64url(hex: string) {
 	const binary = hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16))
 	if (!binary) return ''

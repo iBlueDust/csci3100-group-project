@@ -74,12 +74,15 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       payload.data.reverse()
 
       const theirPublicKey = await importKey(otherParty!.publicKey, 'jwk', [])
-      console.log('theirPublicKey', theirPublicKey)
       const sharedKey = await deriveKey(theirPublicKey, api.uek!.privateKey)
-      console.log('sharedKey', sharedKey)
+
+      const decryptedMessages = await decryptChatMessages(
+        payload.data,
+        sharedKey,
+      )
 
       return {
-        data: await decryptChatMessages(payload.data, sharedKey),
+        data: decryptedMessages,
         meta: payload.meta,
       }
     },

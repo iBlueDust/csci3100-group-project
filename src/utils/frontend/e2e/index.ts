@@ -1,39 +1,13 @@
-import env from '@/utils/frontend/env'
-import { ab2hex, hex2base64url } from '@/utils'
+import { generateDeterministicKeyPair } from './kdf'
 
-export enum HashAlgorithm {
-	/**
-	 * Not for cryptographic use
-	 */
-	SHA1 = 'SHA-1',
-
-	SHA256 = 'SHA-256',
-	SHA384 = 'SHA-384',
-	SHA512 = 'SHA-512',
-}
-
-export async function hash(
-	value: string | Uint8Array | ArrayBuffer,
-	algorithm: HashAlgorithm = HashAlgorithm.SHA256
-): Promise<ArrayBuffer> {
-	if (typeof value === 'string') {
-		// Convert string to Buffer using utf-8 encoding
-		const encoder = new TextEncoder()
-		value = encoder.encode(value)
-	}
-	return await window.crypto.subtle.digest(algorithm, value)
-}
+export { hash, HashAlgorithm } from './hash'
 
 export type UserEncryptionKey = CryptoKeyPair
 
 export async function generateUserEncryptionKey(username: string, password: string): Promise<UserEncryptionKey> {
-	const uekMaterial = Buffer.concat([
-		new TextEncoder().encode(username),
-		new Uint8Array([0xff]),
-		new TextEncoder().encode(password),
-		new TextEncoder().encode(env.NEXT_PUBLIC_UEK_DERIVATION_SALT),
-	])
-	return await generateDeterministicKeys(uekMaterial)
+	const secret = password
+	const salt = username
+	return await generateDeterministicKeyPair(secret, salt)
 }
 
 // https://www.keithbartholomew.com/blog/posts/2024-01-22-webcrypto-diffie-hellman
@@ -43,62 +17,62 @@ const algorithm = { name: 'ECDH', namedCurve: 'P-521' }
 /**
  * @param userDerivationKey Must be a Uint8Array of 32 bytes or more
  */
-export async function generateDeterministicKeys(
-	seed: Uint8Array<ArrayBufferLike>,
-): Promise<CryptoKeyPair> {
-	// Generate 128-bit hash of the seed
-	const seedHash1 = await hash(seed, HashAlgorithm.SHA512)
-	const seed2 = new Uint8Array([...new Uint8Array(seedHash1), ...seed])
-	const seedHash2 = await hash(seed2, HashAlgorithm.SHA512)
-	// Pick the first 66 bytes
-	const seedHashHex = ab2hex(seedHash2.slice(0, 66)).padStart(66 * 2, '0')
+// export async function generateDeterministicKeys(
+// 	seed: Uint8Array<ArrayBufferLike>,
+// ): Promise<CryptoKeyPair> {
+// 	// Generate 128-bit hash of the seed
+// 	const seedHash1 = await hash(seed, HashAlgorithm.SHA512)
+// 	const seed2 = new Uint8Array([...new Uint8Array(seedHash1), ...seed])
+// 	const seedHash2 = await hash(seed2, HashAlgorithm.SHA512)
+// 	// Pick the first 66 bytes
+// 	const seedHashHex = ab2hex(seedHash2.slice(0, 66)).padStart(66 * 2, '0')
 
-	// Dynamically load elliptic
-	const elliptic = (await import('elliptic')).default
-	const ec = new elliptic.ec('p521')
-	const key = ec.keyFromPrivate(seedHashHex, 'hex')
-	const publicKeyPoint = key.getPublic()
+// 	// Dynamically load elliptic
+// 	const elliptic = (await import('elliptic')).default
+// 	const ec = new elliptic.ec('p521')
+// 	const key = ec.keyFromPrivate(seedHashHex, 'hex')
+// 	const publicKeyPoint = key.getPublic()
 
-	const xHex = publicKeyPoint.getX().toString('hex').padStart(66 * 2, '0')
-	const yHex = publicKeyPoint.getY().toString('hex').padStart(66 * 2, '0')
+// 	const xHex = publicKeyPoint.getX().toString('hex').padStart(66 * 2, '0')
+// 	const yHex = publicKeyPoint.getY().toString('hex').padStart(66 * 2, '0')
 
-	const publicJwk = {
-		kty: 'EC',
-		crv: 'P-521',
-		x: hex2base64url(xHex),
-		y: hex2base64url(yHex),
-		ext: true,
-	}
-	const privateJwk = {
-		...publicJwk,
-		d: hex2base64url(seedHashHex),
-	}
+// 	const publicJwk = {
+// 		kty: 'EC',
+// 		crv: 'P-521',
+// 		x: hex2base64url(xHex),
+// 		y: hex2base64url(yHex),
+// 		ext: true,
+// 	}
+// 	const privateJwk = {
+// 		...publicJwk,
+// 		d: hex2base64url(seedHashHex),
+// 	}
 
-	const keypair: Partial<CryptoKeyPair> = {}
+// 	const keypair: Partial<CryptoKeyPair> = {}
 
-	await Promise.all([
-		crypto.subtle.importKey(
-			'jwk',
-			privateJwk,
-			algorithm,
-			true,
-			['deriveKey', 'deriveBits'],
-		).then(key => {
-			keypair.privateKey = key
-		}),
-		crypto.subtle.importKey(
-			'jwk',
-			publicJwk,
-			algorithm,
-			true,
-			[],
-		).then(key => {
-			keypair.publicKey = key
-		}),
-	])
+// 	await Promise.all([
+// 		crypto.subtle.importKey(
+// 			'jwk',
+// 			privateJwk,
+// 			algorithm,
+// 			true,
+// 			['deriveKey', 'deriveBits'],
+// 		).then(key => {
+// 			keypair.privateKey = key
+// 		}),
+// 		crypto.subtle.importKey(
+// 			'jwk',
+// 			publicJwk,
+// 			algorithm,
+// 			true,
+// 			[],
+// 		).then(key => {
+// 			keypair.publicKey = key
+// 		}),
+// 	])
 
-	return keypair as CryptoKeyPair
-}
+// 	return keypair as CryptoKeyPair
+// }
 
 export async function exportKey(
 	key: CryptoKey,
