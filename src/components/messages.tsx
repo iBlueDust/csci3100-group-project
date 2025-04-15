@@ -11,10 +11,9 @@ import type { PageWithLayout } from '@/data/types/layout'
 import type { ClientChat } from '@/data/types/chats'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { QueryKeys } from '@/data/types/queries'
-import { getChats } from '@/data/frontend/queries/getChats'
-import { decryptChats } from '@/utils/frontend/e2e/chat'
 import { isDev } from '@/utils/frontend/env'
 import { hash } from '@/utils/frontend/e2e/hash'
+import { queryChats } from '@/data/frontend/queries/queryChats'
 
 const ChatThread = dynamic(() => import('@/components/ChatThread'), {
   ssr: false,
@@ -31,23 +30,7 @@ const Messages: PageWithLayout = () => {
 
   const { data: chats } = useQuery({
     queryKey: [QueryKeys.CHATS],
-    queryFn: async () => {
-      console.log('queryFn')
-      const chats = await getChats(api)
-      console.log('got chats', chats)
-
-      if (!api.user || !api.uek) throw new Error('User or key not found')
-      const decryptedChats = await decryptChats(
-        chats.data,
-        api.user!.id,
-        api.uek!.privateKey,
-      )
-
-      return {
-        data: decryptedChats,
-        meta: chats.meta,
-      } as typeof chats
-    },
+    queryFn: () => queryChats(api),
     enabled: !!api.user && !!api.uek,
     throwOnError: isDev,
     staleTime: 5 * 1000,
@@ -155,6 +138,7 @@ const Messages: PageWithLayout = () => {
             <ChatThread
               className='h-full'
               chat={activeChat}
+              sharedKey={activeChat.sharedKey}
               onMobileCloseClick={() => {
                 setActiveChatId(null)
                 setMobileChatVisible(false)

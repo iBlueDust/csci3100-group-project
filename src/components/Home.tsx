@@ -4,7 +4,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import { searchMarketListings } from '@/data/frontend/queries/searchMarketListings'
+import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
 import { QueryKeys } from '@/data/types/queries'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency } from '@/utils/format'
@@ -19,7 +19,7 @@ const Home: React.FC<HomeProps> = ({}) => {
   const api = useApi()
   const { data: listings } = useQuery({
     queryKey: [QueryKeys.MARKET_LISTINGS],
-    queryFn: () => searchMarketListings(api, { limit: LIMIT }),
+    queryFn: () => queryMarketListings(api, { limit: LIMIT }),
   })
 
   return (

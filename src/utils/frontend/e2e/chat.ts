@@ -1,6 +1,6 @@
 import { ChatMessageType, ClientChat, ClientChatMessage } from "@/data/types/chats"
 import { str2ab } from "@/utils"
-import { SendChatMessagePayload } from "@/data/frontend/queries/sendChatMessage"
+import { PostChatMessagePayload } from "@/data/frontend/fetches/postChatMessage"
 import { decryptMessage, deriveKey, encryptMessage, importKey } from "."
 
 
@@ -8,10 +8,9 @@ export async function decryptChat(
 	chat: ClientChat,
 	myUserId: string,
 	myPrivateKey: CryptoKey
-): Promise<ClientChat> {
+): Promise<ClientChat & { sharedKey: CryptoKey }> {
 	if (!chat.lastMessage?.e2e) {
 		throw new Error("Chat message is not encrypted")
-		return chat
 	}
 
 	const otherParty = chat.participants.find(
@@ -19,16 +18,15 @@ export async function decryptChat(
 	)
 	if (!otherParty?.publicKey) {
 		throw new Error("Could not find other party's public key")
-		return chat
 	}
 
 	const theirPublicKey = await importKey(otherParty!.publicKey, 'jwk', [])
 	const sharedKey = await deriveKey(theirPublicKey, myPrivateKey)
-	console.log('derived shared key', sharedKey)
 
 	return {
 		...chat,
 		lastMessage: await decryptChatMessage(chat.lastMessage, sharedKey),
+		sharedKey,
 	}
 }
 
@@ -36,7 +34,7 @@ export async function decryptChats(
 	chats: ClientChat[],
 	myUserId: string,
 	myPrivateKey: CryptoKey,
-): Promise<ClientChat[]> {
+): Promise<(ClientChat & { sharedKey: CryptoKey })[]> {
 	const result = new Array(chats.length).fill(null)
 
 	await Promise.all(
@@ -87,9 +85,9 @@ export async function decryptChatMessages(
 }
 
 export async function encryptChatMessage(
-	message: SendChatMessagePayload<string | ArrayBuffer>,
+	message: PostChatMessagePayload<string | ArrayBuffer>,
 	sharedKey: CryptoKey,
-): Promise<SendChatMessagePayload> {
+): Promise<PostChatMessagePayload> {
 	if (message.type !== ChatMessageType.Text) {
 		throw new Error("Only text messages are supported right now")
 	}

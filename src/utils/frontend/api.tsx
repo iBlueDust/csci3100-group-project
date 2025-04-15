@@ -11,6 +11,7 @@ const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:3000/api'
 
 export interface ApiState {
+  isInitialized: boolean
   user?: { id: string; username: string }
   setUser: (user: ApiState['user']) => void
   tokenExpiresAt?: Date
@@ -20,6 +21,7 @@ export interface ApiState {
 }
 
 const ApiContext = React.createContext<ApiState>({
+  isInitialized: false,
   setUser: () => {},
   setTokenExpiresAt: () => {},
   setUek: () => {},
@@ -32,6 +34,7 @@ export interface ApiProviderProps {
 }
 export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
   const [user, _setUser] = useState<ApiState['user']>(undefined)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   const setUser = useCallback((user: ApiState['user']) => {
     _setUser(user)
@@ -132,12 +135,28 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
       _setTokenExpiresAt(new Date(tokenExpiresAt))
     }
 
-    loadUser()
+    loadUser().finally(() => setIsInitialized(true))
   }, [])
 
   const value = useMemo(
-    () => ({ user, setUser, tokenExpiresAt, setTokenExpiresAt, uek, setUek }),
-    [user, setUser, tokenExpiresAt, setTokenExpiresAt, uek, setUek],
+    () => ({
+      isInitialized,
+      user,
+      setUser,
+      tokenExpiresAt,
+      setTokenExpiresAt,
+      uek,
+      setUek,
+    }),
+    [
+      isInitialized,
+      user,
+      setUser,
+      tokenExpiresAt,
+      setTokenExpiresAt,
+      uek,
+      setUek,
+    ],
   )
 
   return (
@@ -148,6 +167,7 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
 }
 
 export interface Api {
+  isInitialized: boolean
   user?: { id: string; username: string }
   setUser: (user: Api['user']) => void
   tokenExpiresAt?: Date
@@ -221,6 +241,7 @@ export const useApi = (): Api => {
 
   return useMemo(
     () => ({
+      isInitialized: context.isInitialized,
       user: context.user,
       setUser: context.setUser,
       fetch: apiFetch,

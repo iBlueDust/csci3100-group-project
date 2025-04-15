@@ -4,15 +4,15 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import classNames from 'classnames'
 import { FiHome, FiPackage, FiMessageSquare, FiSettings } from 'react-icons/fi'
-
-import { geistMono, geistSans } from '@/styles/fonts'
-import Sidebar from '@/components/Sidebar'
-import type { PageWithLayout } from '@/data/types/layout'
-import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { useQueryClient } from '@tanstack/react-query'
+
+import Sidebar from '@/components/Sidebar'
+import { geistMono, geistSans } from '@/styles/fonts'
+import type { PageWithLayout } from '@/data/types/layout'
 import { QueryKeys } from '@/data/types/queries'
-import { getChats } from '@/data/frontend/queries/getChats'
-import { searchMarketListings } from '@/data/frontend/queries/searchMarketListings'
+import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
+import { queryChats } from '@/data/frontend/queries/queryChats'
+import { ApiProvider, useApi } from '@/utils/frontend/api'
 
 // TODO: Add loading component
 const Home = dynamic(() => import('@/components/Home'), { ssr: false })
@@ -59,23 +59,26 @@ const Dashboard: PageWithLayout = () => {
 
   const queryClient = useQueryClient()
   useEffect(() => {
-    if (!api) {
+    if (!api.isInitialized) return
+
+    if (!api.user || !api.uek) {
       console.warn('Not logged in. Returning to home screen...')
       router.replace('/')
+      return
     }
 
-    // queryClient.prefetchQuery({
-    //   queryKey: [QueryKeys.CHATS],
-    //   queryFn: () => getChats(api),
-    //   staleTime: 1000 * 5,
-    // })
+    queryClient.prefetchQuery({
+      queryKey: [QueryKeys.CHATS],
+      queryFn: () => queryChats(api),
+      staleTime: 1000 * 5,
+    })
     queryClient.prefetchQuery({
       queryKey: [QueryKeys.MARKET_LISTINGS],
-      queryFn: () => searchMarketListings(api),
+      queryFn: () => queryMarketListings(api),
       staleTime: 1000 * 5,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [api])
+  }, [api.isInitialized])
 
   const pageKeys: (string | undefined)[] = [
     undefined,

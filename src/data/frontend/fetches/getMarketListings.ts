@@ -3,7 +3,7 @@ import { SearchMarketListingsOptions } from "@/data/db/mongo/queries/market/sear
 import { PaginatedResult } from "@/data/types/common"
 import type { Api } from "@/utils/frontend/api"
 
-export async function searchMarketListings(
+export async function getMarketListings(
 	api: Api,
 	options: SearchMarketListingsOptions = {},
 ): Promise<PaginatedResult<MarketListingSearchResult>> {

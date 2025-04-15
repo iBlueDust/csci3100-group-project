@@ -21,28 +21,23 @@ import { FiChevronLeft, FiMoreVertical, FiSend } from 'react-icons/fi'
 import classNames from 'classnames'
 import { useApi } from '@/utils/frontend/api'
 import { QueryKeys } from '@/data/types/queries'
-import { getChatMessages } from '@/data/frontend/queries/getChatMessages'
 import { PaginatedResult } from '@/data/types/common'
-import {
-  sendChatMessage,
-  SendChatMessagePayload,
-} from '@/data/frontend/queries/sendChatMessage'
-import { deriveKey, importKey } from '@/utils/frontend/e2e'
-import {
-  decryptChatMessages,
-  encryptChatMessage,
-} from '@/utils/frontend/e2e/chat'
+import { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
 import { isDev } from '@/utils/frontend/env'
+import { queryChatMessages } from '@/data/frontend/queries/queryChatMessages'
+import { sendChatMessage } from '@/data/frontend/mutations/sendChatMessage'
 
 export interface ChatThreadProps {
   className?: string
   chat: ClientChat
+  sharedKey: CryptoKey
   onMobileCloseClick?: () => void
 }
 
 const ChatThread: React.FC<ChatThreadProps> = ({
   className,
   chat,
+  sharedKey,
   onMobileCloseClick,
 }) => {
   const api = useApi()
@@ -54,52 +49,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     [chat, api],
   )
 
-  // const { data: sharedKey, promise: sharedKeyPromise } = useQuery({
-  //   queryKey: [QueryKeys.SHARED_KEY, chat.id],
-  //   queryFn: async () => {
-  //     if (!api.uek || !otherParty?.publicKey) {
-  //       return undefined
-  //     }
-
-  //     const theirPublicKey = await importKey(otherParty.publicKey)
-  //     return await deriveKey(theirPublicKey, api.uek.privateKey)
-  //   },
-  //   enabled: !!api.user && !!otherParty,
-  // })
-
   const { data: messages } = useQuery<PaginatedResult<ClientChatMessage>>({
     queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
-    queryFn: async () => {
-      const payload = await getChatMessages(api, chat.id)
-      payload.data.reverse()
-
-      const theirPublicKey = await importKey(otherParty!.publicKey, 'jwk', [])
-      const sharedKey = await deriveKey(theirPublicKey, api.uek!.privateKey)
-
-      const decryptedMessages = await decryptChatMessages(
-        payload.data,
-        sharedKey,
-      )
-
-      return {
-        data: decryptedMessages,
-        meta: payload.meta,
-      }
-    },
+    queryFn: async () => queryChatMessages(api, chat.id, sharedKey),
     throwOnError: isDev,
-    enabled: !!api.user && !!api.uek && !!otherParty,
+    enabled: !!api.user && !!sharedKey,
   })
 
   const mutation = useMutation({
-    mutationFn: async (arg: SendChatMessagePayload<string>) => {
-      const theirPublicKey = await importKey(otherParty!.publicKey, 'jwk', [])
-      const sharedKey = await deriveKey(theirPublicKey, api.uek!.privateKey)
-
-      const encrypted = await encryptChatMessage(arg, sharedKey!)
-      await sendChatMessage(api, chat.id, encrypted)
-    },
+    mutationFn: async (arg: PostChatMessagePayload<string>) =>
+      sendChatMessage(api, chat.id, arg, sharedKey),
     onSuccess: () => {
-      // Handle success
+      // Reload chat messages
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
       })
@@ -125,7 +86,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     }
 
     // In a real app, you would send the message to an API
-    const message: SendChatMessagePayload<string> = {
+    const message: PostChatMessagePayload<string> = {
       type: ChatMessageType.Text,
       content: messageInput,
     }

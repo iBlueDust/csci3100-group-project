@@ -2,7 +2,7 @@ import { ChatMessageType } from "@/data/types/chats"
 import { ab2base64 } from "@/utils"
 import type { Api } from "@/utils/frontend/api"
 
-export interface SendChatMessagePayload<
+export interface PostChatMessagePayload<
 	TContent extends string | ArrayBufferLike = ArrayBuffer,
 > {
 	type: ChatMessageType
@@ -13,10 +13,10 @@ export interface SendChatMessagePayload<
 	}
 }
 
-export async function sendChatMessage(
+export async function postChatMessage(
 	api: Api,
 	chatId: string,
-	message: SendChatMessagePayload<ArrayBuffer>,
+	message: PostChatMessagePayload<ArrayBuffer>,
 ): Promise<{ id: string }> {
 	const formData = new FormData()
 	formData.set('type', 'text')
