@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+
       - name: Run lint
         run: npm run lint
 
@@ -47,4 +50,4 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Validate docker-compose config
-        run: docker-compose -f docker-compose.dev.yml config
+        run: docker compose -f docker-compose.dev.yml config
