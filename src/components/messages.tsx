@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FiChevronLeft, FiSend, FiPaperclip, FiChevronDown, FiChevronUp, FiTrash2, FiAlertTriangle } from 'react-icons/fi'
+import { FiChevronLeft, FiSend, FiPaperclip, FiChevronDown, FiTrash2, FiAlertTriangle } from 'react-icons/fi'
 
 // Mock data for conversations
 const mockConversations = [
@@ -106,15 +106,30 @@ export default function Messages() {
   // Pagination state for conversations
   const [currentPage, setCurrentPage] = useState(1)
   const [conversationsPerPage, setConversationsPerPage] = useState(10)
-  const [totalConversations, setTotalConversations] = useState(mockConversations.length)
   
-  // Calculate total pages
-  const totalPages = Math.ceil(mockConversations.length / conversationsPerPage)
+  // New state for search term
+  const [searchTerm, setSearchTerm] = useState('')
   
-  // Get current page conversations
+  // New states for creating a new chat
+  const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false)
+  const [newChatUserId, setNewChatUserId] = useState('')
+
+  // Filter conversations based on search term (checks username and chat message content)
+  const filteredConversations = mockConversations.filter(convo => {
+    const searchLower = searchTerm.toLowerCase();
+    const userMatch = convo.user.toLowerCase().includes(searchLower);
+    const messages = mockMessages[convo.id as keyof typeof mockMessages] || [];
+    const messageMatch = messages.some(msg =>
+      msg.content.toLowerCase().includes(searchLower)
+    );
+    return userMatch || messageMatch;
+  })
+  
+  const totalConversations = filteredConversations.length
+  const totalPages = Math.ceil(totalConversations / conversationsPerPage)
   const indexOfLastConversation = currentPage * conversationsPerPage
   const indexOfFirstConversation = indexOfLastConversation - conversationsPerPage
-  const currentConversations = mockConversations.slice(indexOfFirstConversation, indexOfLastConversation)
+  const currentConversations = filteredConversations.slice(indexOfFirstConversation, indexOfLastConversation)
 
   const openConversation = (id: string) => {
     setActiveConversation(id)
@@ -125,13 +140,10 @@ export default function Messages() {
     if (message.trim() || attachment) {
       if (attachment) {
         console.log('Sending attachment:', attachment.name, 'File size:', attachment.size)
-        // In a real app, you would upload the file to a server here
       }
       if (message.trim()) {
         console.log('Sending message:', message)
       }
-      
-      // Reset inputs
       setMessage('')
       setAttachment(null)
       setShowAttachmentPreview(false)
@@ -151,7 +163,6 @@ export default function Messages() {
     setShowAttachmentPreview(false)
   }
   
-  // Change page
   const changePage = (pageNumber: number) => {
     if (pageNumber < 1) pageNumber = 1
     if (pageNumber > totalPages) pageNumber = totalPages
@@ -161,27 +172,29 @@ export default function Messages() {
   // Handle delete chat
   const handleDeleteChat = () => {
     if (activeConversation && window.confirm('Are you sure you want to delete this conversation? This action cannot be undone.')) {
-      // In a real app, we would make an API call to delete the chat
-      // For this mock, we'll just close the active conversation
       setActiveConversation(null)
       setMobileChatVisible(false)
-      
-      // In a real implementation, we would also need to remove the conversation from the list
-      // For now, we'll just leave it in the list since we're using mock data
       console.log(`Deleted conversation: ${activeConversation}`)
     }
   }
 
   // For demo purposes - toggle deletion status
   const toggleChatDeletionStatus = (id: string) => {
-    // In a real app, this would be read-only data from the API
-    // This is just to demonstrate the UI behavior
     const conversation = mockConversations.find(c => c.id === Number(id));
     if (conversation) {
       conversation.wasRequestedToDelete = !conversation.wasRequestedToDelete;
-      // Force re-render
       setActiveConversation(null);
       setTimeout(() => setActiveConversation(id), 10);
+    }
+  }
+
+  // Handle the creation of a new chat given a user id
+  const handleCreateNewChat = () => {
+    if (newChatUserId.trim()) {
+      console.log("Creating new chat with user id:", newChatUserId)
+      // Here you would normally add the new chat to your conversation list via an API call or state update
+      setIsNewChatModalOpen(false)
+      setNewChatUserId('')
     }
   }
 
@@ -191,9 +204,20 @@ export default function Messages() {
       
       <div className="flex flex-1 border-2 border-foreground/10 rounded-lg overflow-hidden">
         {/* Conversation List - hidden on mobile when a chat is open */}
-        <div className={`w-full md:w-1/3 border-r-2 border-foreground/10 bg-background-light ${mobileChatVisible ? 'hidden md:block' : 'block'}`}>
-          <div className="h-16 flex items-center px-4 border-b-2 border-foreground/10">
-            <h3 className="text-lg font-bold">Conversations</h3>
+        <div className={`relative w-full md:w-1/3 border-r-2 border-foreground/10 bg-background-light ${mobileChatVisible ? 'hidden md:block' : 'block'}`}>
+          <div className="h-16 flex flex-col justify-center px-4 border-b-2 border-foreground/10">
+            <h3 className="text-lg font-bold mb-2">Conversations</h3>
+            {/* Search input */}
+            <input 
+              type="text" 
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                setCurrentPage(1)
+              }}
+              placeholder="Search chats..." 
+              className="w-full px-3 py-1 border-2 border-foreground/10 rounded-md text-black"
+            />
           </div>
           
           <div className="overflow-y-auto h-[calc(100%-7rem)]">
@@ -230,7 +254,7 @@ export default function Messages() {
               </button>
               
               <span className="mx-2 text-sm">
-                {indexOfFirstConversation + 1}-{Math.min(indexOfLastConversation, mockConversations.length)} of {mockConversations.length}
+                {indexOfFirstConversation + 1}-{Math.min(indexOfLastConversation, totalConversations)} of {totalConversations}
               </span>
               
               <button 
@@ -242,6 +266,14 @@ export default function Messages() {
               </button>
             </div>
           </div>
+          
+          {/* Floating '+' button to create a new chat */}
+          <button 
+            className="absolute bottom-4 right-4 bg-black text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800"
+            onClick={() => setIsNewChatModalOpen(true)}
+          >
+            +
+          </button>
         </div>
         
         {/* Chat Area */}
@@ -282,8 +314,6 @@ export default function Messages() {
                     <p className="font-medium">This conversation has been deleted by the other person.</p>
                     <p className="text-sm">You can still view these messages, but they can no longer reply.</p>
                   </div>
-                  
-                  {/* For demo purposes only - this button would not exist in production */}
                   <button 
                     className="ml-auto text-xs text-amber-800 underline"
                     onClick={() => toggleChatDeletionStatus(activeConversation)}
@@ -295,23 +325,23 @@ export default function Messages() {
               
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {mockMessages[Number(activeConversation) as keyof typeof mockMessages]?.map((message) => (
+                {mockMessages[Number(activeConversation) as keyof typeof mockMessages]?.map((msg) => (
                   <div 
-                    key={message.id}
-                    className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
+                    key={msg.id}
+                    className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div 
                       className={`max-w-[80%] rounded-xl px-4 py-2 ${
-                        message.sender === 'me' 
+                        msg.sender === 'me' 
                           ? 'bg-black text-white border-2 border-[#343434]' 
                           : 'bg-white text-black border-2 border-[#343434]'
                       }`}
                     >
-                      {message.type === MessageType.Text ? (
-                        <p>{message.content}</p>
+                      {msg.type === MessageType.Text ? (
+                        <p>{msg.content}</p>
                       ) : (
                         <a 
-                          href={'fileUrl' in message ? message.fileUrl : '#'} 
+                          href={msg.fileUrl || '#'} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="flex items-center gap-2 hover:bg-foreground/10 p-2 rounded-lg transition-colors"
@@ -320,13 +350,13 @@ export default function Messages() {
                             <FiPaperclip size={18} />
                           </div>
                           <div className="overflow-hidden">
-                            <p className="truncate">{message.content}</p>
+                            <p className="truncate">{msg.content}</p>
                             <p className="text-xs text-foreground/70">Click to open</p>
                           </div>
                         </a>
                       )}
-                      <p className={`text-xs mt-1 ${message.sender === 'me' ? 'text-white/70' : 'text-black/50'}`}>
-                        {message.time}
+                      <p className={`text-xs mt-1 ${msg.sender === 'me' ? 'text-white/70' : 'text-black/50'}`}>
+                        {msg.time}
                       </p>
                     </div>
                   </div>
@@ -335,7 +365,6 @@ export default function Messages() {
               
               {/* Message Input */}
               <div className="p-4 border-t-2 border-foreground/10">
-                {/* Attachment preview */}
                 {showAttachmentPreview && attachment && (
                   <div className="mb-2 p-2 border-2 border-foreground/10 rounded-lg bg-background-dark/10 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -355,7 +384,6 @@ export default function Messages() {
                     </button>
                   </div>
                 )}
-
                 <div className="flex items-center gap-2">
                   <textarea
                     value={message}
@@ -374,7 +402,7 @@ export default function Messages() {
                   </label>
                   <button 
                     onClick={handleSend}
-                    className="h-10 w-10 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center disabled:opacity-50 border-2 border-gray-200 dark:border-gray-700"
+                    className="h-10 w-10 rounded-full bg-black text-white flex items-center justify-center border-2 border-gray-200 disabled:opacity-50"
                     disabled={!message.trim() && !attachment}
                   >
                     <FiSend size={18} />
@@ -391,6 +419,26 @@ export default function Messages() {
           )}
         </div>
       </div>
+      
+      {/* New Chat Modal */}
+      {isNewChatModalOpen && (
+        <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg max-w-md w-full p-6 border-2 border-foreground/10">
+            <h3 className="text-xl font-bold mb-4">Create New Chat</h3>
+            <input
+              type="text"
+              placeholder="Enter user ID"
+              value={newChatUserId}
+              onChange={(e) => setNewChatUserId(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black mb-4"
+            />
+            <div className="flex justify-end gap-3">
+              <button className="button" onClick={() => setIsNewChatModalOpen(false)}>Cancel</button>
+              <button className="button-primary" onClick={handleCreateNewChat}>Create</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
