@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { FiUser, FiLock, FiCreditCard, FiEye, FiEyeOff, FiGlobe, FiShield } from 'react-icons/fi'
+import { FiUser, FiLock, FiEye, FiEyeOff, FiGlobe, FiShield } from 'react-icons/fi'
 import { countries } from '@/utils/countries'
 
 // Tab interfaces - removed 'notifications'
-type SettingsTab = 'profile' | 'security' | 'payment' | 'privacy'
+type SettingsTab = 'profile' | 'security' | 'privacy'
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
@@ -22,12 +22,6 @@ export default function Settings() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  
-  // Payment methods state
-  const [paymentMethods, setPaymentMethods] = useState([
-    { id: 1, type: 'Credit Card', last4: '4242', expiry: '04/24', default: true },
-    { id: 2, type: 'PayPal', email: 'user@example.com', default: false }
-  ])
   
   // Privacy state
   const [privacySettings, setPrivacySettings] = useState({
@@ -55,13 +49,6 @@ export default function Settings() {
         [setting]: !privacySettings[setting]
       })
     }
-  }
-
-  const setDefaultPaymentMethod = (id: number) => {
-    setPaymentMethods(paymentMethods.map(method => ({
-      ...method,
-      default: method.id === id
-    })))
   }
 
   const renderTabContent = () => {
@@ -270,245 +257,21 @@ export default function Settings() {
           </div>
         )
         
-      case 'payment':
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold mb-4">Payment Methods</h3>
-            
-            <div className="bg-background-light border-2 border-foreground/10 rounded-lg divide-y divide-foreground/10">
-              {paymentMethods.map(method => (
-                <div key={method.id} className="p-4 flex justify-between items-center">
-                  <div className="flex items-center">
-                    {method.type === 'Credit Card' ? (
-                      <div className="w-10 h-10 bg-foreground/10 rounded flex items-center justify-center mr-4">
-                        <FiCreditCard size={20} />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 bg-foreground/10 rounded flex items-center justify-center mr-4">
-                        <FiGlobe size={20} />
-                      </div>
-                    )}
-                    
-                    <div>
-                      <p className="font-medium">{method.type}</p>
-                      {method.type === 'Credit Card' ? (
-                        <p className="text-sm text-foreground/70">•••• {method.last4} | Expires {method.expiry}</p>
-                      ) : (
-                        <p className="text-sm text-foreground/70">{method.email}</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    {method.default ? (
-                      <span className="text-sm text-green-500">Default</span>
-                    ) : (
-                      <button 
-                        onClick={() => setDefaultPaymentMethod(method.id)} 
-                        className="text-sm text-blue-500 hover:underline"
-                      >
-                        Set as default
-                      </button>
-                    )}
-                    <button className="button py-1 px-3 h-auto text-sm">Remove</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <button className="button-primary px-4 py-2">Add Payment Method</button>
-            
-            <h3 className="text-xl font-bold mt-8 mb-4">Billing Address</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="addressName" className="block text-sm font-medium mb-1">Full Name</label>
-                <input
-                  type="text"
-                  id="addressName"
-                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
-                  defaultValue={profileForm.name}
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="addressLine1" className="block text-sm font-medium mb-1">Address Line 1</label>
-                <input
-                  type="text"
-                  id="addressLine1"
-                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="addressLine2" className="block text-sm font-medium mb-1">Address Line 2 (Optional)</label>
-                <input
-                  type="text"
-                  id="addressLine2"
-                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="city" className="block text-sm font-medium mb-1">City</label>
-                <input
-                  type="text"
-                  id="city"
-                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="state" className="block text-sm font-medium mb-1">State/Province</label>
-                <input
-                  type="text"
-                  id="state"
-                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="zipCode" className="block text-sm font-medium mb-1">ZIP/Postal Code</label>
-                <input
-                  type="text"
-                  id="zipCode"
-                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="country" className="block text-sm font-medium mb-1">Country</label>
-                <select
-                  id="country"
-                  className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
-                  defaultValue="HK"
-                >
-                  {countries.filter(country => country.id !== 'all').map(country => (
-                    <option key={country.id} value={country.id}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div className="mt-6 flex justify-end">
-              <button className="button-primary px-4 py-2">Save Address</button>
-            </div>
-          </div>
-        )
-        
       case 'privacy':
         return (
           <div className="space-y-6">
             <h3 className="text-xl font-bold mb-4">Privacy Settings</h3>
-            
-            <div className="space-y-6">
-              <div className="bg-background-light p-4 border-2 border-foreground/10 rounded-lg">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Profile Visibility</label>
-                  <select
-                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
-                    value={privacySettings.profileVisibility}
-                    onChange={(e) => setPrivacySettings({...privacySettings, profileVisibility: e.target.value})}
-                  >
-                    <option value="public">Public - Anyone can view your profile</option>
-                    <option value="followers">Followers Only - Only people who follow you can view</option>
-                    <option value="private">Private - Only you can view your profile</option>
-                  </select>
-                </div>
-                
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Activity Visibility</label>
-                  <select
-                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
-                    value={privacySettings.activityVisibility}
-                    onChange={(e) => setPrivacySettings({...privacySettings, activityVisibility: e.target.value})}
-                  >
-                    <option value="public">Public - Anyone can see your activity</option>
-                    <option value="followers">Followers Only - Only people who follow you can see</option>
-                    <option value="private">Private - Only you can see your activity</option>
-                  </select>
-                </div>
-                
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Who Can Message You</label>
-                  <select
-                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
-                    value={privacySettings.allowMessages}
-                    onChange={(e) => setPrivacySettings({...privacySettings, allowMessages: e.target.value})}
-                  >
-                    <option value="authenticated">Authenticated Users - Any registered user</option>
-                    <option value="followers">Followers Only - Only people who follow you</option>
-                    <option value="nobody">Nobody - Turn off messages</option>
-                  </select>
-                </div>
-                
-                <div className="flex items-center justify-between py-2">
-                  <div>
-                    <p className="font-medium">Show Location</p>
-                    <p className="text-sm text-foreground/70">Display your location on your profile</p>
-                  </div>
-                  <div className="toggle-button">
-                    <input 
-                      type="checkbox" 
-                      id="showLocation" 
-                      checked={privacySettings.showLocation}
-                      onChange={() => handlePrivacyChange('showLocation')}
-                      className="sr-only"
-                    />
-                    <label 
-                      htmlFor="showLocation"
-                      className=""
-                    >
-                      <span></span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-background-light p-4 border-2 border-foreground/10 rounded-lg">
-                <h4 className="font-bold mb-4 flex items-center gap-2">
-                  <FiShield />
-                  <span>Security Preferences</span>
-                </h4>
-                
-                <div className="flex items-center justify-between py-2">
-                  <div>
-                    <p className="font-medium">Login Notifications</p>
-                    <p className="text-sm text-foreground/70">Get notified when someone logs into your account</p>
-                  </div>
-                  <div className="toggle-button">
-                    <input 
-                      type="checkbox" 
-                      id="loginNotifications" 
-                      className="sr-only"
-                    />
-                    <label 
-                      htmlFor="loginNotifications"
-                      className=""
-                    >
-                      <span></span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-background-light p-4 border-2 border-foreground/10 rounded-lg">
-                <h4 className="font-bold mb-4">Data & Privacy</h4>
-                
-                <button className="button mb-2 w-full justify-start text-left">Export Your Data</button>
-                <button className="button mb-2 w-full justify-start text-left">View Privacy Policy</button>
-                <button className="button mb-2 w-full justify-start text-left">Manage Cookies</button>
-                <button 
-                  onClick={() => setShowDeleteModal(true)}
-                  className="button text-red-500 w-full justify-start text-left"
-                >
-                  Delete Account
-                </button>
-              </div>
+            <div className="bg-background-light p-4 border-2 border-foreground/10 rounded-lg">
+              <h4 className="font-bold mb-4">Data & Privacy</h4>
+              <button className="button mb-2 w-full justify-start text-left">View Privacy Policy</button>
+              <button className="button mb-2 w-full justify-start text-left">Manage Cookies</button>
+              <button 
+                onClick={() => setShowDeleteModal(true)}
+                className="button text-red-500 w-full justify-start text-left"
+              >
+                Delete Account
+              </button>
             </div>
-            
             <div className="mt-6 flex justify-end">
               <button className="button-primary px-4 py-2">Save Privacy Settings</button>
             </div>
@@ -541,16 +304,6 @@ export default function Settings() {
         >
           <FiLock className="w-4 h-4" />
           <span>Security</span>
-        </button>
-        
-        <button
-          onClick={() => setActiveTab('payment')}
-          className={`flex items-center gap-1 px-4 py-2 border-b-2 font-medium transition-colors ${
-            activeTab === 'payment' ? 'border-foreground text-foreground' : 'border-transparent text-foreground/50 hover:text-foreground/80'
-          }`}
-        >
-          <FiCreditCard className="w-4 h-4" />
-          <span>Payment</span>
         </button>
         
         <button
