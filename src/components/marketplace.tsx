@@ -258,6 +258,14 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
     }
   };
 
+  // Handle search button click
+  const handleSearch = () => {
+    // Reset to first page when performing a new search
+    setCurrentPage(1);
+    // Additional search logic could be added here if needed
+    // For example, API calls or analytics tracking
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="mb-6 flex justify-between items-start">
@@ -282,9 +290,16 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
               placeholder="Search for items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 pl-10 border-2 border-foreground/10 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="w-full px-4 py-2 pr-12 border-2 border-foreground/10 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-            <FiSearch className="absolute left-3 top-3 text-foreground/50" />
+            <button 
+              onClick={handleSearch}
+              className="absolute right-0 top-0 h-full px-4 rounded-r-md bg-gray-500 hover:bg-black flex items-center justify-center border-l-0 border-2 border-foreground/10 dark:border-white"
+              aria-label="Search"
+            >
+              <FiSearch className="text-white" />
+            </button>
           </div>
 
           <div className="flex gap-2">
