@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react'
+import { FiPlus } from 'react-icons/fi'
 import CreateListingForm from './CreateListingForm'
 import { mockListings, getRecentListings } from '@/data/mock/listings'
 
@@ -202,9 +203,9 @@ const Home: React.FC<HomeProps> = ({ navigateToMarketplace }) => {
           </div>
           <button 
             onClick={() => setShowCreateForm(true)}
-            className='mt-4 button-primary w-full'
+            className='mt-4 button-primary w-full flex items-center justify-center gap-2'
           >
-            Create New Listing
+            <FiPlus /> Create New Listing
           </button>
         </div>
       </div>

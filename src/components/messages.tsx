@@ -1,100 +1,6 @@
 import { useState, useEffect } from 'react'
-import { FiChevronLeft, FiSend, FiPaperclip, FiChevronDown, FiChevronUp, FiTrash2, FiAlertTriangle } from 'react-icons/fi'
-
-// Mock data for conversations
-const mockConversations = [
-  {
-    id: 1,
-    user: 'jade_collector',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-    lastMessage: "I'm interested in your jade pendant",
-    unread: true,
-    time: '2h ago',
-    wasRequestedToDelete: false,
-  },
-  {
-    id: 2,
-    user: 'antique_lover',
-    avatar: 'https://randomuser.me/api/portraits/women/65.jpg',
-    lastMessage: 'Is the price negotiable?',
-    unread: false,
-    time: '1d ago',
-    wasRequestedToDelete: true,
-  },
-  {
-    id: 3,
-    user: 'treasure_hunter',
-    avatar: 'https://randomuser.me/api/portraits/men/43.jpg',
-    lastMessage: 'Thanks for the quick delivery!',
-    unread: false,
-    time: '3d ago',
-  },
-  {
-    id: 4,
-    user: 'gem_specialist',
-    avatar: 'https://randomuser.me/api/portraits/women/28.jpg',
-    lastMessage: 'Do you have any more items like this?',
-    unread: true,
-    time: '1w ago',
-  },
-]
-
-// Message types
-enum MessageType {
-  Text = 'text',
-  Attachment = 'attachment',
-}
-
-// Mock message history
-const mockMessages = {
-  1: [
-    { id: 1, sender: 'jade_collector', type: MessageType.Text, content: 'Hello, I saw your jade pendant listing. Is it still available?', time: '2 hours ago' },
-    { id: 2, sender: 'me', type: MessageType.Text, content: "Yes, it's still available!", time: '2 hours ago' },
-    { id: 3, sender: 'jade_collector', type: MessageType.Text, content: "Great! I'm interested in buying it. Can you tell me more about its history?", time: '2 hours ago' },
-    { id: 4, sender: 'me', type: MessageType.Text, content: 'Of course! This pendant is from the Ming Dynasty period and has been authenticated by experts.', time: '1 hour ago' },
-    { 
-      id: 5, 
-      sender: 'me', 
-      type: MessageType.Attachment, 
-      content: 'certificate-of-authenticity.pdf', 
-      fileUrl: 'https://example.com/files/certificate.pdf',
-      time: '1 hour ago' 
-    },
-    { id: 6, sender: 'jade_collector', type: MessageType.Text, content: "I'm interested in your jade pendant. Would you consider $50 less than your asking price?", time: '1 hour ago' },
-  ],
-  2: [
-    { id: 1, sender: 'antique_lover', type: MessageType.Text, content: "Hi there, I'm interested in your vintage item.", time: '1 day ago' },
-    { id: 2, sender: 'me', type: MessageType.Text, content: 'Hello! Thanks for your interest.', time: '1 day ago' },
-    { id: 3, sender: 'antique_lover', type: MessageType.Text, content: 'Is the price negotiable?', time: '1 day ago' },
-    { id: 4, sender: 'me', type: MessageType.Text, content: "I can offer a 5% discount if you're seriously interested.", time: '1 day ago' },
-  ],
-  3: [
-    { id: 1, sender: 'me', type: MessageType.Text, content: 'Your package has been shipped! Tracking: JT123456', time: '4 days ago' },
-    { 
-      id: 2, 
-      sender: 'me', 
-      type: MessageType.Attachment, 
-      content: 'shipping_receipt.pdf', 
-      fileUrl: 'https://example.com/files/receipt.pdf', 
-      time: '4 days ago' 
-    },
-    { id: 3, sender: 'treasure_hunter', type: MessageType.Text, content: 'Got it, thank you!', time: '3 days ago' },
-    { id: 4, sender: 'treasure_hunter', type: MessageType.Text, content: 'Just received the package. Thanks for the quick delivery!', time: '3 days ago' },
-  ],
-  4: [
-    { id: 1, sender: 'gem_specialist', type: MessageType.Text, content: 'The quality of your jade items is impressive.', time: '1 week ago' },
-    { id: 2, sender: 'me', type: MessageType.Text, content: 'Thank you! I try to ensure all items are of the highest quality.', time: '1 week ago' },
-    { 
-      id: 3, 
-      sender: 'gem_specialist', 
-      type: MessageType.Attachment, 
-      content: 'jade_inquiry.jpg',
-      fileUrl: 'https://example.com/files/jade_photo.jpg', 
-      time: '1 week ago' 
-    },
-    { id: 4, sender: 'gem_specialist', type: MessageType.Text, content: 'Do you have any more items like this?', time: '1 week ago' },
-  ],
-}
+import { FiChevronLeft, FiSend, FiPaperclip, FiChevronDown, FiChevronUp, FiTrash2, FiAlertTriangle, FiSearch, FiChevronRight } from 'react-icons/fi'
+import { mockConversations, mockMessages, MessageType } from '../data/mock/conversations'
 
 export default function Messages() {
   const [activeConversation, setActiveConversation] = useState<string | null>(null)
@@ -103,18 +9,63 @@ export default function Messages() {
   const [attachment, setAttachment] = useState<File | null>(null)
   const [showAttachmentPreview, setShowAttachmentPreview] = useState(false)
   
+  // Search functionality
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredConversations, setFilteredConversations] = useState(mockConversations)
+  
+  // Create conversation modal state
+  const [isCreateConversationOpen, setIsCreateConversationOpen] = useState(false)
+  const [newConversationUsername, setNewConversationUsername] = useState('')
+  
   // Pagination state for conversations
   const [currentPage, setCurrentPage] = useState(1)
   const [conversationsPerPage, setConversationsPerPage] = useState(10)
-  const [totalConversations, setTotalConversations] = useState(mockConversations.length)
+  const [totalConversations, setTotalConversations] = useState(filteredConversations.length)
   
   // Calculate total pages
-  const totalPages = Math.ceil(mockConversations.length / conversationsPerPage)
+  const totalPages = Math.ceil(filteredConversations.length / conversationsPerPage)
   
   // Get current page conversations
   const indexOfLastConversation = currentPage * conversationsPerPage
   const indexOfFirstConversation = indexOfLastConversation - conversationsPerPage
-  const currentConversations = mockConversations.slice(indexOfFirstConversation, indexOfLastConversation)
+  const currentConversations = filteredConversations.slice(indexOfFirstConversation, indexOfLastConversation)
+
+  // Update filtered conversations when search query changes
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      // If search query is empty, show all conversations
+      setFilteredConversations(mockConversations);
+    } else {
+      // Filter conversations based on username or message content
+      const filtered = mockConversations.filter(conversation => {
+        const userMatch = conversation.user.toLowerCase().includes(searchQuery.toLowerCase());
+        const messageMatch = conversation.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        // Also search in message content if the conversation is active
+        let messageContentMatch = false;
+        if (activeConversation && Number(activeConversation) === conversation.id) {
+          const messagesForConversation = mockMessages[conversation.id as keyof typeof mockMessages];
+          if (messagesForConversation) {
+            messageContentMatch = messagesForConversation.some(msg => 
+              msg.content.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+          }
+        }
+        
+        return userMatch || messageMatch || messageContentMatch;
+      });
+      
+      setFilteredConversations(filtered);
+    }
+    
+    // Reset to first page when search query changes
+    setCurrentPage(1);
+  }, [searchQuery, activeConversation]);
+
+  // Update total conversations count when filtered conversations change
+  useEffect(() => {
+    setTotalConversations(filteredConversations.length);
+  }, [filteredConversations]);
 
   const openConversation = (id: string) => {
     setActiveConversation(id)
@@ -185,6 +136,42 @@ export default function Messages() {
     }
   }
 
+  // Handle search
+  const handleSearch = () => {
+    // The search is already handled by the useEffect above
+    // This function is mainly for the search button click
+    console.log('Searching for:', searchQuery)
+  }
+
+  // Handle creating a new conversation
+  const handleCreateConversation = () => {
+    if (newConversationUsername.trim()) {
+      // In a real app, you would make an API call to create a new conversation with this user
+      console.log('Creating new conversation with:', newConversationUsername)
+      
+      // For demo purposes, we'll mock creating a new conversation by adding it to the list
+      const newConversation = {
+        id: mockConversations.length + 1,
+        user: newConversationUsername,
+        avatar: '', // No avatar initially
+        lastMessage: "New conversation",
+        unread: false,
+        time: 'Just now',
+      };
+      
+      // Add the new conversation to the beginning of the list
+      setFilteredConversations([newConversation, ...filteredConversations]);
+      
+      // Open the new conversation
+      setActiveConversation(String(newConversation.id));
+      setMobileChatVisible(true);
+      
+      // Reset the form and close the modal
+      setNewConversationUsername('');
+      setIsCreateConversationOpen(false);
+    }
+  }
+
   return (
     <div className="h-[calc(100vh-7rem)] flex flex-col">
       <h2 className="text-3xl font-bold mb-4">Messages</h2>
@@ -192,11 +179,38 @@ export default function Messages() {
       <div className="flex flex-1 border-2 border-foreground/10 rounded-lg overflow-hidden">
         {/* Conversation List - hidden on mobile when a chat is open */}
         <div className={`w-full md:w-1/3 border-r-2 border-foreground/10 bg-background-light ${mobileChatVisible ? 'hidden md:block' : 'block'}`}>
-          <div className="h-16 flex items-center px-4 border-b-2 border-foreground/10">
+          <div className="h-16 flex items-center px-4 border-b-2 border-foreground/10 justify-between">
             <h3 className="text-lg font-bold">Conversations</h3>
+            <button 
+              onClick={() => setIsCreateConversationOpen(true)}
+              className="px-5 py-2 rounded-md bg-foreground text-background flex items-center gap-2 text-sm font-medium hover:bg-foreground/80 transition-colors shadow-sm"
+            >
+              <span>New Chat</span>
+            </button>
           </div>
           
-          <div className="overflow-y-auto h-[calc(100%-7rem)]">
+          {/* Search bar */}
+            <div className="px-4 py-3 border-b-2 border-foreground/10">
+            <div className="relative">
+              <input
+              type="text"
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="w-full px-4 py-2 pr-12 border-2 border-foreground/10 rounded-md text-black outline-none focus:outline-none focus:border-foreground/10"
+              />
+              <button 
+              onClick={handleSearch}
+              className="absolute right-0 top-0 h-full px-4 rounded-r-md bg-foreground text-background flex items-center justify-center"
+              aria-label="Search"
+              >
+              <FiSearch />
+              </button>
+            </div>
+            </div>
+          
+          <div className="overflow-y-auto h-[calc(100%-11rem)]">
             {currentConversations.map((conversation) => (
               <div 
                 key={conversation.id}
@@ -238,7 +252,7 @@ export default function Messages() {
                 disabled={currentPage === totalPages}
                 className={`px-2 py-1 ${currentPage === totalPages ? 'text-foreground/30 cursor-not-allowed' : 'text-foreground/70 hover:text-foreground'}`}
               >
-                <FiChevronDown />
+                <FiChevronRight />
               </button>
             </div>
           </div>
@@ -391,6 +405,46 @@ export default function Messages() {
           )}
         </div>
       </div>
+
+      {/* Create Conversation Modal */}
+      {isCreateConversationOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background border-2 border-foreground/10 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold mb-4">Start a New Conversation</h3>
+            
+            <div className="mb-6">
+              <label htmlFor="username" className="block text-sm font-medium mb-2">
+              Username
+              </label>
+              <input 
+              type="text"
+              id="username"
+              placeholder="Enter username"
+              value={newConversationUsername}
+              onChange={(e) => setNewConversationUsername(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleCreateConversation()}
+              className="w-full px-4 py-2 pr-12 border-2 border-foreground/10 rounded-md text-black outline-none focus:outline-none focus:border-foreground/10"
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <button 
+                onClick={() => setIsCreateConversationOpen(false)}
+                className="px-4 py-2 border-2 border-foreground/10 rounded-md hover:bg-foreground/5"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleCreateConversation}
+                className="px-4 py-2 bg-foreground text-background rounded-md hover:bg-foreground/90"
+                disabled={!newConversationUsername.trim()}
+              >
+                Start Conversation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -152,10 +152,6 @@ export default function Settings() {
             >
               Delete Account
             </button>
-            
-            <div className="mt-6 flex justify-end">
-              <button className="button-primary px-4 py-2">Save Privacy Settings</button>
-            </div>
           </div>
         )
     }

@@ -131,14 +131,15 @@ export default function MyListings({ navigateToMarketplace }: MyListingsProps) {
 
       {/* Grid View */}
       {myListings.length > 0 && viewMode === 'grid' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sortedListings.map(listing => (
             <div 
               key={listing.id} 
-              className="bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+              className="bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer h-[595px] flex flex-col"
+              onClick={() => viewListingInMarketplace(listing.id)}
             >
-              {/* Item image */}
-              <div className="h-48 bg-foreground/5 overflow-hidden">
+              {/* Item image - fixed height */}
+              <div className="h-48 bg-foreground/5 overflow-hidden flex-shrink-0">
                 {listing.image ? (
                   <img src={listing.image} alt={listing.title} className="w-full h-full object-cover" />
                 ) : (
@@ -148,9 +149,12 @@ export default function MyListings({ navigateToMarketplace }: MyListingsProps) {
                 )}
               </div>
 
-              <div className="p-4">
-                <h3 className="font-medium mb-1">{listing.title}</h3>
-                <p className="text-lg font-mono font-bold">{listing.price}</p>
+              <div className="p-4 flex flex-col flex-grow">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-medium truncate max-w-[85%]" title={listing.title}>{listing.title}</h3>
+                </div>
+
+                <p className="text-lg font-mono font-bold mt-1">{listing.price}</p>
 
                 <div className="flex items-center text-sm mt-1 text-foreground/70">
                   <span className="flex items-center">
@@ -160,35 +164,41 @@ export default function MyListings({ navigateToMarketplace }: MyListingsProps) {
                   <span>{listing.reviews} reviews</span>
                 </div>
 
-                <div className="text-xs text-foreground/50 mt-2">
-                  Listed: {listing.listed}
-                </div>
+                <p className="text-sm mt-1 text-foreground/70 line-clamp-1" title={`Seller: You`}>
+                  Seller: You
+                </p>
+                
+                {/* Add description with line clamp */}
+                <p className="text-sm mt-2 text-foreground/70 line-clamp-2 flex-grow" title={listing.description}>
+                  {listing.description}
+                </p>
 
-                <div className="flex mt-4 gap-2">
-                  <button
-                    className="button py-1 px-2 flex items-center gap-1 flex-1"
-                    onClick={() => viewListingInMarketplace(listing.id)}
-                  >
-                    <FiEye size={14} />
-                    <span>View</span>
-                  </button>
-                  <button 
-                    className="button py-1 px-2 flex items-center gap-1 flex-1"
-                    onClick={() => setEditingListing(listing)}
-                  >
-                    <FiEdit size={14} />
-                    <span>Edit</span>
-                  </button>
-                  <button 
-                    className="button py-1 px-2 flex items-center gap-1 flex-1 text-red-500"
-                    onClick={() => {
-                      setListingToDelete(listing);
-                      setIsDeleteModalOpen(true);
-                    }}
-                  >
-                    <FiTrash2 size={14} />
-                    <span>Delete</span>
-                  </button>
+                {/* Push buttons to the bottom with mt-auto */}
+                <div className="flex flex-col mt-auto pt-4 pb-4">
+                  <span className="text-xs text-foreground/50 mb-3">Listed: {listing.listed}</span>
+                  <div className="flex justify-between">
+                    <button 
+                      className="button py-1.5 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center text-red-500"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering parent onClick
+                        setListingToDelete(listing);
+                        setIsDeleteModalOpen(true);
+                      }}
+                    >
+                      <FiTrash2 size={14} />
+                      <span>Delete</span>
+                    </button>
+                    <button 
+                      className="button-primary py-1.5 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering parent onClick
+                        setEditingListing(listing);
+                      }}
+                    >
+                      <FiEdit size={14} />
+                      <span>Edit</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -202,7 +212,8 @@ export default function MyListings({ navigateToMarketplace }: MyListingsProps) {
           {sortedListings.map(listing => (
             <div 
               key={listing.id} 
-              className="bg-background-light border-2 border-foreground/10 rounded-lg p-4 flex gap-4 hover:shadow-md transition-shadow"
+              className="bg-background-light border-2 border-foreground/10 rounded-lg p-4 flex gap-4 hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => viewListingInMarketplace(listing.id)}
             >
               {/* Item image */}
               <div className="h-24 w-24 bg-foreground/5 shrink-0 overflow-hidden">
@@ -240,29 +251,26 @@ export default function MyListings({ navigateToMarketplace }: MyListingsProps) {
                 </div>
 
                 <div className="flex mt-3 gap-2">
-                  <button
-                    className="button py-1 px-3 h-auto flex items-center gap-1"
-                    onClick={() => viewListingInMarketplace(listing.id)}
-                  >
-                    <FiEye size={14} />
-                    <span>View in Marketplace</span>
-                  </button>
-                  <button 
-                    className="button py-1 px-3 h-auto flex items-center gap-1"
-                    onClick={() => setEditingListing(listing)}
-                  >
-                    <FiEdit size={14} />
-                    <span>Edit Listing</span>
-                  </button>
                   <button 
                     className="button py-1 px-3 h-auto flex items-center gap-1 text-red-500"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering parent onClick
                       setListingToDelete(listing);
                       setIsDeleteModalOpen(true);
                     }}
                   >
                     <FiTrash2 size={14} />
                     <span>Delete</span>
+                  </button>
+                  <button 
+                    className="button-primary py-1 px-3 h-auto flex items-center gap-1"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering parent onClick
+                      setEditingListing(listing);
+                    }}
+                  >
+                    <FiEdit size={14} />
+                    <span>Edit</span>
                   </button>
                 </div>
               </div>
