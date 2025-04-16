@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FiSearch, FiFilter, FiGrid, FiList, FiChevronDown, FiHeart, FiShoppingCart, FiChevronLeft, FiChevronRight, FiMessageCircle, FiX, FiPaperclip, FiCreditCard, FiCheckCircle, FiMapPin } from 'react-icons/fi'
+import { FiSearch, FiFilter, FiGrid, FiList, FiChevronDown, FiHeart, FiShoppingCart, FiChevronLeft, FiChevronRight, FiMessageCircle, FiX, FiPaperclip, FiCreditCard, FiCheckCircle, FiMapPin, FiPlus } from 'react-icons/fi'
 import { countries, getFeaturedCountries } from '@/utils/countries'
 import { mockListings, mockUserListings } from '@/data/mock/listings'
 import CreateListingForm from './CreateListingForm'
@@ -268,8 +268,8 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
         <button 
           className="button-primary h-auto py-2 px-5"
           onClick={() => setIsCreateListingOpen(true)}
-        >
-          Create New Listing
+        ><FiPlus />
+            <span>Create New Listing</span>
         </button>
       </div>
 
