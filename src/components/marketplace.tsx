@@ -34,6 +34,12 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(8)
   const [totalPages, setTotalPages] = useState(1)
+  
+  // Pagination parameters for API queries
+  // skip - type: int, required: no, description: number of listings at the front of the list to skip. defaults to 0
+  const skip = (currentPage - 1) * itemsPerPage
+  // limit - type: int, required: no, description: maximum number of listings to send back. defaults to 20
+  const limit = itemsPerPage
 
   // Favorites state
   const [favorites, setFavorites] = useState<typeof mockListings>([])
@@ -509,20 +515,37 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                 <div className="flex flex-col mt-auto pt-4 pb-4">
                   <span className="text-xs text-foreground/50 mb-3">Listed: {item.listed}</span>
                   <div className="flex justify-between">
-                    <button
-                      className="button py-1.5 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent triggering parent onClick
-                        openChat(item);
-                      }}
-                    >
-                      <FiMessageCircle size={14} />
-                      <span>Chat</span>
-                    </button>
+                    {/* Only show chat button for listings where user is not the seller */}
+                    {item.seller !== 'You' ? (
+                      <button
+                        className="button py-1.5 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering parent onClick
+                          openChat(item);
+                        }}
+                      >
+                        <FiMessageCircle size={14} />
+                        <span>Chat</span>
+                      </button>
+                    ) : (
+                      <button 
+                        className="button py-1.5 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center text-red-500"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering parent onClick
+                          if(confirm(`Are you sure you want to delete "${item.title}"?`)) {
+                            // In a real app, this would call an API to delete the listing
+                            alert(`Listing "${item.title}" has been deleted.`);
+                            // You would typically refresh the listings after deletion
+                          }
+                        }}
+                      >
+                        <span>Delete</span>
+                      </button>
+                    )}
                     {/* Show different buttons based on whether user is the seller */}
                     {item.seller === 'You' ? (
                       <button 
-                        className="button-primary py-1 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
+                        className="button-primary py-1.5 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent triggering parent onClick
                           setEditingListing(item);
@@ -532,7 +555,7 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                       </button>
                     ) : (
                       <button 
-                        className="button-primary py-1 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
+                        className="button-primary py-1.5 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent triggering parent onClick
                           openBuyModal(item);
