@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { FiSearch, FiFilter, FiGrid, FiList, FiChevronDown, FiHeart, FiShoppingCart, FiChevronLeft, FiChevronRight, FiMessageCircle, FiX, FiPaperclip, FiCreditCard, FiCheckCircle, FiMapPin } from 'react-icons/fi'
 import { countries, getFeaturedCountries } from '@/utils/countries'
-import { mockListings } from '@/data/mock/listings'
+import { mockListings, mockUserListings } from '@/data/mock/listings'
+import CreateListingForm from './CreateListingForm'
 
 // Mock categories
 const categories = [
@@ -116,6 +117,10 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
     ]);
   };
 
+  // Create listing form state
+  const [isCreateListingOpen, setIsCreateListingOpen] = useState(false);
+  const [editingListing, setEditingListing] = useState<typeof mockListings[0] | null>(null);
+  
   // Buy modal state
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [buyingListing, setBuyingListing] = useState<typeof mockListings[0] | null>(null);
@@ -147,7 +152,8 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
   };
 
   // Filter and sort listings
-  const filteredListings = mockListings
+  const allListings = [...mockListings, ...mockUserListings];
+  const filteredListings = allListings
     .filter(listing => {
       // Search filter
       const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -248,9 +254,17 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold mb-2">Marketplace</h2>
-        <p className="text-foreground/70">Browse, buy, and trade with trusted sellers on The Jade Trail</p>
+      <div className="mb-6 flex justify-between items-start">
+        <div>
+          <h2 className="text-3xl font-bold mb-2">Marketplace</h2>
+          <p className="text-foreground/70">Browse, buy, and trade with trusted sellers on The Jade Trail</p>
+        </div>
+        <button 
+          className="button-primary h-auto py-2 px-5"
+          onClick={() => setIsCreateListingOpen(true)}
+        >
+          Create New Listing
+        </button>
       </div>
 
       {/* Search and filter bar */}
@@ -499,16 +513,29 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                       <FiMessageCircle size={14} />
                       <span>Chat</span>
                     </button>
-                    <button 
-                      className="button-primary py-1 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent triggering parent onClick
-                        openBuyModal(item);
-                      }}
-                    >
-                      <FiShoppingCart size={14} />
-                      <span>Buy</span>
-                    </button>
+                    {/* Show different buttons based on whether user is the seller */}
+                    {item.seller === 'You' ? (
+                      <button 
+                        className="button-primary py-1 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering parent onClick
+                          setEditingListing(item);
+                        }}
+                      >
+                        <span>Edit</span>
+                      </button>
+                    ) : (
+                      <button 
+                        className="button-primary py-1 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering parent onClick
+                          openBuyModal(item);
+                        }}
+                      >
+                        <FiShoppingCart size={14} />
+                        <span>Buy</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -569,13 +596,26 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                     <FiMessageCircle size={14} />
                     <span>Chat</span>
                   </button>
-                  <button 
-                    className="button-primary py-1 px-3 h-auto flex items-center gap-1"
-                    onClick={() => openBuyModal(item)}
-                  >
-                    <FiShoppingCart size={14} />
-                    <span>Buy</span>
-                  </button>
+                  {/* Conditional rendering based on whether user is seller */}
+                  {item.seller === 'You' ? (
+                    <button 
+                      className="button-primary py-1 px-3 h-auto flex items-center gap-1"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering parent onClick
+                        setEditingListing(item);
+                      }}
+                    >
+                      <span>Edit</span>
+                    </button>
+                  ) : (
+                    <button 
+                      className="button-primary py-1 px-3 h-auto flex items-center gap-1"
+                      onClick={() => openBuyModal(item)}
+                    >
+                      <FiShoppingCart size={14} />
+                      <span>Buy</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -974,9 +1014,23 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-3">
                       <p className="text-2xl font-mono font-bold">{detailedListing.price}</p>
-                      <button className="text-foreground/50 hover:text-red-500">
-                        <FiHeart size={20} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button className="text-foreground/50 hover:text-red-500">
+                          <FiHeart size={20} />
+                        </button>
+                        {/* Mock check to simulate if user is the owner */}
+                        {detailedListing.seller === 'You' && (
+                          <button 
+                            onClick={() => {
+                              closeDetailModal();
+                              setEditingListing(detailedListing);
+                            }}
+                            className="text-foreground/50 hover:text-blue-500"
+                          >
+                            <span className="text-sm">Edit</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="space-y-2">
@@ -1178,6 +1232,31 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Create Listing Form Modal */}
+      {(isCreateListingOpen || editingListing) && (
+        <CreateListingForm
+          onClose={() => {
+            setIsCreateListingOpen(false);
+            setEditingListing(null);
+          }}
+          onSuccess={(listingId) => {
+            setIsCreateListingOpen(false);
+            setEditingListing(null);
+            // In a real app, you might refresh the listings or navigate to the new listing
+            alert(`Listing ${editingListing ? 'updated' : 'created'} successfully! ID: ${listingId}`);
+          }}
+          initialData={editingListing ? {
+            title: editingListing.title,
+            description: editingListing.description,
+            priceInCents: editingListing.price.replace('$', '').replace(',', ''),
+            category: editingListing.category,
+            country: editingListing.location.toLowerCase().slice(0, 2)
+          } : undefined}
+          listingId={editingListing ? editingListing.id.toString() : undefined}
+          isEditing={!!editingListing}
+        />
       )}
     </div>
   )

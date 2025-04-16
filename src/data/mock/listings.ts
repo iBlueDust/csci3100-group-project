@@ -1306,3 +1306,72 @@ export const mockListings = [
 export const getRecentListings = (count: number = 4) => {
   return mockListings.slice(0, count);
 };
+
+// Mock listings where the current user is the seller
+export const mockUserListings = [
+  {
+    id: 101,
+    title: 'Carved Jade Dragon',
+    description: 'Exquisite hand-carved jade dragon figurine from my personal collection. This piece features incredible detail with scales and flowing whiskers. The jade is of high quality with a beautiful emerald hue. Perfect centerpiece for any jade collection.',
+    price: '$1,250',
+    seller: 'You',
+    rating: 4.9,
+    reviews: 28,
+    image: '',
+    category: 'jade',
+    location: 'Hong Kong',
+    listed: '2 days ago'
+  },
+  {
+    id: 102,
+    title: 'Ming Dynasty Teapot',
+    description: 'Authentic Ming Dynasty era teapot with detailed blue lotus pattern. This teapot has been in my family for generations and is in excellent condition considering its age. Comes with certificate of authenticity and detailed provenance documents.',
+    price: '$3,800',
+    seller: 'You',
+    rating: 4.9,
+    reviews: 28,
+    image: '',
+    category: 'antiques',
+    location: 'Hong Kong',
+    listed: '1 week ago'
+  },
+  {
+    id: 103,
+    title: 'Qing Dynasty Hairpin',
+    description: 'Elegant silver hairpin with jade accents from the Qing Dynasty. This beautiful piece shows the craftsmanship of imperial artisans with fine filigree work and smooth jade inlays. Would make a wonderful addition to any collection of historical accessories.',
+    price: '$650',
+    seller: 'You',
+    rating: 4.9,
+    reviews: 28,
+    image: '',
+    category: 'jade',
+    location: 'Hong Kong',
+    listed: '3 days ago'
+  },
+  {
+    id: 104,
+    title: 'Traditional Ink Painting',
+    description: 'Original ink painting on silk depicting mountain landscape with waterfall and pavilion. Created using traditional techniques and materials. Signed by me and comes with a custom wooden frame. The painting evokes the tranquility of ancient Chinese landscapes.',
+    price: '$580',
+    seller: 'You',
+    rating: 4.9,
+    reviews: 28,
+    image: '',
+    category: 'art',
+    location: 'Hong Kong',
+    listed: '5 days ago'
+  },
+  {
+    id: 105,
+    title: 'Rare Imperial Jade Bracelet',
+    description: 'Stunning jade bracelet carved from a single piece of imperial green jade. This bracelet features traditional cloud motifs symbolizing good fortune and prosperity. The color is exceptionally vivid and the translucency is remarkable.',
+    price: '$2,400',
+    seller: 'You',
+    rating: 4.9,
+    reviews: 28,
+    image: '',
+    category: 'jade',
+    location: 'Hong Kong',
+    listed: '12 hours ago'
+  }
+];

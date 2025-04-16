@@ -3,7 +3,7 @@ import { FiX } from 'react-icons/fi'
 import { countries } from '@/utils/countries'
 import { useListingForm } from '@/hooks/useListingForm'
 import { InputField, TextAreaField, SelectField, ImageUploadField } from '@/components/ui/FormComponents'
-import { CategoryOption } from '@/types/marketplace'
+import { CategoryOption, ListingFormData } from '@/types/marketplace'
 
 // The same categories from the marketplace component
 const categories: CategoryOption[] = [
@@ -17,9 +17,18 @@ const categories: CategoryOption[] = [
 interface CreateListingFormProps {
   onClose: () => void
   onSuccess?: (listingId: string) => void
+  initialData?: ListingFormData
+  listingId?: string
+  isEditing?: boolean
 }
 
-const CreateListingForm: React.FC<CreateListingFormProps> = ({ onClose, onSuccess }) => {
+const CreateListingForm: React.FC<CreateListingFormProps> = ({ 
+  onClose, 
+  onSuccess, 
+  initialData, 
+  listingId, 
+  isEditing = false 
+}) => {
   const { 
     formData, 
     images, 
@@ -29,13 +38,13 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({ onClose, onSucces
     handleImageChange,
     removeImage,
     handleSubmit 
-  } = useListingForm({ onSuccess })
+  } = useListingForm({ initialData, listingId, onSuccess })
 
   return (
     <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex justify-center items-center z-50 p-4">
       <div className="bg-background w-full max-w-2xl rounded-lg shadow-xl overflow-hidden">
         <div className="flex justify-between items-center p-4 border-b border-foreground/10">
-          <h2 className="text-xl font-bold">Create New Listing</h2>
+          <h2 className="text-xl font-bold">{isEditing ? 'Edit Listing' : 'Create New Listing'}</h2>
           <button 
             onClick={onClose}
             className="text-foreground/70 hover:text-foreground rounded-full p-1"
@@ -126,7 +135,9 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({ onClose, onSucces
               className="button-primary px-5 py-2"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Creating...' : 'Create Listing'}
+              {isSubmitting 
+                ? (isEditing ? 'Updating...' : 'Creating...') 
+                : (isEditing ? 'Update Listing' : 'Create Listing')}
             </button>
           </div>
         </form>

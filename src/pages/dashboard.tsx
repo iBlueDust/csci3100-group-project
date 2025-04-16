@@ -2,7 +2,7 @@ import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import classNames from 'classnames'
-import { FiHome, FiPackage, FiMessageSquare, FiSettings, FiHeart } from 'react-icons/fi'
+import { FiHome, FiPackage, FiMessageSquare, FiSettings, FiHeart, FiList } from 'react-icons/fi'
 
 import { geistMono, geistSans } from '@/styles/fonts'
 import Sidebar from '@/components/Sidebar'
@@ -13,11 +13,13 @@ const Messages = dynamic(() => import('@/components/messages'), { ssr: false })
 const Marketplace = dynamic(() => import('@/components/marketplace'), {
   ssr: false,
 })
+const MyListings = dynamic(() => import('@/components/myListings'), { ssr: false })
 const Settings = dynamic(() => import('@/components/settings'), { ssr: false })
 
 enum Page {
   HOME = 'home',
   MARKETPLACE = 'marketplace',
+  MY_LISTINGS = 'my-listings',
   MESSAGES = 'messages',
   SETTINGS = 'settings',
 }
@@ -32,6 +34,11 @@ const navItems = [
     key: Page.MARKETPLACE,
     icon: <FiPackage className='w-5 h-5 min-w-5' />,
     label: 'Marketplace',
+  },
+  {
+    key: Page.MY_LISTINGS,
+    icon: <FiList className='w-5 h-5 min-w-5' />,
+    label: 'My Listings',
   },
   {
     key: Page.MESSAGES,
@@ -111,6 +118,8 @@ export default function Dashboard() {
           {activePage === Page.MESSAGES && <Messages />}
 
           {activePage === Page.MARKETPLACE && <Marketplace initialSelectedListingId={selectedListingId} />}
+
+          {activePage === Page.MY_LISTINGS && <MyListings navigateToMarketplace={navigateToMarketplace} />}
 
           {activePage === Page.SETTINGS && <Settings />}
         </main>
