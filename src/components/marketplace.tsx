@@ -284,23 +284,23 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
       {/* Search and filter bar */}
       <div className="mb-6">
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-grow">
-            <input
-              type="text"
-              placeholder="Search for items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full px-4 py-2 pr-12 border-2 border-foreground/10 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <button 
-              onClick={handleSearch}
-              className="absolute right-0 top-0 h-full px-4 rounded-r-md bg-gray-500 hover:bg-black flex items-center justify-center border-l-0 border-2 border-foreground/10 dark:border-white"
-              aria-label="Search"
-            >
-              <FiSearch className="text-white" />
-            </button>
-          </div>
+            <div className="relative flex-grow">
+              <input
+                type="text"
+                placeholder="Search for items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="w-full px-4 py-2 pr-12 border-2 border-foreground/10 rounded-md text-black outline-none focus:outline-none focus:border-foreground/10"
+              />
+              <button 
+                onClick={handleSearch}
+                className="absolute right-0 top-0 h-full px-4 rounded-r-md bg-foreground text-background flex items-center justify-center"
+                aria-label="Search"
+              >
+                <FiSearch />
+              </button>
+            </div>
 
           <div className="flex gap-2">
             <div className="relative">
