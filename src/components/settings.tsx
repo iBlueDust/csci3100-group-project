@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { FiUser, FiLock, FiEye, FiEyeOff, FiGlobe, FiShield } from 'react-icons/fi'
+import { FiUser, FiGlobe, FiShield } from 'react-icons/fi'
 import { countries } from '@/utils/countries'
 
-// Tab interfaces - removed 'notifications'
-type SettingsTab = 'profile' | 'security' | 'privacy'
+// Tab interfaces
+type SettingsTab = 'profile' | 'privacy'
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
@@ -17,11 +17,6 @@ export default function Settings() {
     location: 'Hong Kong',
     website: 'https://example.com'
   })
-  
-  // Security state
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   
   // Privacy state
   const [privacySettings, setPrivacySettings] = useState({
@@ -78,18 +73,6 @@ export default function Settings() {
               <h3 className="text-xl font-bold mb-4">Personal Information</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={profileForm.name}
-                    onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md text-black"
-                  />
-                </div>
-                
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
                   <input
@@ -158,120 +141,18 @@ export default function Settings() {
           </div>
         )
         
-      case 'security':
-        return (
-          <div className="space-y-8">
-            <div>
-              <h3 className="text-xl font-bold mb-4">Change Password</h3>
-              
-              <div className="space-y-4 max-w-lg">
-                <div>
-                  <label htmlFor="currentPassword" className="block text-sm font-medium mb-1">Current Password</label>
-                  <div className="relative">
-                    <input
-                      type={showCurrentPassword ? "text" : "password"}
-                      id="currentPassword"
-                      className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md pr-10 text-black"
-                    />
-                    <button 
-                      type="button" 
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                      {showCurrentPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
-                  </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="newPassword" className="block text-sm font-medium mb-1">New Password</label>
-                  <div className="relative">
-                    <input
-                      type={showNewPassword ? "text" : "password"}
-                      id="newPassword"
-                      className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md pr-10 text-black"
-                    />
-                    <button 
-                      type="button" 
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                      {showNewPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
-                  </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">Confirm New Password</label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      id="confirmPassword"
-                      className="w-full px-3 py-2 border-2 border-foreground/10 rounded-md pr-10 text-black"
-                    />
-                    <button 
-                      type="button" 
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="pt-2">
-                  <button className="button-primary px-4 py-2">Update Password</button>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-xl font-bold mb-4">Login Sessions</h3>
-              
-              <div className="bg-background-light border-2 border-foreground/10 rounded-lg">
-                <div className="p-4 border-b-2 border-foreground/10">
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="font-medium">Current Session</p>
-                      <p className="text-sm text-foreground/70">Mac OS • Chrome • Hong Kong</p>
-                    </div>
-                    <span className="text-green-500 text-sm">Active Now</span>
-                  </div>
-                </div>
-                
-                <div className="p-4 border-b-2 border-foreground/10">
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="font-medium">iOS Device</p>
-                      <p className="text-sm text-foreground/70">iOS • Safari • Hong Kong</p>
-                    </div>
-                    <span className="text-foreground/70 text-sm">2 days ago</span>
-                  </div>
-                </div>
-                
-                <div className="p-4">
-                  <button className="button-primary text-sm">Sign out all other sessions</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-        
       case 'privacy':
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-bold mb-4">Privacy Settings</h3>
-            <div className="bg-background-light p-4 border-2 border-foreground/10 rounded-lg">
-              <h4 className="font-bold mb-4">Data & Privacy</h4>
-              <button className="button mb-2 w-full justify-start text-left">View Privacy Policy</button>
-              <button className="button mb-2 w-full justify-start text-left">Manage Cookies</button>
-              <button 
-                onClick={() => setShowDeleteModal(true)}
-                className="button text-red-500 w-full justify-start text-left"
-              >
-                Delete Account
-              </button>
-            </div>
+            <button className="button mb-2 w-full justify-start text-left">View Privacy Policy</button>
+            <button className="button mb-2 w-full justify-start text-left">Manage Cookies</button>
+            <button 
+              onClick={() => setShowDeleteModal(true)}
+              className="button text-red-500 w-full justify-start text-left"
+            >
+              Delete Account
+            </button>
+            
             <div className="mt-6 flex justify-end">
               <button className="button-primary px-4 py-2">Save Privacy Settings</button>
             </div>
@@ -294,16 +175,6 @@ export default function Settings() {
         >
           <FiUser className="w-4 h-4" />
           <span>Profile</span>
-        </button>
-        
-        <button
-          onClick={() => setActiveTab('security')}
-          className={`flex items-center gap-1 px-4 py-2 border-b-2 font-medium transition-colors ${
-            activeTab === 'security' ? 'border-foreground text-foreground' : 'border-transparent text-foreground/50 hover:text-foreground/80'
-          }`}
-        >
-          <FiLock className="w-4 h-4" />
-          <span>Security</span>
         </button>
         
         <button
