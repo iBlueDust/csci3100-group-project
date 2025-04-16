@@ -453,11 +453,11 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
           {currentItems.map(item => (
             <div 
               key={item.id} 
-              className="bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer h-[595px] flex flex-col"
               onClick={() => openDetailModal(item)}
             >
-              {/* Item image */}
-              <div className="h-48 bg-foreground/5 overflow-hidden">
+              {/* Item image - fixed height */}
+              <div className="h-48 bg-foreground/5 overflow-hidden flex-shrink-0">
                 {item.image ? (
                   <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
                 ) : (
@@ -467,11 +467,11 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                 )}
               </div>
 
-              <div className="p-4">
+              <div className="p-4 flex flex-col flex-grow">
                 <div className="flex justify-between items-start">
-                  <h3 className="font-medium">{item.title}</h3>
+                  <h3 className="font-medium truncate max-w-[85%]" title={item.title}>{item.title}</h3>
                   <button 
-                    className={`${favorites.find(fav => fav.id === item.id) ? 'text-red-500' : 'text-foreground/50 hover:text-red-500'}`}
+                    className={`flex-shrink-0 ${favorites.find(fav => fav.id === item.id) ? 'text-red-500' : 'text-foreground/50 hover:text-red-500'}`}
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent triggering parent onClick
                       // Add to favorites logic
@@ -496,15 +496,21 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                   <span>{item.reviews} reviews</span>
                 </div>
 
-                <p className="text-sm mt-1 text-foreground/70">
+                <p className="text-sm mt-1 text-foreground/70 line-clamp-1" title={`Seller: ${item.seller}`}>
                   Seller: {item.seller}
                 </p>
+                
+                {/* Add description with line clamp */}
+                <p className="text-sm mt-2 text-foreground/70 line-clamp-2 flex-grow" title={item.description}>
+                  {item.description}
+                </p>
 
-                <div className="flex flex-col mt-4">
-                  <span className="text-xs text-foreground/50 mb-2">{item.listed}</span>
+                {/* Push buttons to the bottom with mt-auto */}
+                <div className="flex flex-col mt-auto pt-4 pb-4">
+                  <span className="text-xs text-foreground/50 mb-3">Listed: {item.listed}</span>
                   <div className="flex justify-between">
                     <button
-                      className="button py-1 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center"
+                      className="button py-1.5 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center"
                       onClick={(e) => {
                         e.stopPropagation(); // Prevent triggering parent onClick
                         openChat(item);
