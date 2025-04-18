@@ -217,17 +217,16 @@ export default function Messages() {
                 onClick={() => openConversation(String(conversation.id))}
                 className={`p-4 border-b-2 border-foreground/5 hover:bg-background-dark/10 cursor-pointer ${
                   activeConversation === String(conversation.id) ? 'bg-background-dark/20' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center text-foreground">
-                    {conversation.user.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h4 className="font-medium">{conversation.user}</h4>
-                    <p className="text-sm text-foreground/70 truncate">{conversation.lastMessage}</p>
-                  </div>
+                }`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 flex-shrink-0 rounded-full bg-foreground/10 flex items-center justify-center text-foreground">
+                   {conversation.user.charAt(0).toUpperCase()}
                 </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium truncate">{conversation.user}</h4>
+                  <p className="text-sm text-foreground/70 truncate">{conversation.lastMessage}</p>
+                </div>
+               </div>
               </div>
             ))}
           </div>
@@ -323,22 +322,29 @@ export default function Messages() {
                     >
                       {message.type === MessageType.Text ? (
                         <p>{message.content}</p>
-                      ) : (
-                        <a 
-                          href={'fileUrl' in message ? message.fileUrl : '#'} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 hover:bg-foreground/10 p-2 rounded-lg transition-colors"
-                        >
-                          <div className="bg-foreground/5 p-2 rounded-lg">
-                            <FiPaperclip size={18} />
-                          </div>
-                          <div className="overflow-hidden">
-                            <p className="truncate">{message.content}</p>
-                            <p className="text-xs text-foreground/70">Click to open</p>
-                          </div>
-                        </a>
-                      )}
+                      ) : message.type === MessageType.Attachment && 'fileUrl' in message ? (
+                        ((message: any) => {
+                          const url: string = message.fileUrl;
+                          return /\.(jpe?g|png|gif|webp)$/i.test(url) ? (
+                            <img src={url} alt={message.content} className="max-w-full h-auto rounded-lg" />
+                          ) : (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 hover:bg-foreground/10 p-2 rounded-lg transition-colors"
+                            >
+                              <div className="bg-foreground/5 p-2 rounded-lg">
+                                <FiPaperclip size={18} />
+                              </div>
+                              <div className="overflow-hidden">
+                                <p className="truncate">{message.content}</p>
+                                <p className="text-xs text-foreground/70">Click to open</p>
+                              </div>
+                            </a>
+                          );
+                        })(message)
+                      ) : null}
                       <p className={`text-xs mt-1 ${message.sender === 'me' ? 'text-white/70' : 'text-black/50'}`}>
                         {message.time}
                       </p>

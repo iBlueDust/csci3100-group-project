@@ -267,14 +267,14 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="mb-6 flex justify-between items-start">
+    <div className="h-full flex flex-col pb-16">
+      <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center">
         <div>
           <h2 className="text-3xl font-bold mb-2">Marketplace</h2>
           <p className="text-foreground/70">Browse, buy, and trade with trusted sellers on The Jade Trail</p>
         </div>
         <button 
-          className="button-primary h-auto py-2 px-5"
+          className="button-primary h-auto py-2 px-5 mt-3 md:mt-0"
           onClick={() => setIsCreateListingOpen(true)}
         ><FiPlus />
             <span>Create New Listing</span>
@@ -757,8 +757,8 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
 
       {/* Buy Modal */}
       {isBuyModalOpen && buyingListing && (
-        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-background rounded-lg p-6 max-w-lg w-full shadow-xl border-2 border-foreground/10">
+        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-background rounded-lg w-full max-w-screen-sm md:max-w-2xl mx-4 md:mx-auto shadow-xl overflow-hidden">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">
                 {purchaseStep === 'confirm' ? 'Purchase Item' : 

@@ -70,7 +70,7 @@ const StatsPopup: React.FC<{onClose: () => void}> = ({ onClose }) => {
   
   return (
     <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+      <div className="bg-background rounded-lg p-6 w-full max-w-screen-sm md:max-w-2xl max-h-[80vh] overflow-y-auto mx-4 md:mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Market Statistics</h2>
           <button onClick={onClose} className="p-1 hover:bg-background-dark rounded-full">
@@ -126,24 +126,20 @@ const StatsPopup: React.FC<{onClose: () => void}> = ({ onClose }) => {
   );
 };
 
-const Home: React.FC<HomeProps> = ({ navigateToMarketplace }) => {
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [showStatsPopup, setShowStatsPopup] = useState(false)
+export default function Home({ navigateToMarketplace }: HomeProps) {
+  const [showStatsPopup, setShowStatsPopup] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   
+  // Handle successful listing creation
   const handleCreateSuccess = (listingId: string) => {
-    setShowCreateForm(false)
-    // In a real app, you might want to refresh the listings or show a success message
-    console.log(`Listing created with ID: ${listingId}`)
-  }
-  
-  const handleViewListing = (listingId: number) => {
+    setShowCreateForm(false);
     if (navigateToMarketplace) {
-      navigateToMarketplace(listingId);
+      navigateToMarketplace(Number(listingId));
     }
-  }
-  
+  };
+
   return (
-    <div>
+    <div className="pb-16">
       <div className='mb-6'>
         <h2 className='text-3xl font-bold mb-2'>Welcome back!</h2>
         <p className='text-foreground/70'>
@@ -256,5 +252,3 @@ const Home: React.FC<HomeProps> = ({ navigateToMarketplace }) => {
     </div>
   )
 }
-
-export default Home

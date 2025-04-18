@@ -53,7 +53,7 @@ export default function MyListings({ navigateToMarketplace }: MyListingsProps) {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col pb-16">
       <div className="mb-6 flex justify-between items-start">
         <div>
           <h2 className="text-3xl font-bold mb-2">My Listings</h2>

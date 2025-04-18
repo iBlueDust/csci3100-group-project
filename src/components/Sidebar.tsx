@@ -17,7 +17,7 @@ export interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ navItems, value, onChange }) => {
   return (
-    <aside className='w-16 sm:w-64 border-r-2 border-foreground/10 min-h-screen h-full sticky top-0 p-4 flex flex-col'>
+    <aside className='w-16 sm:w-64 border-r-2 border-foreground/10 min-h-screen h-full p-4 flex flex-col bg-background'> {/* Added bg-background, removed sticky top-0 */}
       <nav className='space-y-1'>
         {navItems.map((item) => (
           <button

@@ -67,7 +67,7 @@ export default function Dashboard() {
       className={classNames(
         geistSans.variable,
         geistMono.variable,
-        'min-h-screen font-body bg-background flex flex-col',
+        'w-full max-w-screen-sm mx-auto md:max-w-full md:mx-0 min-h-screen font-body bg-background flex flex-col overflow-x-hidden',
       )}
     >
       {/* Fixed Header */}
@@ -96,23 +96,23 @@ export default function Dashboard() {
             <FiHeart className='w-5 h-5' />
           </button>
           {/* User Avatar or Placeholder */}
-          <div className='w-8 h-8 rounded-full bg-foreground/10 mr-2' />
-          <span>Username</span>
+          <div className='w-8 h-8 rounded-full bg-foreground/10'></div>
+          <span className='hidden sm:inline'>Username</span>
         </div>
       </header>
 
-      <div className='flex pt-16'> {/* Add padding top to account for fixed header */}
-        {/* Fixed Sidebar */}
-        <div className="fixed left-0 top-16 bottom-0">
-          <Sidebar
-            navItems={navItems}
-            value={activePage}
-            onChange={setActivePage as (value: string | number) => void}
-          />
-        </div>
+      <div className='flex flex-col sm:flex-row pt-16'> {/* Stack on mobile, row on sm+ */}
+        {/* Fixed Sidebar (hidden on mobile) */}
+        <div className="hidden sm:block fixed left-0 top-16 bottom-0">
+           <Sidebar
+             navItems={navItems}
+             value={activePage}
+             onChange={setActivePage as (value: string | number) => void}
+           />
+         </div>
 
-        {/* Main content with left margin to account for sidebar width */}
-        <main className='flex-1 p-6 ml-16 sm:ml-64'>
+        {/* Main content full-width on mobile, margin-left on desktop, bottom padding on mobile for bottom nav */}
+        <main className='flex-1 p-6 pb-16 sm:pb-0 sm:ml-64'>
           {activePage === Page.HOME && <Home navigateToMarketplace={navigateToMarketplace} />}
 
           {activePage === Page.MESSAGES && <Messages />}
@@ -123,6 +123,22 @@ export default function Dashboard() {
 
           {activePage === Page.SETTINGS && <Settings />}
         </main>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed bottom-0 bg-background border-t-2 border-foreground/10 flex justify-around p-2 sm:hidden z-10 w-full max-w-screen-sm mx-auto inset-x-0">
+        {navItems.map(item => (
+          <button
+            key={item.key}
+            onClick={() => setActivePage(item.key)}
+            className={classNames(
+              'p-2 rounded-md transition-colors',
+              item.key === activePage ? 'text-foreground' : 'text-foreground/50 hover:text-foreground'
+            )}
+          >
+            {item.icon}
+          </button>
+        ))}
       </div>
     </div>
   )
