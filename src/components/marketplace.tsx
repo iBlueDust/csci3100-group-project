@@ -283,7 +283,7 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
 
       {/* Search and filter bar */}
       <div className="mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col gap-4">
             <div className="relative flex-grow">
               <input
                 type="text"
@@ -302,42 +302,48 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
               </button>
             </div>
 
-          <div className="flex gap-2">
-            <div className="relative">
-              <select
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value)}
-                className="h-full px-4 py-2 border-2 border-foreground/10 rounded-md appearance-none pr-8 bg-background"
+          <div className="flex flex-wrap gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-1 p-2 rounded-md ${showFilters ? 'bg-foreground/10' : ''}`}
               >
-                <option value="newest">Newest</option>
-                <option value="price_low">Price: Low to High</option>
-                <option value="price_high">Price: High to Low</option>
-                <option value="rating">Highest Rated</option>
-              </select>
-              <FiChevronDown className="absolute right-3 top-3 pointer-events-none text-foreground/50" />
+                <FiFilter />
+                <span>Filters</span>
+              </button>
             </div>
 
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-foreground/10' : ''}`}
-            >
-              <FiGrid />
-            </button>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                  className="h-full px-4 py-2 border-2 border-foreground/10 rounded-md appearance-none pr-8 bg-background"
+                >
+                  <option value="newest">Newest</option>
+                  <option value="price_low">Price: Low to High</option>
+                  <option value="price_high">Price: High to Low</option>
+                  <option value="rating">Highest Rated</option>
+                </select>
+                <FiChevronDown className="absolute right-3 top-3 pointer-events-none text-foreground/50" />
+              </div>
 
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-foreground/10' : ''}`}
-            >
-              <FiList />
-            </button>
+              <div className="hidden md:flex">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-foreground/10' : ''}`}
+                >
+                  <FiGrid />
+                </button>
 
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-1 p-2 rounded-md ${showFilters ? 'bg-foreground/10' : ''}`}
-            >
-              <FiFilter />
-              <span className="hidden sm:inline">Filters</span>
-            </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-foreground/10' : ''}`}
+                >
+                  <FiList />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -692,12 +698,11 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
             <button 
               onClick={() => paginate(currentPage - 1)} 
               disabled={currentPage === 1}
-              className={`px-4 py-2 border-r-2 border-foreground/10 flex items-center ${
+              className={`px-3 sm:px-4 py-2 border-r-2 border-foreground/10 flex items-center ${
                 currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
               <FiChevronLeft className="mr-1" />
-              Previous
             </button>
 
             <div className="flex">
@@ -705,7 +710,7 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                 <button
                   key={i + 1}
                   onClick={() => paginate(i + 1)}
-                  className={`px-4 py-2 ${currentPage === i + 1
+                  className={`px-3 sm:px-4 py-2 ${currentPage === i + 1
                     ? 'bg-foreground text-background'
                     : 'hover:bg-background-light'
                     }`}
@@ -722,12 +727,11 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
             <button 
               onClick={() => paginate(currentPage + 1)} 
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 border-l-2 border-foreground/10 flex items-center ${
+              className={`px-3 sm:px-4 py-2 border-l-2 border-foreground/10 flex items-center ${
                 currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
-              Next
-              <FiChevronRight className="ml-1" />
+              <FiChevronRight />
             </button>
           </div>
         </div>
@@ -735,23 +739,28 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
 
       {/* Items per page selector */}
       {filteredListings.length > 0 && (
-        <div className="mt-4 text-center flex justify-center items-center gap-2">
-          <span className="text-sm text-foreground/70">Items per page:</span>
-          <select 
-            value={itemsPerPage} 
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1); // Reset to first page when changing items per page
-            }}
-            className="px-2 py-1 border-2 border-foreground/10 rounded-md text-black"
-          >
-            <option value={8}>8</option>
-            <option value={16}>16</option>
-            <option value={32}>32</option>
-          </select>
-          <span className="text-sm text-foreground/70 ml-4">
-            Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredListings.length)} of {filteredListings.length} items
-          </span>
+        <div className="mt-4 text-center">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
+            <div className="flex items-center">
+              <span className="text-sm text-foreground/70">Items per page:</span>
+              <select 
+                value={itemsPerPage} 
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1); // Reset to first page when changing items per page
+                }}
+                className="ml-2 px-2 py-1 border-2 border-foreground/10 rounded-md text-black"
+              >
+                <option value={8}>8</option>
+                <option value={16}>16</option>
+                <option value={32}>32</option>
+              </select>
+            </div>
+            
+            <span className="text-sm text-foreground/70 sm:ml-4">
+              Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredListings.length)} of {filteredListings.length} items
+            </span>
+          </div>
         </div>
       )}
 
@@ -1152,11 +1161,11 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
 
       {/* Favorites Modal */}
       {showFavorites && (
-        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-background rounded-lg max-w-4xl w-full shadow-xl border-2 border-foreground/10 my-8">
-            {/* Modal Header */}
-            <div className="flex justify-between items-center p-6 border-b border-foreground/10">
-              <h2 className="text-2xl font-bold">Favorites</h2>
+        <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-background rounded-lg w-full max-w-4xl shadow-xl border-2 border-foreground/10 my-8 mx-2 max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Modal Header - Added rounded-t-lg to match parent container's top corners */}
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b border-foreground/10 sticky top-0 bg-background z-10 rounded-t-lg">
+              <h2 className="text-xl sm:text-2xl font-bold">Favorites</h2>
               <button 
                 onClick={() => setShowFavorites(false)} 
                 className="p-1 hover:bg-background-dark rounded-full"
@@ -1165,102 +1174,87 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
               </button>
             </div>
             
-            {/* Modal Body */}
-            <div className="p-6">
+            {/* Modal Body - Scrollable Content */}
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
               {favorites.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {favorites.map(item => (
-                      <div 
-                        key={item.id} 
-                        className="bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                        onClick={() => {
-                          setDetailedListing(item);
-                          setIsDetailModalOpen(true);
-                          setShowFavorites(false);
-                        }}
-                      >
-                        {/* Image placeholder */}
-                        <div className="h-48 bg-foreground/5 flex items-center justify-center">
-                          <span className="text-foreground/30">Item Image</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pb-4">
+                  {favorites.map(item => (
+                    <div 
+                      key={item.id} 
+                      className="bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => {
+                        setDetailedListing(item);
+                        setIsDetailModalOpen(true);
+                        setShowFavorites(false);
+                      }}
+                    >
+                      {/* Image placeholder */}
+                      <div className="h-48 bg-foreground/5 flex items-center justify-center">
+                        <span className="text-foreground/30">Item Image</span>
+                      </div>
+
+                      <div className="p-4">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-medium">{item.title}</h3>
+                          <button 
+                            className="text-red-500"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent triggering parent onClick
+                              setFavorites(favorites.filter(fav => fav.id !== item.id));
+                            }}
+                          >
+                            <FiHeart className="fill-current" />
+                          </button>
                         </div>
 
-                        <div className="p-4">
-                          <div className="flex justify-between items-start">
-                            <h3 className="font-medium">{item.title}</h3>
-                            <button 
-                              className="text-red-500"
+                        <p className="text-lg font-mono font-bold mt-1">{item.price}</p>
+
+                        <div className="flex items-center text-sm mt-1 text-foreground/70">
+                          <span className="flex items-center">
+                            ★ {item.rating}
+                          </span>
+                          <span className="mx-1">•</span>
+                          <span>{item.reviews} reviews</span>
+                        </div>
+
+                        <p className="text-sm mt-1 text-foreground/70">
+                          Seller: {item.seller}
+                        </p>
+
+                        <div className="flex flex-col mt-4">
+                          <span className="text-xs text-foreground/50 mb-2">{item.listed}</span>
+                          <div className="flex justify-between">
+                            <button
+                              className="button py-1 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center"
                               onClick={(e) => {
                                 e.stopPropagation(); // Prevent triggering parent onClick
-                                setFavorites(favorites.filter(fav => fav.id !== item.id));
+                                openChat(item);
+                                setShowFavorites(false);
                               }}
                             >
-                              <FiHeart className="fill-current" />
+                              <FiMessageCircle size={14} />
+                              <span>Chat</span>
                             </button>
-                          </div>
-
-                          <p className="text-lg font-mono font-bold mt-1">{item.price}</p>
-
-                          <div className="flex items-center text-sm mt-1 text-foreground/70">
-                            <span className="flex items-center">
-                              ★ {item.rating}
-                            </span>
-                            <span className="mx-1">•</span>
-                            <span>{item.reviews} reviews</span>
-                          </div>
-
-                          <p className="text-sm mt-1 text-foreground/70">
-                            Seller: {item.seller}
-                          </p>
-
-                          <div className="flex flex-col mt-4">
-                            <span className="text-xs text-foreground/50 mb-2">{item.listed}</span>
-                            <div className="flex justify-between">
-                              <button
-                                className="button py-1 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent triggering parent onClick
-                                  openChat(item);
-                                  setShowFavorites(false);
-                                }}
-                              >
-                                <FiMessageCircle size={14} />
-                                <span>Chat</span>
-                              </button>
-                              <button 
-                                className="button-primary py-1 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent triggering parent onClick
-                                  openBuyModal(item);
-                                  setShowFavorites(false);
-                                }}
-                              >
-                                <FiShoppingCart size={14} />
-                                <span>Buy</span>
-                              </button>
-                            </div>
+                            <button 
+                              className="button-primary py-1 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent triggering parent onClick
+                                openBuyModal(item);
+                                setShowFavorites(false);
+                              }}
+                            >
+                              <FiShoppingCart size={14} />
+                              <span>Buy</span>
+                            </button>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                  
-                  <div className="flex justify-end mt-6">
-                    <button 
-                      onClick={() => {
-                        if (confirm('Are you sure you want to clear all favorites?')) {
-                          setFavorites([]);
-                        }
-                      }}
-                      className="button text-red-500"
-                    >
-                      Clear All Favorites
-                    </button>
-                  </div>
-                </>
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <div className="text-center py-10">
-                  <FiHeart size={64} className="mx-auto mb-4 text-foreground/30" />
+                <div className="text-center py-6 sm:py-10">
+                  <FiHeart size={48} className="mx-auto mb-4 text-foreground/30" />
                   <h3 className="text-xl font-bold mb-2">No favorites yet</h3>
                   <p className="text-foreground/70 mb-6">
                     Items you favorite will appear here for easy access
@@ -1274,6 +1268,24 @@ export default function Marketplace({ initialSelectedListingId }: MarketplacePro
                 </div>
               )}
             </div>
+            
+            {/* Clear All Button - Fixed at bottom outside of scrollable area */}
+            {favorites.length > 0 && (
+              <div className="border-t border-foreground/10 p-4 bg-background rounded-b-lg shadow-inner">
+                <div className="flex justify-end">
+                  <button 
+                    onClick={() => {
+                      if (confirm('Are you sure you want to clear all favorites?')) {
+                        setFavorites([]);
+                      }
+                    }}
+                    className="button text-red-500"
+                  >
+                    Clear All Favorites
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

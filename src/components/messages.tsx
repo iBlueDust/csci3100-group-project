@@ -58,9 +58,36 @@ export default function Messages() {
       setFilteredConversations(filtered);
     }
     
-    // Reset to first page when search query changes
+    // Reset to first page only when search query changes, not when activeConversation changes
     setCurrentPage(1);
-  }, [searchQuery, activeConversation]);
+  }, [searchQuery]); // Remove activeConversation from dependencies
+  
+  // Separate effect to handle active conversation changes for message content search
+  useEffect(() => {
+    if (searchQuery.trim() && activeConversation) {
+      // Re-run the search when active conversation changes, but don't reset the page
+      const filtered = mockConversations.filter(conversation => {
+        const userMatch = conversation.user.toLowerCase().includes(searchQuery.toLowerCase());
+        const messageMatch = conversation.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        // Also search in message content if the conversation is active
+        let messageContentMatch = false;
+        if (Number(activeConversation) === conversation.id) {
+          const messagesForConversation = mockMessages[conversation.id as keyof typeof mockMessages];
+          if (messagesForConversation) {
+            messageContentMatch = messagesForConversation.some(msg => 
+              msg.content.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+          }
+        }
+        
+        return userMatch || messageMatch || messageContentMatch;
+      });
+      
+      setFilteredConversations(filtered);
+      // Notice: we don't reset page number here
+    }
+  }, [activeConversation, searchQuery]);
 
   // Update total conversations count when filtered conversations change
   useEffect(() => {
@@ -173,49 +200,64 @@ export default function Messages() {
   }
 
   return (
-    <div className="h-[calc(100vh-7rem)] flex flex-col">
-      <h2 className="text-3xl font-bold mb-4">Messages</h2>
-      
-      <div className="flex flex-1 border-2 border-foreground/10 rounded-lg overflow-hidden">
-        {/* Conversation List - hidden on mobile when a chat is open */}
-        <div className={`w-full md:w-1/3 border-r-2 border-foreground/10 bg-background-light ${mobileChatVisible ? 'hidden md:block' : 'block'}`}>
-          <div className="h-16 flex items-center px-4 border-b-2 border-foreground/10 justify-between">
-            <h3 className="text-lg font-bold">Conversations</h3>
-            <button 
-              onClick={() => setIsCreateConversationOpen(true)}
-              className="px-5 py-2 rounded-md bg-foreground text-background flex items-center gap-2 text-sm font-medium hover:bg-foreground/80 transition-colors shadow-sm"
-            >
-              <span>New Chat</span>
-            </button>
-          </div>
-          
-          {/* Search bar */}
-            <div className="px-4 py-3 border-b-2 border-foreground/10">
-            <div className="relative">
-              <input
-              type="text"
-              placeholder="Search messages..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full px-4 py-2 pr-12 border-2 border-foreground/10 rounded-md text-black outline-none focus:outline-none focus:border-foreground/10"
-              />
-              <button 
-              onClick={handleSearch}
-              className="absolute right-0 top-0 h-full px-4 rounded-r-md bg-foreground text-background flex items-center justify-center"
-              aria-label="Search"
+    <div className="h-[calc(100vh-7rem)] md:h-[calc(100vh-7rem)] h-screen flex flex-col overflow-hidden">
+      <h2 className="text-3xl font-bold mb-4 md:block hidden">Messages</h2>
+
+      <div className="flex flex-1 md:border-2 border-0 md:border-foreground/10 rounded-lg overflow-hidden md:mt-0 mt-[-16px]">
+        {/* Conversation List */}
+        <div className={`md:w-1/3 md:border-r-2 border-foreground/10 bg-background-light ${mobileChatVisible ? 'hidden md:block' : 'block'} 
+          md:relative md:z-20 fixed inset-x-0 md:top-0 top-[4rem] md:bottom-0 bottom-[3.5rem] z-[5] 
+          flex flex-col md:overflow-auto overflow-hidden`}>  
+          {/* Header + search container */}
+          <div className="sticky top-0 bg-background-light z-10">
+            {/* Header with height matching chat header in desktop view */}
+            <div className="h-12 md:h-16 flex items-center md:px-4 px-2 border-b-2 border-foreground/10 justify-between">
+              <h3 className="text-lg font-bold">Conversations</h3>
+              <button
+                onClick={() => setIsCreateConversationOpen(true)}
+                className="px-5 py-2 rounded-md bg-foreground text-background flex items-center gap-2 text-sm font-medium hover:bg-foreground/80 transition-colors shadow-sm md:flex hidden"
               >
-              <FiSearch />
+                <span>New Chat</span>
               </button>
             </div>
+            {/* Adjusted padding for mobile */}
+            <div className="md:px-4 px-2 py-2 border-b-2 border-foreground/10 bg-background-light">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search messages..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  className="w-full px-4 py-2 pr-12 border-2 border-foreground/10 rounded-md text-black outline-none focus:outline-none focus:border-foreground/10"
+                />
+                <button
+                  onClick={handleSearch}
+                  className="absolute right-0 top-0 h-full px-4 rounded-r-md bg-foreground text-background flex items-center justify-center"
+                  aria-label="Search"
+                >
+                  <FiSearch />
+                </button>
+              </div>
+              {/* Mobile New Chat button below search */}
+              <div className="md:hidden mt-2">
+                <button
+                  onClick={() => setIsCreateConversationOpen(true)}
+                  className="w-full py-2 rounded-md bg-foreground text-background flex items-center justify-center gap-2 text-sm font-medium hover:bg-foreground/80 transition-colors shadow-sm"
+                >
+                  <span>New Chat</span>
+                </button>
+              </div>
             </div>
-          
-          <div className="overflow-y-auto h-[calc(100%-11rem)]">
+          </div>
+
+          {/* Conversation items list - Make sure this is scrollable in all views */}
+          <div className="flex-1 overflow-y-auto pointer-events-auto">
             {currentConversations.map((conversation) => (
-              <div 
+              <div
                 key={conversation.id}
                 onClick={() => openConversation(String(conversation.id))}
-                className={`p-4 border-b-2 border-foreground/5 hover:bg-background-dark/10 cursor-pointer ${
+                className={`md:p-4 p-2 border-b-2 border-foreground/5 hover:bg-background-dark/10 cursor-pointer ${
                   activeConversation === String(conversation.id) ? 'bg-background-dark/20' : ''
                 }`}>
               <div className="flex items-center gap-3">
@@ -230,11 +272,11 @@ export default function Messages() {
               </div>
             ))}
           </div>
-          
-          {/* Pagination controls for conversations */}
-          <div className="h-12 flex items-center justify-center border-t-2 border-foreground/10">
+
+          {/* Pagination controls */}
+          <div className="h-12 min-h-[3rem] flex items-center justify-center border-t-2 border-foreground/10 sticky bottom-0 bg-background-light z-10">
             <div className="flex items-center">
-              <button 
+              <button
                 onClick={() => changePage(currentPage - 1)}
                 disabled={currentPage === 1}
                 className={`px-2 py-1 ${currentPage === 1 ? 'text-foreground/30 cursor-not-allowed' : 'text-foreground/70 hover:text-foreground'}`}
@@ -246,7 +288,7 @@ export default function Messages() {
                 {indexOfFirstConversation + 1}-{Math.min(indexOfLastConversation, mockConversations.length)} of {mockConversations.length}
               </span>
               
-              <button 
+              <button
                 onClick={() => changePage(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 className={`px-2 py-1 ${currentPage === totalPages ? 'text-foreground/30 cursor-not-allowed' : 'text-foreground/70 hover:text-foreground'}`}
@@ -256,13 +298,13 @@ export default function Messages() {
             </div>
           </div>
         </div>
-        
-        {/* Chat Area */}
-        <div className={`w-full md:w-2/3 flex flex-col ${!mobileChatVisible ? 'hidden md:flex' : 'flex'}`}>
+
+        {/* Chat Area - Adjust to have single scrollable container in mobile */}
+        <div className={`w-full md:w-2/3 ${!mobileChatVisible ? 'hidden md:flex' : 'fixed inset-0 z-30'} flex flex-col md:relative md:z-10`}>
           {activeConversation ? (
             <>
               {/* Chat Header */}
-              <div className="h-16 flex items-center justify-between px-4 border-b-2 border-foreground/10">
+              <div className="fixed top-0 left-0 right-0 h-16 flex items-center justify-between px-2 md:px-4 border-b-2 border-foreground/10 bg-background z-20 md:relative md:top-0 md:z-10">
                 <div className="flex items-center gap-3">
                   <button 
                     className="md:hidden text-foreground/70"
@@ -287,74 +329,77 @@ export default function Messages() {
                 </div>
               </div>
               
-              {/* Deletion Banner */}
-              {mockConversations.find(c => c.id === Number(activeConversation))?.wasRequestedToDelete && (
-                <div className="bg-amber-50 border-l-4 border-amber-400 p-4 text-amber-800 flex items-center gap-2">
-                  <FiAlertTriangle size={20} />
-                  <div>
-                    <p className="font-medium">This conversation has been deleted by the other person.</p>
-                    <p className="text-sm">You can still view these messages, but they can no longer reply.</p>
-                  </div>
-                  
-                  {/* For demo purposes only - this button would not exist in production */}
-                  <button 
-                    className="ml-auto text-xs text-amber-800 underline"
-                    onClick={() => toggleChatDeletionStatus(activeConversation)}
-                  >
-                    Toggle Status (Demo)
-                  </button>
-                </div>
-              )}
-              
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {mockMessages[Number(activeConversation) as keyof typeof mockMessages]?.map((message) => (
-                  <div 
-                    key={message.id}
-                    className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div 
-                      className={`max-w-[80%] rounded-xl px-4 py-2 ${
-                        message.sender === 'me' 
-                          ? 'bg-black text-white border-2 border-[#343434]' 
-                          : 'bg-white text-black border-2 border-[#343434]'
-                      }`}
-                    >
-                      {message.type === MessageType.Text ? (
-                        <p>{message.content}</p>
-                      ) : message.type === MessageType.Attachment && 'fileUrl' in message ? (
-                        ((message: any) => {
-                          const url: string = message.fileUrl;
-                          return /\.(jpe?g|png|gif|webp)$/i.test(url) ? (
-                            <img src={url} alt={message.content} className="max-w-full h-auto rounded-lg" />
-                          ) : (
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 hover:bg-foreground/10 p-2 rounded-lg transition-colors"
-                            >
-                              <div className="bg-foreground/5 p-2 rounded-lg">
-                                <FiPaperclip size={18} />
-                              </div>
-                              <div className="overflow-hidden">
-                                <p className="truncate">{message.content}</p>
-                                <p className="text-xs text-foreground/70">Click to open</p>
-                              </div>
-                            </a>
-                          );
-                        })(message)
-                      ) : null}
-                      <p className={`text-xs mt-1 ${message.sender === 'me' ? 'text-white/70' : 'text-black/50'}`}>
-                        {message.time}
-                      </p>
+              {/* Container for mobile that includes both the banner and messages with a single scroll */}
+              <div className="fixed inset-0 top-16 bottom-[4rem] overflow-y-auto md:static md:flex-1 md:overflow-y-auto bg-background">
+                {/* Deletion Banner */}
+                {mockConversations.find(c => c.id === Number(activeConversation))?.wasRequestedToDelete && (
+                  <div className="bg-amber-50 border-l-4 border-amber-400 p-4 text-amber-800 flex items-center gap-2 sticky top-0 z-10">
+                    <FiAlertTriangle size={20} />
+                    <div>
+                      <p className="font-medium">This conversation has been deleted by the other person.</p>
+                      <p className="text-sm">You can still view these messages, but they can no longer reply.</p>
                     </div>
+                    
+                    {/* For demo purposes only - this button would not exist in production */}
+                    <button 
+                      className="ml-auto text-xs text-amber-800 underline"
+                      onClick={() => toggleChatDeletionStatus(activeConversation)}
+                    >
+                      Toggle Status (Demo)
+                    </button>
                   </div>
-                ))}
+                )}
+                
+                {/* Messages */}
+                <div className="px-4 md:px-6 md:py-5 space-y-4 md:space-y-5 pt-4 pb-5 md:flex-1 md:overflow-y-auto">
+                  {mockMessages[Number(activeConversation) as keyof typeof mockMessages]?.map((message) => (
+                    <div 
+                      key={message.id}
+                      className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'} mx-1`}
+                    >
+                      <div 
+                        className={`max-w-[80%] rounded-xl px-3 py-2 md:px-4 md:py-3 ${
+                          message.sender === 'me' 
+                            ? 'bg-black text-white border-2 border-[#343434]' 
+                            : 'bg-white text-black border-2 border-[#343434]'
+                        }`}
+                      >
+                        {message.type === MessageType.Text ? (
+                          <p>{message.content}</p>
+                        ) : message.type === MessageType.Attachment && 'fileUrl' in message ? (
+                          ((message: any) => {
+                            const url: string = message.fileUrl;
+                            return /\.(jpe?g|png|gif|webp)$/i.test(url) ? (
+                              <img src={url} alt={message.content} className="max-w-full h-auto rounded-lg" />
+                            ) : (
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 hover:bg-foreground/10 p-2 rounded-lg transition-colors"
+                              >
+                                <div className="bg-foreground/5 p-2 rounded-lg">
+                                  <FiPaperclip size={18} />
+                                </div>
+                                <div className="overflow-hidden">
+                                  <p className="truncate">{message.content}</p>
+                                  <p className="text-xs text-foreground/70">Click to open</p>
+                                </div>
+                              </a>
+                            );
+                          })(message)
+                        ) : null}
+                        <p className={`text-xs mt-1 ${message.sender === 'me' ? 'text-white/70' : 'text-black/50'}`}>
+                          {message.time}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
               
-              {/* Message Input */}
-              <div className="p-4 border-t-2 border-foreground/10">
+              {/* Message Input - Fixed at bottom for mobile */}
+              <div className="fixed bottom-0 left-0 right-0 p-2 md:p-4 border-t-2 border-foreground/10 bg-background z-20 md:relative md:bottom-0">
                 {/* Attachment preview */}
                 {showAttachmentPreview && attachment && (
                   <div className="mb-2 p-2 border-2 border-foreground/10 rounded-lg bg-background-dark/10 flex items-center justify-between">

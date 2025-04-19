@@ -54,13 +54,13 @@ export default function MyListings({ navigateToMarketplace }: MyListingsProps) {
 
   return (
     <div className="h-full flex flex-col pb-16">
-      <div className="mb-6 flex justify-between items-start">
+      <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center">
         <div>
           <h2 className="text-3xl font-bold mb-2">My Listings</h2>
           <p className="text-foreground/70">Manage your items for sale on The Jade Trail</p>
         </div>
         <button 
-          className="button-primary h-auto py-2 px-5"
+          className="button-primary h-auto py-2 px-5 mt-3 md:mt-0"
           onClick={() => setIsCreateListingOpen(true)}
         >
           <div className="flex items-center gap-2">
@@ -72,11 +72,11 @@ export default function MyListings({ navigateToMarketplace }: MyListingsProps) {
 
       {/* Filters and sorting */}
       <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div className="text-foreground/70">
+        <div className="flex flex-col gap-3">
+          <div className="text-foreground/70 text-center md:text-left">
             Showing {myListings.length} {myListings.length === 1 ? 'listing' : 'listings'}
           </div>
-          <div className="flex gap-2">
+          <div className="flex justify-center md:justify-end gap-2">
             <div className="relative">
               <select
                 value={sortOption}
@@ -92,19 +92,21 @@ export default function MyListings({ navigateToMarketplace }: MyListingsProps) {
               <FiChevronDown className="absolute right-3 top-3 pointer-events-none text-foreground/50" />
             </div>
 
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-foreground/10' : ''}`}
-            >
-              <FiGrid />
-            </button>
+            <div className="hidden md:flex">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-foreground/10' : ''}`}
+              >
+                <FiGrid />
+              </button>
 
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-foreground/10' : ''}`}
-            >
-              <FiList />
-            </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-foreground/10' : ''}`}
+              >
+                <FiList />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -130,7 +132,7 @@ export default function MyListings({ navigateToMarketplace }: MyListingsProps) {
       )}
 
       {/* Grid View */}
-      {myListings.length > 0 && viewMode === 'grid' && (
+      {myListings.length > 0 && (viewMode === 'grid') && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sortedListings.map(listing => (
             <div 
