@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { FiPlus } from 'react-icons/fi'
+import { FiPlus, FiX } from 'react-icons/fi'
 import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -84,20 +84,7 @@ const StatsPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             onClick={onClose}
             className='p-1 hover:bg-background-dark rounded-full'
           >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              width='24'
-              height='24'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeWidth='2'
-              strokeLinecap='round'
-              strokeLinejoin='round'
-            >
-              <line x1='18' y1='6' x2='6' y2='18'></line>
-              <line x1='6' y1='6' x2='18' y2='18'></line>
-            </svg>
+            <FiX size={24} className='text-foreground' />
           </button>
         </div>
 
