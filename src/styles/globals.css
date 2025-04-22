@@ -23,19 +23,21 @@
 }
 
 .button {
-  @apply rounded-full border-2 border-solid border-foreground-light/30;
+  @apply rounded-full border border-solid border-foreground-light/75;
   @apply transition-colors flex items-center justify-center;
-  @apply hover:bg-background-dark hover:border-transparent;
+  @apply hover:bg-background-dark;
   @apply disabled:bg-background-dark disabled:border-transparent;
   @apply text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5;
+  @apply disabled:cursor-not-allowed;
 }
 
 .button-primary {
-  @apply rounded-full border-2 border-solid border-transparent transition-colors;
+  @apply rounded-full border border-solid border-transparent transition-colors;
   @apply flex items-center justify-center gap-2;
   @apply bg-foreground text-background;
-  @apply hover:bg-foreground-light disabled:bg-foreground-light;
+  @apply hover:bg-foreground-light disabled:bg-foreground-light/50;
   @apply text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5;
+  @apply disabled:cursor-not-allowed;
 }
 
 .link {

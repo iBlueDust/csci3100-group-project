@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import classNames from 'classnames'
 import { useQuery } from '@tanstack/react-query'
+import { FiPlus, FiSearch } from 'react-icons/fi'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
@@ -19,8 +20,9 @@ import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { QueryKeys } from '@/data/types/queries'
 import { isDev } from '@/utils/frontend/env'
 import { queryChats } from '@/data/frontend/queries/queryChats'
-import { FiChevronLeft, FiChevronRight, FiSearch } from 'react-icons/fi'
+import PaginationControls from './PaginationControls'
 
+const NewChatModal = dynamic(() => import('@/components/NewChatModal'))
 const ChatThread = dynamic(() => import('@/components/ChatThread'), {
   ssr: false,
 })
@@ -36,9 +38,7 @@ const Messages: PageWithLayout = () => {
   const [searchQuery, setSearchQuery] = useState('')
 
   // Create conversation modal state
-  const [isCreateConversationOpen, setIsCreateConversationOpen] =
-    useState(false)
-  const [newConversationUsername, setNewConversationUsername] = useState('')
+  const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false)
 
   // Pagination state for conversations
   const [currentPage, setCurrentPage] = useState(1)
@@ -71,62 +71,6 @@ const Messages: PageWithLayout = () => {
   const openConversation = (id: string) => {
     setActiveChatId(id)
     setMobileChatVisible(true)
-  }
-
-  // Handle search
-  const handleSearch = () => {
-    // The search is already handled by the useEffect above
-    // This function is mainly for the search button click
-    console.log('Searching for:', searchQuery)
-  }
-
-  // Handle creating a new conversation
-  const handleCreateConversation = () => {
-    if (newConversationUsername.trim()) {
-      // In a real app, you would make an API call to create a new conversation with this user
-      console.log('Creating new conversation with:', newConversationUsername)
-
-      // // For demo purposes, we'll mock creating a new conversation by adding it to the list
-      // const newConversation = {
-      //   id: mockConversations.length + 1,
-      //   user: newConversationUsername,
-      //   avatar: '', // No avatar initially
-      //   lastMessage: "New conversation",
-      //   unread: false,
-      //   time: 'Just now',
-      // };
-
-      // // Add the new conversation to the beginning of the list
-      // setFilteredConversations([newConversation, ...filteredConversations]);
-
-      // // Open the new conversation
-      // setActiveConversation(String(newConversation.id));
-      // setMobileChatVisible(true);
-
-      // // Reset the form and close the modal
-      // setNewConversationUsername('');
-      // setIsCreateConversationOpen(false);
-    }
-  }
-
-  // Handle delete chat
-  const handleDeleteChat = () => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this conversation? This action cannot be undone.',
-      )
-    ) {
-      return
-    }
-
-    // In a real app, we would make an API call to delete the chat
-    // For this mock, we'll just close the active conversation
-    // setActiveConversation(null)
-    setMobileChatVisible(false)
-
-    // In a real implementation, we would also need to remove the conversation from the list
-    // For now, we'll just leave it in the list since we're using mock data
-    console.log(`Deleted conversation: ${activeChatId}`)
   }
 
   const { data: chats } = useQuery({
@@ -171,13 +115,43 @@ const Messages: PageWithLayout = () => {
     setCurrentPage(pageNumber)
   }
 
-  // For demo purposes - toggle deletion status
+  // Handle search
+  const handleSearch = useCallback(() => {
+    // The search is already handled by the useEffect above
+    // This function is mainly for the search button click
+    console.log('Searching for:', searchQuery)
+  }, [searchQuery])
+
+  // Handle creating a new conversation
+  const handleNewChat = useCallback((recipient: string) => {
+    setIsNewChatModalOpen(false)
+    if (!recipient.trim()) {
+      return
+    }
+
+    // In a real app, you would make an API call to create a new conversation with this user
+    console.log('Creating new conversation with:', recipient)
+  }, [])
+
+  // Handle delete chat
+  const handleDeleteChat = useCallback(() => {
+    if (
+      !window.confirm(
+        'Are you sure you want to delete this conversation? This action cannot be undone.',
+      )
+    ) {
+      return
+    }
+
+    setMobileChatVisible(false)
+    console.log(`Deleted conversation: ${activeChatId}`)
+  }, [activeChatId])
+
   useLayoutEffect(() => {
     if (!api.user) {
       router.replace('/')
       return
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -189,45 +163,48 @@ const Messages: PageWithLayout = () => {
         {/* Conversation List */}
         <div
           className={classNames(
-            'md:w-1/3 md:border-r-2 border-foreground/10 h-full bg-background-light md:relative md:z-20 fixed inset-x-0 md:top-0 top-16 md:bottom-0 bottom-14 z-[5] overflow-hidden md:overflow-auto',
-            mobileChatVisible && 'hidden md:flex md:flex-col md:flex-nowrap',
+            'flex flex-col flex-nowrap md:w-1/3 md:border-r-2 border-foreground/10 h-full bg-background-light md:relative md:z-20 fixed inset-x-0 md:top-0 top-16 md:bottom-0 bottom-14 z-[5] overflow-hidden md:overflow-auto',
+            mobileChatVisible && 'hidden md:flex',
           )}
         >
           {/* Header + search container */}
           <div className='sticky top-0 bg-background-light z-10'>
             {/* Header with height matching chat header in desktop view */}
-            <div className='h-12 md:h-16 flex items-center md:px-4 px-2 border-b-2 border-foreground/10 justify-between'>
+            <div className='h-12 md:h-16 flex items-center md:px-4 px-2 border-b border-foreground/25 justify-between'>
               <h3 className='text-lg font-bold'>Conversations</h3>
               <button
-                onClick={() => setIsCreateConversationOpen(true)}
-                className='px-5 py-2 rounded-md bg-foreground text-background items-center gap-2 text-sm font-medium hover:bg-foreground/80 transition-colors shadow-sm md:flex hidden'
+                onClick={() => setIsNewChatModalOpen(true)}
+                className='px-4 py-2 rounded-md bg-background border border-foreground-light/75 text-foreground items-center gap-2 text-sm font-medium hover:bg-background-dark transition-colors shadow-sm md:flex hidden'
               >
-                <span>New Chat</span>
+                <FiPlus />
+                <span>New</span>
               </button>
             </div>
+
             {/* Adjusted padding for mobile */}
-            <div className='md:px-4 px-2 py-2 border-b-2 border-foreground/10 bg-background-light'>
+            <div className='md:px-4 px-2 py-2 border-b border-foreground-light/25 bg-background-light'>
               <div className='relative'>
                 <input
                   type='text'
-                  placeholder='Search messages...'
+                  placeholder='Search chats'
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className='w-full px-4 py-2 pr-12 border-2 border-foreground/10 rounded-md text-black outline-none focus:outline-none focus:border-foreground/10'
+                  className='w-full px-4 py-2 pr-12 border border-foreground/25 rounded-md text-foreground outline-none focus:outline-none focus:border-foreground/10 bg-background hover:bg-background-dark'
                 />
                 <button
                   onClick={handleSearch}
-                  className='absolute right-0 top-0 h-full px-4 rounded-r-md bg-foreground text-background flex items-center justify-center'
+                  className='absolute right-0 top-0 h-full px-4 rounded-r-md bg-background hover:bg-background-dark border border-foreground-light/25 text-foreground flex items-center justify-center'
                   aria-label='Search'
                 >
                   <FiSearch />
                 </button>
               </div>
+
               {/* Mobile New Chat button below search */}
               <div className='md:hidden mt-2'>
                 <button
-                  onClick={() => setIsCreateConversationOpen(true)}
+                  onClick={() => setIsNewChatModalOpen(true)}
                   className='w-full py-2 rounded-md bg-foreground text-background flex items-center justify-center gap-2 text-sm font-medium hover:bg-foreground/80 transition-colors shadow-sm'
                 >
                   <span>New Chat</span>
@@ -274,41 +251,14 @@ const Messages: PageWithLayout = () => {
           </div>
 
           {/* Pagination controls */}
-          <div className='h-12 min-h-[3rem] flex items-center justify-center border-t-2 border-foreground/10 sticky bottom-0 bg-background-light z-10'>
-            <div className='flex items-center'>
-              <button
-                onClick={() => changePage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`px-2 py-1 ${
-                  currentPage === 1
-                    ? 'text-foreground/30 cursor-not-allowed'
-                    : 'text-foreground/70 hover:text-foreground'
-                }`}
-              >
-                <FiChevronLeft />
-              </button>
-
-              <span className='mx-2 text-sm'>
-                {chats
-                  ? `${indexOfFirstConversation + 1}-${Math.min(
-                      indexOfLastConversation,
-                      chats.meta.total,
-                    )} of ${chats.meta.total}`
-                  : '-- of --'}
-              </span>
-
-              <button
-                onClick={() => changePage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`px-2 py-1 ${
-                  currentPage === totalPages
-                    ? 'text-foreground/30 cursor-not-allowed'
-                    : 'text-foreground/70 hover:text-foreground'
-                }`}
-              >
-                <FiChevronRight />
-              </button>
-            </div>
+          <div className='h-12 min-h-12 flex items-center justify-center border-t border-foreground/25 sticky bottom-0 bg-background-light z-10'>
+            <PaginationControls
+              indexOfFirstItem={indexOfFirstConversation}
+              indexOfLastItem={indexOfLastConversation}
+              numberOfItems={chats?.meta.total}
+              onPrevClick={() => changePage(currentPage - 1)}
+              onNextClick={() => changePage(currentPage + 1)}
+            />
           </div>
         </div>
 
@@ -340,48 +290,11 @@ const Messages: PageWithLayout = () => {
       </div>
 
       {/* Create Conversation Modal */}
-      {isCreateConversationOpen && (
-        <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
-          <div className='bg-background border-2 border-foreground/10 rounded-lg p-6 max-w-md w-full mx-4'>
-            <h3 className='text-xl font-bold mb-4'>Start a New Conversation</h3>
-
-            <div className='mb-6'>
-              <label
-                htmlFor='username'
-                className='block text-sm font-medium mb-2'
-              >
-                Username
-              </label>
-              <input
-                type='text'
-                id='username'
-                placeholder='Enter username'
-                value={newConversationUsername}
-                onChange={(e) => setNewConversationUsername(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === 'Enter' && handleCreateConversation()
-                }
-                className='w-full px-4 py-2 pr-12 border-2 border-foreground/10 rounded-md text-black outline-none focus:outline-none focus:border-foreground/10'
-              />
-            </div>
-
-            <div className='flex justify-end gap-2'>
-              <button
-                onClick={() => setIsCreateConversationOpen(false)}
-                className='px-4 py-2 border-2 border-foreground/10 rounded-md hover:bg-foreground/5'
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateConversation}
-                className='px-4 py-2 bg-foreground text-background rounded-md hover:bg-foreground/90'
-                disabled={!newConversationUsername.trim()}
-              >
-                Start Conversation
-              </button>
-            </div>
-          </div>
-        </div>
+      {isNewChatModalOpen && (
+        <NewChatModal
+          onCancel={() => setIsNewChatModalOpen(false)}
+          onConfirm={handleNewChat}
+        />
       )}
     </div>
   )

@@ -2,8 +2,9 @@ import React from 'react'
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string
+  label?: React.ReactNode
   error?: string
+  hideError?: boolean
 }
 
 const Input: React.FC<InputProps> = (props) => {
@@ -13,12 +14,14 @@ const Input: React.FC<InputProps> = (props) => {
         <span>{props.label}</span>
 
         <input
-          className='mt-1 block w-full rounded-md border bg-black border-gray-300 px-3 py-2'
+          className='mt-1 block w-full rounded-md border bg-background-light border-foreground-light/75 px-3 py-2'
           {...props}
         />
       </label>
 
-      <div className='mx-1 text-red-500 min-h-5'>{props.error}</div>
+      {!props.hideError && (
+        <div className='mx-1 text-red-500 min-h-5'>{props.error}</div>
+      )}
     </div>
   )
 }

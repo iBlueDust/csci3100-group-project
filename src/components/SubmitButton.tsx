@@ -6,7 +6,8 @@ import BasicSpinner from '@/components/BasicSpinner'
 type HTMLButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>
 
 export interface SubmitButtonProps extends HTMLButtonProps {
-  look?: 'primary' | 'default'
+  ref?: React.Ref<HTMLButtonElement>
+  look?: 'primary' | 'error' | 'default'
   loading?: boolean
 }
 
@@ -24,7 +25,10 @@ const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
       {...buttonProps}
       disabled={props.loading || props.disabled}
       className={classNames(
-        look === 'primary' ? 'button-primary' : 'button',
+        look === 'primary' && 'button-primary',
+        look === 'error' &&
+          'button bg-red-500 text-white px-4 py-2 disabled:opacity-50',
+        look === 'default' && 'button',
         props.className,
       )}
     >
