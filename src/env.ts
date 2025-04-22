@@ -2,6 +2,7 @@ import Joi from 'joi'
 
 const schema = Joi.object({
 	NEXT_PUBLIC_API_ENDPOINT: Joi.string().uri().required(),
+	NEXT_PUBLIC_UEK_DERIVATION_SALT: Joi.string().min(1).required(),
 
 	AUTH_TOKEN_SECRET: Joi.string().required(),
 	AUTH_TOKEN_EXPIRATION_SECONDS: Joi.number().min(1).default(300),
@@ -44,3 +45,6 @@ if (error) {
 }
 
 export default env
+
+export const isDev = process.env.NODE_ENV === 'development'
+export const isProd = process.env.NODE_ENV === 'production'

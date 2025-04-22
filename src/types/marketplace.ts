@@ -1,43 +1,43 @@
 // Types related to market listings
 
 export interface ListingFormData {
-  title: string;
-  description: string;
-  priceInCents: string;
-  category: string;
-  country: string;
+  title: string
+  description: string
+  priceInCents: number
+  category: string
+  countries: string[]
 }
 
 export interface Listing extends Omit<ListingFormData, 'priceInCents'> {
-  id: string;
-  priceInCents: number;
-  images: string[];
+  id: string
+  priceInCents: number
+  images: string[]
   seller: {
-    id: string;
-    username: string;
-  };
-  createdAt: string;
-  updatedAt: string;
+    id: string
+    username: string
+  }
+  createdAt: string
+  updatedAt: string
 }
 
 export interface ListingFilters {
-  query?: string;
-  category?: string;
-  minPrice?: string;
-  maxPrice?: string;
-  country?: string;
+  query?: string
+  category?: string
+  minPrice?: number
+  maxPrice?: number
+  countries?: string[]
 }
 
 export interface ListingApiResponse {
-  data: Listing[];
+  data: Listing[]
   meta: {
-    total: number;
-    skip: number;
-    limit: number;
-  };
+    total: number
+    skip: number
+    limit: number
+  }
 }
 
 export interface CategoryOption {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }

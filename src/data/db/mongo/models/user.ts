@@ -6,6 +6,15 @@ function hash(value: string | Buffer, secret: string | Buffer) {
 	return crypto.createHmac('sha256', secret).update(value).digest()
 }
 
+export interface UserPublicKeyJWK {
+	kty: 'EC'
+	crv: 'P-521'
+	x: string // base64url encoded
+	y: string // base64url encoded
+	ext: true
+	key_ops?: ('deriveKey' | 'deriveBits')[]
+}
+
 const UserSchema = new mongoose.Schema({
 	username: {
 		type: String,
@@ -23,6 +32,11 @@ const UserSchema = new mongoose.Schema({
 		required: true,
 	},
 
+	publicKey: { // JSON Web Key (JWK) format
+		type: Object,
+		required: true,
+	},
+
 	roles: {
 		type: [String],
 		default: [UserRole.USER],
@@ -35,10 +49,21 @@ const UserSchema = new mongoose.Schema({
 			},
 		},
 		statics: {
-			createWithPasskey(username: string, passkey: string, roles: string[] = [UserRole.USER]) {
+			createWithPasskey(
+				username: string,
+				passkey: string,
+				roles: string[] = [UserRole.USER],
+				publicKey: UserPublicKeyJWK,
+			) {
 				const passkeySalt = crypto.randomBytes(32)
 				const passkeyHash = hash(passkey, passkeySalt)
-				return this.create({ username, passkeySalt, passkeyHash, roles })
+				return this.create({
+					username,
+					passkeySalt,
+					passkeyHash,
+					roles,
+					publicKey,
+				})
 			}
 		}
 	})

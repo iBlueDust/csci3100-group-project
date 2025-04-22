@@ -1,8 +1,14 @@
 import React from 'react'
 import { FiX } from 'react-icons/fi'
-import { countries } from '@/utils/countries'
+
+import {
+  InputField,
+  TextAreaField,
+  SelectField,
+  ImageUploadField,
+} from '@/components/ui/FormComponents'
 import { useListingForm } from '@/hooks/useListingForm'
-import { InputField, TextAreaField, SelectField, ImageUploadField } from '@/components/ui/FormComponents'
+import { countries } from '@/utils/countries'
 import { CategoryOption, ListingFormData } from '@/types/marketplace'
 
 // The same categories from the marketplace component
@@ -11,7 +17,7 @@ const categories: CategoryOption[] = [
   { id: 'antiques', name: 'Antiques' },
   { id: 'collectibles', name: 'Collectibles' },
   { id: 'art', name: 'Artwork' },
-  { id: 'gems', name: 'Precious Gems' }
+  { id: 'gems', name: 'Precious Gems' },
 ]
 
 interface CreateListingFormProps {
@@ -22,122 +28,131 @@ interface CreateListingFormProps {
   isEditing?: boolean
 }
 
-const CreateListingForm: React.FC<CreateListingFormProps> = ({ 
-  onClose, 
-  onSuccess, 
-  initialData, 
-  listingId, 
-  isEditing = false 
+const CreateListingForm: React.FC<CreateListingFormProps> = ({
+  onClose,
+  onSuccess,
+  initialData,
+  listingId,
+  isEditing = false,
 }) => {
-  const { 
-    formData, 
-    images, 
-    isSubmitting, 
+  const {
+    formData,
+    images,
+    isSubmitting,
     error,
     handleChange,
     handleImageChange,
     removeImage,
-    handleSubmit 
+    handleSubmit,
   } = useListingForm({ initialData, listingId, onSuccess })
 
   return (
-    <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-      <div className="bg-background w-full max-w-screen-sm md:max-w-2xl md:mx-auto rounded-lg shadow-xl overflow-hidden">
-        <div className="flex justify-between items-center p-4 border-b border-foreground/10">
-          <h2 className="text-xl font-bold">{isEditing ? 'Edit Listing' : 'Create New Listing'}</h2>
-          <button 
+    <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex justify-center items-center z-50 p-4'>
+      <div className='bg-background w-full max-w-screen-sm md:max-w-2xl md:mx-auto rounded-lg shadow-xl overflow-hidden'>
+        <div className='flex justify-between items-center p-4 border-b border-foreground/10'>
+          <h2 className='text-xl font-bold'>
+            {isEditing ? 'Edit Listing' : 'Create New Listing'}
+          </h2>
+          <button
             onClick={onClose}
-            className="text-foreground/70 hover:text-foreground rounded-full p-1"
+            className='text-foreground/70 hover:text-foreground rounded-full p-1'
           >
             <FiX size={24} />
           </button>
         </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[70vh] flex flex-col gap-6">
+
+        <form
+          onSubmit={handleSubmit}
+          className='p-6 overflow-y-auto max-h-[70vh] flex flex-col gap-6'
+        >
           {error && (
-            <div className="p-3 bg-red-100 text-red-700 rounded-md">
+            <div className='p-3 bg-red-100 text-red-700 rounded-md'>
               {error}
             </div>
           )}
-          
+
           <InputField
-            id="title"
-            name="title"
-            label="Title"
+            id='title'
+            name='title'
+            label='Title'
             value={formData.title}
             onChange={handleChange}
             required
             maxLength={100}
           />
-          
+
           <TextAreaField
-            id="description"
-            name="description"
-            label="Description"
+            id='description'
+            name='description'
+            label='Description'
             value={formData.description}
             onChange={handleChange}
             required
             maxLength={1000}
           />
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <InputField
-              id="priceInCents"
-              name="priceInCents"
-              label="Price ($)"
+              id='priceInCents'
+              name='priceInCents'
+              label='Price ($)'
               value={formData.priceInCents}
               onChange={handleChange}
-              type="number"
-              step="0.01"
-              min="0"
+              type='number'
+              step='0.01'
+              min='0'
               required
             />
-            
+
             <SelectField
-              id="country"
-              name="country"
-              label="Country"
-              value={formData.country}
+              id='country'
+              name='country'
+              label='Country'
+              value={formData.countries[0]}
               onChange={handleChange}
-              options={countries.filter(country => country.id !== 'all')}
+              options={countries.filter((country) => country.id !== 'all')}
               required
             />
           </div>
-          
+
           <SelectField
-            id="category"
-            name="category"
-            label="Category"
+            id='category'
+            name='category'
+            label='Category'
             value={formData.category}
             onChange={handleChange}
             options={categories}
             required
           />
-          
-          <ImageUploadField 
+
+          <ImageUploadField
             images={images}
             maxImages={5}
             onChange={handleImageChange}
             onRemove={removeImage}
           />
 
-          <div className="flex gap-3 justify-end">
+          <div className='flex gap-3 justify-end'>
             <button
-              type="button"
+              type='button'
               onClick={onClose}
-              className="button px-5 py-2"
+              className='button px-5 py-2'
               disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
-              type="submit"
-              className="button-primary px-5 py-2"
+              type='submit'
+              className='button-primary px-5 py-2'
               disabled={isSubmitting}
             >
-              {isSubmitting 
-                ? (isEditing ? 'Updating...' : 'Creating...') 
-                : (isEditing ? 'Update Listing' : 'Create Listing')}
+              {isSubmitting
+                ? isEditing
+                  ? 'Updating...'
+                  : 'Creating...'
+                : isEditing
+                ? 'Update Listing'
+                : 'Create Listing'}
             </button>
           </div>
         </form>
@@ -145,6 +160,5 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
     </div>
   )
 }
-
 
 export default CreateListingForm

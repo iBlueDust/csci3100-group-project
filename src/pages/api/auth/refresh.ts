@@ -5,11 +5,11 @@ import dbConnect from "@/data/db/mongo"
 import User from "@/data/db/mongo/models/user"
 import { sessionStore, sessionToCookie } from "@/data/session"
 import { UserRole } from "@/data/types/auth"
-import { AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS } from "@/data/session"
-import { AuthData, protectedRoute } from "@/utils/api/auth"
+import env from "@/env"
 
 type Data = {
 	id: string
+	expiresAt: string
 }
 
 type Error = {
@@ -20,35 +20,51 @@ type Error = {
 async function POST(
 	req: NextApiRequest,
 	res: NextApiResponse<Data | Error>,
-	auth: AuthData,
 ) {
-	await dbConnect()
-	const user = await User.findById(auth.data.userId)
-	if (!user) {
+	const refreshToken = req.cookies['refreshToken']
+	if (!refreshToken) {
 		return res.status(401).json({ code: 'INVALID_CREDENTIALS' })
 	}
 
-	const refreshTokenData = await sessionStore.checkRefreshToken(auth.refreshToken.toString())
+	const refreshTokenData = await sessionStore.checkRefreshToken(refreshToken)
 	if (!refreshTokenData) {
 		return res.status(401).json({ code: 'INVALID_CREDENTIALS' })
 	}
 
-	const refreshTokenExpiresAt = refreshTokenData.expiresAt
 	const issuedAt = new Date()
+	const userId = refreshTokenData.userId
+
+	await dbConnect()
+	const user = await User.findOne({ _id: userId }).select('roles')
+	if (!user) {
+		return res.status(401).json({ code: 'INVALID_CREDENTIALS' })
+	}
 
 	// If refresh token is not halfway through its expiration time, only reissue token
-	if (refreshTokenExpiresAt.getTime() - Date.now() > (1000 * AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS / 2)) {
-		const newToken = await sessionStore.reissueToken(user.username, user.roles as UserRole[])
-		const session = { token: newToken, refreshToken: auth.refreshToken, issuedAt }
-		return res.setHeader('Set-Cookie', sessionToCookie(session))
+	const halfExpiration = (1000 * env.AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS / 2)
+	if (Date.now() - refreshTokenData.issuedAt.getTime() < halfExpiration) {
+		const newToken = await sessionStore
+			.reissueToken(user.id, user.roles as UserRole[])
+		const session = {
+			token: newToken.token,
+			refreshToken,
+			issuedAt: issuedAt,
+			expiresAt: newToken.expiresAt,
+		}
+
+		res.setHeader('Set-Cookie', sessionToCookie(session))
+		res.status(200)
+			.send({ id: user.id, expiresAt: session.expiresAt.toISOString() })
+		return
 	}
 
 	// Also invalidates old tokens
-	const session = await sessionStore.createSession(user.username, user.roles as UserRole[])
+	const session = await sessionStore.createSession(user.id, user.roles as UserRole[])
 
 	// httpOnly cookies
 	res.setHeader('Set-Cookie', sessionToCookie(session))
 	res.status(200)
+		.send({ id: user.id, expiresAt: session.expiresAt.toISOString() })
 }
 
 export default async function handler(
@@ -57,7 +73,7 @@ export default async function handler(
 ) {
 	switch (req.method) {
 		case "POST":
-			return await protectedRoute(POST, sessionStore)(req, res)
+			return await POST(req, res)
 		default:
 			res.status(405).end() // Method Not Allowed
 	}

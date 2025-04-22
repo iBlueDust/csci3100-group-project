@@ -1,145 +1,178 @@
 import React, { useState, useMemo } from 'react'
 import { FiPlus } from 'react-icons/fi'
+import { useQuery } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+dayjs.extend(relativeTime)
+
+import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
+import { QueryKeys } from '@/data/types/queries'
+import { mockListings } from '@/data/mock/listings'
+import { useApi } from '@/utils/frontend/api'
+import { formatCurrency, formatNumber } from '@/utils/format'
 import CreateListingForm from './CreateListingForm'
-import { mockListings, getRecentListings } from '@/data/mock/listings'
 
 // Get recent listings (first 4)
-const recentListings = getRecentListings(4)
+// const recentListings = getRecentListings(4)
 
 // Calculate market statistics
 const calculateMarketStats = () => {
-  const totalListings = mockListings.length;
-  
+  const totalListings = mockListings.length
+
   // Calculate completed trades (just a mock example - approximately 30% of listings)
-  const completedTrades = Math.floor(totalListings * 0.3);
-  
+  const completedTrades = Math.floor(totalListings * 0.3)
+
   // Calculate average price
   const totalValue = mockListings.reduce((sum, item) => {
-    return sum + parseFloat(item.price.replace('$', '').replace(',', ''));
-  }, 0);
-  
-  const averagePrice = Math.round(totalValue / totalListings);
-  const tradeVolume = Math.round(totalValue * 0.3); // Assuming 30% of items were traded
-  
+    return sum + parseFloat(item.price.replace('$', '').replace(',', ''))
+  }, 0)
+
+  const averagePrice = Math.round(totalValue / totalListings)
+  const tradeVolume = Math.round(totalValue * 0.3) // Assuming 30% of items were traded
+
   // Calculate category distribution
-  const categories: Record<string, number> = {};
-  mockListings.forEach(item => {
+  const categories: Record<string, number> = {}
+  mockListings.forEach((item) => {
     if (categories[item.category]) {
-      categories[item.category]++;
+      categories[item.category]++
     } else {
-      categories[item.category] = 1;
+      categories[item.category] = 1
     }
-  });
-  
-  const categoryPercentages: Record<string, number> = {};
-  Object.keys(categories).forEach(cat => {
-    categoryPercentages[cat] = Math.round((categories[cat] / totalListings) * 100);
-  });
-  
+  })
+
+  const categoryPercentages: Record<string, number> = {}
+  Object.keys(categories).forEach((cat) => {
+    categoryPercentages[cat] = Math.round(
+      (categories[cat] / totalListings) * 100,
+    )
+  })
+
   // Get top categories
   const topCategories = Object.entries(categoryPercentages)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 4);
-  
+    .slice(0, 4)
+
   // Approximate new accounts - just a mock example
-  const newAccounts = Math.floor(totalListings * 0.1);
-  
+  const newAccounts = Math.floor(totalListings * 0.1)
+
   return {
     totalListings,
     completedTrades,
     averagePrice,
     tradeVolume,
     topCategories,
-    newAccounts
-  };
-};
+    newAccounts,
+  }
+}
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+const LIMIT = 4
+
 export interface HomeProps {
-  navigateToMarketplace?: (listingId: number) => void;
+  navigateToMarketplace?: (listingId: number) => void
 }
 
 // Stats popup component
-const StatsPopup: React.FC<{onClose: () => void}> = ({ onClose }) => {
-  const stats = calculateMarketStats();
-  
-  // Format number with commas
-  const formatNumber = (num: number): string => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-  
+const StatsPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const stats = calculateMarketStats()
+
   return (
-    <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg p-6 w-full max-w-screen-sm md:max-w-2xl max-h-[80vh] overflow-y-auto mx-4 md:mx-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Market Statistics</h2>
-          <button onClick={onClose} className="p-1 hover:bg-background-dark rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
+    <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
+      <div className='bg-background rounded-lg p-6 w-full max-w-screen-sm md:max-w-2xl max-h-[80vh] overflow-y-auto mx-4 md:mx-auto'>
+        <div className='flex justify-between items-center mb-4'>
+          <h2 className='text-2xl font-bold'>Market Statistics</h2>
+          <button
+            onClick={onClose}
+            className='p-1 hover:bg-background-dark rounded-full'
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              width='24'
+              height='24'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth='2'
+              strokeLinecap='round'
+              strokeLinejoin='round'
+            >
+              <line x1='18' y1='6' x2='6' y2='18'></line>
+              <line x1='6' y1='6' x2='18' y2='18'></line>
             </svg>
           </button>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div className="border-2 border-foreground/10 rounded-lg p-4">
-            <h3 className="font-bold mb-3">Market Activity</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
+
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
+          <div className='border-2 border-foreground/10 rounded-lg p-4'>
+            <h3 className='font-bold mb-3'>Market Activity</h3>
+            <div className='space-y-3'>
+              <div className='flex justify-between'>
                 <span>Active Listings</span>
-                <span className="font-mono font-bold">{formatNumber(stats.totalListings)}</span>
+                <span className='font-mono font-bold'>
+                  {formatNumber(stats.totalListings)}
+                </span>
               </div>
-              <div className="flex justify-between">
+              <div className='flex justify-between'>
                 <span>Completed Trades</span>
-                <span className="font-mono font-bold">{formatNumber(stats.completedTrades)}</span>
+                <span className='font-mono font-bold'>
+                  {formatNumber(stats.completedTrades)}
+                </span>
               </div>
-              <div className="flex justify-between">
+              <div className='flex justify-between'>
                 <span>Trade Volume (7d)</span>
-                <span className="font-mono font-bold">${formatNumber(stats.tradeVolume)}</span>
+                <span className='font-mono font-bold'>
+                  {formatCurrency(stats.tradeVolume)}
+                </span>
               </div>
-              <div className="flex justify-between">
+              <div className='flex justify-between'>
                 <span>New Accounts</span>
-                <span className="font-mono font-bold">{formatNumber(stats.newAccounts)}</span>
+                <span className='font-mono font-bold'>
+                  {formatNumber(stats.newAccounts)}
+                </span>
               </div>
             </div>
           </div>
-          
-          <div className="border-2 border-foreground/10 rounded-lg p-4">
-            <h3 className="font-bold mb-3">Top Categories</h3>
-            <div className="space-y-3">
+
+          <div className='border-2 border-foreground/10 rounded-lg p-4'>
+            <h3 className='font-bold mb-3'>Top Categories</h3>
+            <div className='space-y-3'>
               {stats.topCategories.map(([category, percentage], index) => (
-                <div key={index} className="flex justify-between">
-                  <span className="capitalize">{category}</span>
-                  <span className="font-mono font-bold">{percentage}%</span>
+                <div key={index} className='flex justify-between'>
+                  <span className='capitalize'>{category}</span>
+                  <span className='font-mono font-bold'>{percentage}%</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
-        
-        <button onClick={onClose} className="button-primary w-full mt-6">
+
+        <button onClick={onClose} className='button-primary w-full mt-6'>
           Close
         </button>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default function Home({ navigateToMarketplace }: HomeProps) {
-  const [showStatsPopup, setShowStatsPopup] = useState(false);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  
+const Home: React.FC<HomeProps> = ({ navigateToMarketplace }: HomeProps) => {
+  const api = useApi()
+  const { data: listings } = useQuery({
+    queryKey: [QueryKeys.MARKET_LISTINGS],
+    queryFn: () => queryMarketListings(api, { limit: LIMIT }),
+  })
+
+  const [showStatsPopup, setShowStatsPopup] = useState(false)
+  const [showCreateForm, setShowCreateForm] = useState(false)
+
   // Handle successful listing creation
   const handleCreateSuccess = (listingId: string) => {
-    setShowCreateForm(false);
+    setShowCreateForm(false)
     if (navigateToMarketplace) {
-      navigateToMarketplace(Number(listingId));
+      navigateToMarketplace(Number(listingId))
     }
-  };
+  }
 
   return (
-    <div className="pb-16">
+    <div className='pb-16'>
       <div className='mb-6'>
         <h2 className='text-3xl font-bold mb-2'>Welcome back!</h2>
         <p className='text-foreground/70'>
@@ -154,26 +187,32 @@ export default function Home({ navigateToMarketplace }: HomeProps) {
           <div className='space-y-2'>
             {/* Using useMemo to avoid recalculating on every render */}
             {useMemo(() => {
-              const stats = calculateMarketStats();
+              const stats = calculateMarketStats()
               return (
                 <>
                   <div className='flex justify-between'>
                     <span>Active Listings</span>
-                    <span className='font-mono font-bold'>{stats.totalListings}</span>
+                    <span className='font-mono font-bold'>
+                      {listings?.meta.total}
+                    </span>
                   </div>
                   <div className='flex justify-between'>
                     <span>Completed Trades</span>
-                    <span className='font-mono font-bold'>{stats.completedTrades}</span>
+                    <span className='font-mono font-bold'>
+                      {stats.completedTrades}
+                    </span>
                   </div>
                   <div className='flex justify-between'>
                     <span>Average Trade Value</span>
-                    <span className='font-mono font-bold'>${stats.averagePrice}</span>
+                    <span className='font-mono font-bold'>
+                      ${stats.averagePrice}
+                    </span>
                   </div>
                 </>
-              );
+              )
             }, [])}
           </div>
-          <button 
+          <button
             className='mt-4 button w-full'
             onClick={() => setShowStatsPopup(true)}
           >
@@ -197,7 +236,7 @@ export default function Home({ navigateToMarketplace }: HomeProps) {
               <span className='font-mono font-bold'>5</span>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setShowCreateForm(true)}
             className='mt-4 button-primary w-full flex items-center justify-center gap-2'
           >
@@ -221,30 +260,41 @@ export default function Home({ navigateToMarketplace }: HomeProps) {
               </tr>
             </thead>
             <tbody>
-              {recentListings.map((item) => (
+              {listings?.data.slice(0, LIMIT).map((listing) => (
                 <tr
-                  key={item.id}
-                  className='border-b border-foreground/5 hover:bg-background-dark/30'
+                  key={listing.id.toString()}
+                  className='border-b border-foreground/5 hover:bg-background-dark/30 [&>td]:py-3'
                 >
-                  <td className='py-3'>{item.title}</td>
-                  <td className='py-3 font-mono'>{item.price}</td>
-                  <td className='py-3'>{item.seller}</td>
-                  <td className='py-3 text-foreground/70'>{item.listed}</td>
+                  <td>{listing.title}</td>
+                  <td className='font-mono'>
+                    {formatCurrency(listing.priceInCents)}
+                  </td>
+                  <td>
+                    {listing.author.username ?? listing.author.id.toString()}
+                  </td>
+                  <td className='text-foreground/70'>
+                    {dayjs(listing.listedAt).fromNow()}
+                  </td>
+                  <td className='text-right'>
+                    <button className='button py-1 mx-auto px-3 h-auto'>
+                      View
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
-      
+
       {/* Create Listing Form Modal */}
       {showCreateForm && (
-        <CreateListingForm 
+        <CreateListingForm
           onClose={() => setShowCreateForm(false)}
           onSuccess={handleCreateSuccess}
         />
       )}
-      
+
       {/* Stats Pop-up Modal */}
       {showStatsPopup && (
         <StatsPopup onClose={() => setShowStatsPopup(false)} />
@@ -252,3 +302,5 @@ export default function Home({ navigateToMarketplace }: HomeProps) {
     </div>
   )
 }
+
+export default Home
