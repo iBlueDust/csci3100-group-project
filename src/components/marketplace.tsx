@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useMemo } from 'react'
 import {
   FiSearch,
   FiFilter,
@@ -8,8 +8,6 @@ import {
   FiChevronDown,
   FiHeart,
   FiShoppingCart,
-  FiChevronLeft,
-  FiChevronRight,
   FiMessageCircle,
   FiX,
   FiPaperclip,
@@ -18,6 +16,7 @@ import {
   FiMapPin,
   FiPlus,
 } from 'react-icons/fi'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import classNames from 'classnames'
 import dayjs from 'dayjs'
@@ -30,7 +29,8 @@ import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { countries } from '@/utils/countries'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency } from '@/utils/format'
-import CreateListingForm from './CreateListingForm'
+import PaginationControls from './PaginationControls'
+const CreateListingForm = dynamic(() => import('./CreateListingForm'))
 
 // Mock categories
 const categories = [
@@ -56,13 +56,12 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
   const [itemsPerPage, setItemsPerPage] = useState(8)
   const [totalPages, setTotalPages] = useState(1)
 
-  // Pagination parameters for API queries
-  const indexOfFirstItem = (currentPage - 1) * itemsPerPage
-  const indexOfLastItem = indexOfFirstItem + itemsPerPage + 1
-
   const api = useApi()
 
-  const { data: listings } = useQuery({
+  // Pagination parameters for API queries
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage
+
+  const { data: listings, refetch } = useQuery({
     queryKey: [QueryKeys.MARKET_LISTINGS],
     queryFn: async () => {
       const options = {
@@ -77,6 +76,17 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
     enabled: !!api.user,
     refetchOnWindowFocus: false,
   })
+  const indexOfLastItem = useMemo(
+    () =>
+      listings
+        ? Math.min(indexOfFirstItem + itemsPerPage, listings.meta.total - 1)
+        : indexOfFirstItem + itemsPerPage,
+    [indexOfFirstItem, itemsPerPage, listings],
+  )
+
+  useEffect(() => {
+    refetch()
+  }, [itemsPerPage, currentPage, refetch])
 
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedCountry, setSelectedCountry] = useState('all')
@@ -771,88 +781,21 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
         </div>
       )}
 
-      {/* Pagination */}
-      {listings && listings.data.length > 0 && (
-        <div className='mt-8 flex justify-center'>
-          <div className='flex border-2 border-foreground/10 rounded-md overflow-hidden'>
-            <button
-              onClick={() => paginate(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-3 sm:px-4 py-2 border-r-2 border-foreground/10 flex items-center ${
-                currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              <FiChevronLeft className='mr-1' />
-            </button>
-
-            <div className='flex'>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => paginate(i + 1)}
-                  className={`px-3 sm:px-4 py-2 ${
-                    currentPage === i + 1
-                      ? 'bg-foreground text-background'
-                      : 'hover:bg-background-light'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              )).slice(
-                // Show a window of 5 pages or fewer if there aren't enough pages
-                Math.max(0, Math.min(currentPage - 3, totalPages - 5)),
-                Math.min(totalPages, Math.max(5, currentPage + 2)),
-              )}
-            </div>
-
-            <button
-              onClick={() => paginate(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`px-3 sm:px-4 py-2 border-l-2 border-foreground/10 flex items-center ${
-                currentPage === totalPages
-                  ? 'opacity-50 cursor-not-allowed'
-                  : ''
-              }`}
-            >
-              <FiChevronRight />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Items per page selector */}
-      {listings && listings?.data.length > 0 && (
-        <div className='mt-4 text-center'>
-          <div className='flex flex-col sm:flex-row justify-center items-center gap-2'>
-            <div className='flex items-center'>
-              <span className='text-sm text-foreground/70'>
-                Items per page:
-              </span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value))
-                  setCurrentPage(1) // Reset to first page when changing items per page
-                }}
-                className='ml-2 px-2 py-1 border-2 border-foreground/10 rounded-md text-black'
-              >
-                <option value={8}>8</option>
-                <option value={16}>16</option>
-                <option value={32}>32</option>
-              </select>
-            </div>
-
-            <span className='text-sm text-foreground/70 sm:ml-4'>
-              {listings
-                ? `Showing ${indexOfFirstItem + 1}-${Math.min(
-                    indexOfLastItem + 1,
-                    listings.data.length,
-                  )} of ${listings.data.length} items`
-                : 'Showing -- of -- items'}
-            </span>
-          </div>
-        </div>
-      )}
+      <div className='mt-8 mx-auto'>
+        <PaginationControls
+          indexOfFirstItem={indexOfFirstItem}
+          indexOfLastItem={indexOfLastItem}
+          numberOfItems={listings?.meta.total}
+          pageSize={itemsPerPage}
+          onPageClick={paginate}
+          onPrevClick={() => paginate(currentPage - 1)}
+          onNextClick={() => paginate(currentPage + 1)}
+          onPageSizeChange={(size) => {
+            setCurrentPage(1)
+            setItemsPerPage(size)
+          }}
+        />
+      </div>
 
       {/* Buy Modal */}
       {isBuyModalOpen && buyingListing && (
