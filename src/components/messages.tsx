@@ -20,7 +20,7 @@ import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { QueryKeys } from '@/data/types/queries'
 import { isDev } from '@/utils/frontend/env'
 import { queryChats } from '@/data/frontend/queries/queryChats'
-import PaginationControls from './PaginationControls'
+import MiniPaginationControls from './MiniPaginationControls'
 
 const NewChatModal = dynamic(() => import('@/components/NewChatModal'))
 const ChatBox = dynamic(() => import('@/components/ChatBox'), {
@@ -252,7 +252,7 @@ const Messages: PageWithLayout = () => {
 
           {/* Pagination controls */}
           <div className='h-12 min-h-12 flex items-center justify-center border-t border-foreground/25 sticky bottom-0 bg-background-light z-10'>
-            <PaginationControls
+            <MiniPaginationControls
               indexOfFirstItem={indexOfFirstConversation}
               indexOfLastItem={indexOfLastConversation}
               numberOfItems={chats?.meta.total}

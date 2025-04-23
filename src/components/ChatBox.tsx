@@ -1,12 +1,23 @@
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { FiChevronLeft, FiTrash2 } from 'react-icons/fi'
 import classNames from 'classnames'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import { type ClientChat } from '@/data/types/chats'
+import {
+  ChatMessageType,
+  ClientChatMessage,
+  ClientChat,
+} from '@/data/types/chats'
+import { QueryKeys } from '@/data/types/queries'
+import { sendChatMessage } from '@/data/frontend/mutations/sendChatMessage'
+import type { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
+import { queryChatMessages } from '@/data/frontend/queries/queryChatMessages'
+import type { PaginatedResult } from '@/data/types/common'
 import { useApi } from '@/utils/frontend/api'
+import { isDev } from '@/utils/frontend/env'
 import ChatThreadContent from './ChatThread'
 
 export interface ChatThreadProps {
@@ -25,11 +36,59 @@ const ChatBox: React.FC<ChatThreadProps> = ({
   onDeleteChat,
 }) => {
   const api = useApi()
+  const queryClient = useQueryClient()
+
+  const { data: messages } = useQuery<PaginatedResult<ClientChatMessage>>({
+    queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
+    queryFn: async () => queryChatMessages(api, chat.id, sharedKey),
+    throwOnError: isDev,
+    enabled: !!api.user && !!sharedKey,
+  })
+
+  const mutation = useMutation({
+    mutationFn: async (arg: PostChatMessagePayload<string>) =>
+      sendChatMessage(api, chat.id, arg, sharedKey),
+    onSuccess: () => {
+      // Reload chat messages
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
+      })
+    },
+  })
 
   const otherParty = useMemo(
     () =>
       chat.participants.find((participant) => participant.id !== api.user?.id),
     [chat, api],
+  )
+
+  const handleSendMessage = useCallback(
+    async (message: string, attachment: File | null) => {
+      if (!message.trim() && !attachment) {
+        console.warn('Message input is empty')
+        return false
+      }
+
+      if (!api.user) {
+        console.warn('User is not yet authenticated')
+        return false
+      }
+
+      // In a real app, you would send the message to an API
+      const messagePayload: PostChatMessagePayload<string> = {
+        type: ChatMessageType.Text,
+        content: message,
+      }
+
+      try {
+        await mutation.mutateAsync(messagePayload)
+      } catch (error) {
+        console.error('Error sending message:', error)
+      }
+
+      return true
+    },
+    [api, mutation],
   )
 
   return (
@@ -76,7 +135,8 @@ const ChatBox: React.FC<ChatThreadProps> = ({
 
       <ChatThreadContent
         chat={chat}
-        sharedKey={sharedKey}
+        messages={messages?.data}
+        onSend={handleSendMessage}
         onDeleteChat={onDeleteChat}
       />
       {/* </div> */}

@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useRef } from 'react'
+import React, { useLayoutEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 
 import {
@@ -6,17 +6,10 @@ import {
   ClientChat,
   ClientChatMessage,
 } from '@/data/types/chats'
-import type { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
-import { QueryKeys } from '@/data/types/queries'
 import { useApi } from '@/utils/frontend/api'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { PaginatedResult } from '@/data/types/common'
-import { queryChatMessages } from '@/data/frontend/queries/queryChatMessages'
-import { isDev } from '@/utils/frontend/env'
-import { sendChatMessage } from '@/data/frontend/mutations/sendChatMessage'
-
 import ChatInput from './ChatInput'
 import ChatTextMessage from './ChatTextMessage'
+import { ClientChatMarketListingMessage } from './ChatMarketListingMessage'
 const ChatImageMessage = dynamic(() => import('./ChatImageMessage'))
 const ChatAttachmentMessage = dynamic(() => import('./ChatAttachmentMessage'))
 const ChatRecipientLeftBanner = dynamic(
@@ -24,67 +17,21 @@ const ChatRecipientLeftBanner = dynamic(
 )
 
 export interface ChatThreadProps {
-  chat: ClientChat
-  sharedKey: CryptoKey
+  chat: Pick<ClientChat, 'wasRequestedToDelete'>
+  messages: (ClientChatMessage | ClientChatMarketListingMessage)[] | undefined
+  onSend: (message: string, attachment: File | null) => Promise<boolean>
   onDeleteChat?: () => void
 }
 
 const ChatThread: React.FC<ChatThreadProps> = ({
   chat,
-  sharedKey,
+  messages,
+  onSend,
   onDeleteChat,
 }) => {
   const api = useApi()
-  const queryClient = useQueryClient()
-
-  const { data: messages } = useQuery<PaginatedResult<ClientChatMessage>>({
-    queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
-    queryFn: async () => queryChatMessages(api, chat.id, sharedKey),
-    throwOnError: isDev,
-    enabled: !!api.user && !!sharedKey,
-  })
-
-  const mutation = useMutation({
-    mutationFn: async (arg: PostChatMessagePayload<string>) =>
-      sendChatMessage(api, chat.id, arg, sharedKey),
-    onSuccess: () => {
-      // Reload chat messages
-      queryClient.invalidateQueries({
-        queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
-      })
-    },
-  })
 
   const scrollHelperRef = useRef<HTMLDivElement>(null)
-
-  const handleSendMessage = useCallback(
-    async (message: string, attachment: File | null) => {
-      if (!message.trim() && !attachment) {
-        console.warn('Message input is empty')
-        return false
-      }
-
-      if (!api.user) {
-        console.warn('User is not yet authenticated')
-        return false
-      }
-
-      // In a real app, you would send the message to an API
-      const messagePayload: PostChatMessagePayload<string> = {
-        type: ChatMessageType.Text,
-        content: message,
-      }
-
-      try {
-        await mutation.mutateAsync(messagePayload)
-      } catch (error) {
-        console.error('Error sending message:', error)
-      }
-
-      return true
-    },
-    [api, mutation],
-  )
 
   useLayoutEffect(() => {
     scrollHelperRef.current?.scrollIntoView({ behavior: 'instant' })
@@ -104,7 +51,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
         {/* Messages */}
         <div className='mt-auto p-4 space-y-4'>
-          {messages?.data.map((message) => {
+          {messages?.map((message) => {
             if (message.type === ChatMessageType.Text) {
               return (
                 <ChatTextMessage
@@ -141,7 +88,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
         {/* Message Input - Fixed at bottom for mobile */}
         <div className='sticky bottom-0'>
-          <ChatInput onSend={handleSendMessage} />
+          <ChatInput onSend={onSend} />
         </div>
       </div>
     </div>
