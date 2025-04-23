@@ -3,10 +3,14 @@ import { FiUser, FiShield } from 'react-icons/fi'
 import dynamic from 'next/dynamic'
 
 import type { PageWithLayout } from '@/data/types/layout'
-import { ApiProvider } from '@/utils/frontend/api'
 import classNames from 'classnames'
-const SettingsProfileTab = dynamic(() => import('./SettingsProfileTab'))
-const SettingsPrivacyTab = dynamic(() => import('./SettingsPrivacyTab'))
+import DashboardLayout from '@/layouts/DashboardLayout'
+const SettingsProfileTab = dynamic(
+  () => import('../../../components/SettingsProfileTab'),
+)
+const SettingsPrivacyTab = dynamic(
+  () => import('../../../components/SettingsPrivacyTab'),
+)
 
 // Tab interfaces
 type SettingsTab = 'profile' | 'privacy'
@@ -65,7 +69,13 @@ const Settings: PageWithLayout = () => {
 }
 
 Settings.PageLayout = function SettingsLayout({ children }) {
-  return <ApiProvider>{children}</ApiProvider>
+  const GrandfatherLayout =
+    DashboardLayout.PageLayout ?? (({ children }) => children)
+  return (
+    <GrandfatherLayout>
+      <DashboardLayout>{children}</DashboardLayout>
+    </GrandfatherLayout>
+  )
 }
 
 export default Settings

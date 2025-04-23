@@ -1,12 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/router'
 import classNames from 'classnames'
 import { useQuery } from '@tanstack/react-query'
 import { FiPlus, FiSearch } from 'react-icons/fi'
@@ -16,11 +9,12 @@ dayjs.extend(relativeTime)
 
 import type { PageWithLayout } from '@/data/types/layout'
 import type { ClientChat } from '@/data/types/chats'
-import { ApiProvider, useApi } from '@/utils/frontend/api'
+import { useApi } from '@/utils/frontend/api'
 import { QueryKeys } from '@/data/types/queries'
 import { isDev } from '@/utils/frontend/env'
 import { queryChats } from '@/data/frontend/queries/queryChats'
-import MiniPaginationControls from './MiniPaginationControls'
+import MiniPaginationControls from '../../../components/MiniPaginationControls'
+import DashboardLayout from '@/layouts/DashboardLayout'
 
 const NewChatModal = dynamic(() => import('@/components/NewChatModal'))
 const ChatBox = dynamic(() => import('@/components/ChatBox'), {
@@ -29,7 +23,6 @@ const ChatBox = dynamic(() => import('@/components/ChatBox'), {
 
 const Messages: PageWithLayout = () => {
   const api = useApi()
-  const router = useRouter()
 
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [mobileChatVisible, setMobileChatVisible] = useState(false)
@@ -147,14 +140,6 @@ const Messages: PageWithLayout = () => {
     console.log(`Deleted conversation: ${activeChatId}`)
   }, [activeChatId])
 
-  useLayoutEffect(() => {
-    if (!api.user) {
-      router.replace('/')
-      return
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   return (
     <div className='h-screen md:h-[calc(100vh-7rem)] flex flex-col overflow-hidden'>
       <h1 className='text-3xl font-bold mb-4 md:block hidden'>Messages</h1>
@@ -174,7 +159,7 @@ const Messages: PageWithLayout = () => {
               <h3 className='text-lg font-bold'>Conversations</h3>
               <button
                 onClick={() => setIsNewChatModalOpen(true)}
-                className='px-4 py-2 rounded-md bg-background border border-foreground-light/75 text-foreground items-center gap-2 text-sm font-medium hover:bg-background-dark transition-colors shadow-sm md:flex hidden'
+                className='px-4 py-2 rounded-md bg-background border border-foreground-light/25 text-foreground items-center gap-2 text-sm font-medium hover:bg-background-dark transition-colors shadow-sm md:flex hidden'
               >
                 <FiPlus />
                 <span>New</span>
@@ -301,7 +286,13 @@ const Messages: PageWithLayout = () => {
 }
 
 Messages.PageLayout = function MessagesLayout({ children }) {
-  return <ApiProvider>{children}</ApiProvider>
+  const GrandfatherLayout =
+    DashboardLayout.PageLayout ?? (({ children }) => children)
+  return (
+    <GrandfatherLayout>
+      <DashboardLayout>{children}</DashboardLayout>
+    </GrandfatherLayout>
+  )
 }
 
 export default Messages
