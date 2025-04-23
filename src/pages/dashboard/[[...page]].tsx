@@ -27,7 +27,7 @@ const Messages = dynamic(() => import('@/components/messages'), { ssr: false })
 const Marketplace = dynamic(() => import('@/components/marketplace'), {
   ssr: false,
 })
-const MyListings = dynamic(() => import('@/components/myListings'), {
+const MyListings = dynamic(() => import('@/components/MyListings'), {
   ssr: false,
 })
 const Settings = dynamic(() => import('@/components/settings'), { ssr: false })
