@@ -1,0 +1,72 @@
+services:
+  api-server:
+    container_name: api-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo
+      - minio
+      - redis
+    restart: always
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    env_file:
+      - .env
+      - .env.local
+
+  mongo:
+    container_name: mongo
+    image: mongo:latest
+    restart: always
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - "./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro"
+      - "./data/db:/data/db"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$MONGO_ROOT_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGO_ROOT_PASSWORD
+      - MONGO_INITDB_DATABASE=${MONGO_DB:-db}
+      - MONGO_INITDB_USERNAME=$MONGO_USERNAME
+      - MONGO_INITDB_PASSWORD=$MONGO_PASSWORD
+
+  minio:
+    container_name: minio
+    image: quay.io/minio/minio
+    restart: always
+    environment:
+      - MINIO_ROOT_USER=$MINIO_ROOT_USER
+      - MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_DASHBOARD_PORT:-9001}:9001"
+    volumes:
+      - "./data/obj:/data"
+    command: server /data --console-address ":9001"
+
+  minio-setup:
+    container_name: minio-setup
+    image: minio/mc
+    restart: "no"
+    depends_on:
+      - minio
+    env_file:
+      - .env
+      - .env.local
+    volumes:
+      - "./minio-init.sh:/minio-init.sh:ro"
+    entrypoint: /bin/sh /minio-init.sh
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    restart: always
+    environment:
+      - REDIS_PASSWORD=$REDIS_PASSWORD
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - "./data/redis:/data"
+    # Disable appendonly mode since this is only for session storage
+    command: redis-server --appendonly no 
