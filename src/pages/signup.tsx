@@ -205,7 +205,7 @@ const SignUp: PageWithLayout = () => {
           <Input
             type='text'
             name='licenseKey'
-            label='Password'
+            label='License Key'
             autoComplete={isDev ? undefined : 'off'}
             error={formErrors.licenseKey}
             placeholder='XXXX-XXXX-XXXX-XXXX'
