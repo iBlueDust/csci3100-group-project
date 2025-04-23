@@ -31,6 +31,7 @@ import { useApi } from '@/utils/frontend/api'
 import { formatCurrency } from '@/utils/format'
 import PaginationControls from './PaginationControls'
 const CreateListingForm = dynamic(() => import('./CreateListingForm'))
+const MarketListingModal = dynamic(() => import('./MarketListingModal'))
 
 // Mock categories
 const categories = [
@@ -1006,6 +1007,8 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
 
       {/* Floating Chat Bubble */}
       {isChatOpen && selectedListing && (
+        // <HoveringChatBox key={selectedListing.id} onClose={() => setIsChatOpen(false)} />
+
         <div className='fixed bottom-4 right-4 w-80 md:w-96 h-96 bg-background border-2 border-black dark:border-[#343434] rounded-lg shadow-xl flex flex-col z-50'>
           {/* Chat Header */}
           <div className='flex justify-between items-center p-3 border-b border-l border-r border-foreground/10 bg-background-light rounded-t-lg'>
@@ -1114,160 +1117,23 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
 
       {/* Detailed Listing Modal */}
       {isDetailModalOpen && detailedListing && (
-        <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-          <div className='bg-background rounded-lg max-w-3xl w-full shadow-xl border-2 border-foreground/10 max-h-[90vh] flex flex-col'>
-            {/* Modal Header */}
-            <div className='flex justify-between items-center p-4 border-b border-foreground/10 shrink-0'>
-              <h2 className='text-xl font-bold truncate'>
-                {detailedListing.title}
-              </h2>
-              <button
-                onClick={closeDetailModal}
-                className='p-1 hover:bg-background-dark rounded-full'
-              >
-                <FiX size={20} />
-              </button>
-            </div>
-
-            {/* Modal Body - Scrollable */}
-            <div className='p-4 overflow-y-auto'>
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-                {/* Image Gallery */}
-                <div className='md:col-span-2 space-y-3'>
-                  {/* Main Image */}
-                  <div className='bg-foreground/5 rounded-lg h-64 flex items-center justify-center'>
-                    <span className='text-foreground/30 text-lg'>
-                      Item Images
-                    </span>
-                  </div>
-
-                  {/* Thumbnail Row */}
-                  <div className='grid grid-cols-5 gap-2'>
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className='bg-foreground/5 rounded-md h-12 flex items-center justify-center cursor-pointer hover:border-2 hover:border-foreground/30'
-                      >
-                        <span className='text-foreground/30 text-xs'>
-                          {i + 1}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Item Details */}
-                <div className='md:col-span-1 flex flex-col'>
-                  {/* Price and Actions */}
-                  <div className='mb-4'>
-                    <div className='flex justify-between items-center mb-3'>
-                      <p className='text-2xl font-mono font-bold'>
-                        {formatCurrency(detailedListing.priceInCents)}
-                      </p>
-                      <div className='flex items-center gap-2'>
-                        <button className='text-foreground/50 hover:text-red-500'>
-                          <FiHeart size={20} />
-                        </button>
-                        {/* Mock check to simulate if user is the owner */}
-                        {detailedListing.author.id.toString() ===
-                          api.user?.id && (
-                          <button
-                            onClick={() => {
-                              closeDetailModal()
-                              setEditingListing(detailedListing)
-                            }}
-                            className='text-foreground/50 hover:text-blue-500'
-                          >
-                            <span className='text-sm'>Edit</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className='space-y-2'>
-                      <button
-                        onClick={() => {
-                          closeDetailModal()
-                          openBuyModal(detailedListing)
-                        }}
-                        className='button-primary w-full py-2 flex items-center justify-center gap-2 text-sm'
-                      >
-                        <FiShoppingCart size={16} />
-                        Buy Now
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          closeDetailModal()
-                          openChat(detailedListing)
-                        }}
-                        className='button w-full py-2 flex items-center justify-center gap-2 text-sm'
-                      >
-                        <FiMessageCircle size={16} />
-                        Message Seller
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Seller Info */}
-                  <div className='mb-4 p-3 border-2 border-foreground/10 rounded-lg'>
-                    <div className='flex items-center gap-2 mb-1'>
-                      <div className='w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-sm'>
-                        {(
-                          detailedListing.author.username ??
-                          detailedListing.author.id.toString()
-                        )
-                          ?.charAt(0)
-                          .toUpperCase()}
-                      </div>
-                      <div>
-                        <p className='font-medium text-sm'>
-                          {detailedListing.author.username ??
-                            detailedListing.author.id.toString()}
-                        </p>
-                        <div className='flex items-center text-xs text-foreground/70'>
-                          <span className='flex items-center'>★ {0}</span>
-                          <span className='mx-1'>•</span>
-                          <span>{0} reviews</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Item Details */}
-                  <div className='space-y-2 text-sm'>
-                    <div>
-                      <p className='text-xs text-foreground/70'>Category</p>
-                      <p className='font-medium capitalize'>{'--'}</p>
-                    </div>
-
-                    <div>
-                      <p className='text-xs text-foreground/70'>Location</p>
-                      <p className='font-medium'>
-                        {detailedListing.countries.join(', ')}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className='text-xs text-foreground/70'>Listed</p>
-                      <p className='font-medium'>
-                        {dayjs(detailedListing.listedAt).fromNow()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className='mt-6 border-t border-foreground/10 pt-6'>
-                <h3 className='text-lg font-bold mb-3'>Description</h3>
-                <p className='whitespace-pre-line text-foreground/90 text-sm'>
-                  {detailedListing.description}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <MarketListingModal
+          listing={detailedListing}
+          isMine={detailedListing.author.id.toString() === api.user?.id}
+          onClose={closeDetailModal}
+          onBuy={() => {
+            closeDetailModal()
+            openBuyModal(detailedListing)
+          }}
+          onChat={() => {
+            closeDetailModal()
+            openChat(detailedListing)
+          }}
+          onEditListing={() => {
+            closeDetailModal()
+            setEditingListing(detailedListing)
+          }}
+        />
       )}
 
       {/* Favorites Modal */}
