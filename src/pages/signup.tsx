@@ -53,7 +53,7 @@ const SignUp: PageWithLayout = () => {
       }
 
       if (
-        /^(?:[A-HJ-NP-Z2-9]{4}-){3}[A-HJ-NP-Z2-9]{4}$/.test(data.licenseKey)
+        !/^(?:[A-HJ-NP-Z2-9]{4}-){3}[A-HJ-NP-Z2-9]{4}$/.test(data.licenseKey)
       ) {
         setFormErrors((prev) => ({
           ...prev,
