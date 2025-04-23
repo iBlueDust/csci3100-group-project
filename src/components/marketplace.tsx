@@ -7,7 +7,6 @@ import {
   FiList,
   FiChevronDown,
   FiHeart,
-  FiShoppingCart,
   FiMessageCircle,
   FiX,
   FiPaperclip,
@@ -30,6 +29,8 @@ import { countries } from '@/utils/countries'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency } from '@/utils/format'
 import PaginationControls from './PaginationControls'
+import MarketListingGridItem from './MarketListingGridItem'
+const MarketListingListItem = dynamic(() => import('./MarketListingListItem'))
 const CreateListingForm = dynamic(() => import('./CreateListingForm'))
 const MarketListingModal = dynamic(() => import('./MarketListingModal'))
 
@@ -515,245 +516,73 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
       {viewMode === 'grid' ? (
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
           {listings?.data.map((item) => (
-            <button
+            <MarketListingGridItem
               key={item.id.toString()}
-              className='text-left bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer h-[595px] flex flex-col'
+              listing={item}
+              isFavorite={favorites.some(
+                (fav) => fav.id.toString() === item.id.toString(),
+              )}
+              isMine={item.author.id.toString() === api.user?.id}
               onClick={() => openDetailModal(item)}
-            >
-              {/* Item image - fixed height */}
-              <div className='h-48 bg-foreground/5 overflow-hidden flex-shrink-0'>
-                {item.pictures.length > 0 ? (
-                  <Image
-                    src={item.pictures[0]}
-                    width={300}
-                    height={192}
-                    className='object-cover w-full h-full bg-foreground/5'
-                    alt='Market listing picture'
-                  />
-                ) : (
-                  <div className='h-full flex items-center justify-center'>
-                    <span className='text-foreground/30'>Item Image</span>
-                  </div>
-                )}
-              </div>
+              onFavorite={() => {
+                setFavorites((favorites) => [...favorites, item])
+              }}
+              onUnfavorite={() => {
+                setFavorites(
+                  favorites.filter(
+                    (fav) => fav.id.toString() !== item.id.toString(),
+                  ),
+                )
+              }}
+              onChat={() => openChat(item)}
+              onBuy={() => openBuyModal(item)}
+              onEdit={() => setEditingListing(item)}
+              onDelete={() => {
+                if (
+                  !confirm(`Are you sure you want to delete "${item.title}"?`)
+                ) {
+                  return
+                }
 
-              <div className='p-4 flex flex-col flex-grow'>
-                <div className='flex justify-between items-start'>
-                  <h3
-                    className='font-medium truncate max-w-[85%]'
-                    title={item.title}
-                  >
-                    {item.title}
-                  </h3>
-                  <button
-                    className={`flex-shrink-0 ${
-                      favorites.some(
-                        (fav) => fav.id.toString() === item.id.toString(),
-                      )
-                        ? 'text-red-500'
-                        : 'text-foreground/50 hover:text-red-500'
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation() // Prevent triggering parent onClick
-                      // Add to favorites logic
-                      if (
-                        favorites.some(
-                          (fav) => fav.id.toString() === item.id.toString(),
-                        )
-                      ) {
-                        setFavorites(
-                          favorites.filter(
-                            (fav) => fav.id.toString() !== item.id.toString(),
-                          ),
-                        )
-                      } else {
-                        setFavorites([...favorites, item])
-                      }
-                    }}
-                  >
-                    <FiHeart
-                      className={
-                        favorites.some(
-                          (fav) => fav.id.toString() === item.id.toString(),
-                        )
-                          ? 'fill-current'
-                          : ''
-                      }
-                    />
-                  </button>
-                </div>
-
-                <p className='text-lg font-mono font-bold mt-1'>
-                  {formatCurrency(item.priceInCents)}
-                </p>
-
-                <div className='flex items-center text-sm mt-1 text-foreground/70'>
-                  <span className='flex items-center'>★ {0}</span>
-                  <span className='mx-1'>•</span>
-                  <span>{0} reviews</span>
-                </div>
-
-                <p className='text-sm mt-1 text-foreground/70 line-clamp-1'>
-                  Seller: {item.author.username ?? item.author.id.toString()}
-                </p>
-
-                {/* Add description with line clamp */}
-                <p className='text-sm mt-2 text-foreground/70 line-clamp-2 flex-grow'>
-                  {item.description}
-                </p>
-
-                {/* Push buttons to the bottom with mt-auto */}
-                <div className='flex flex-col mt-auto pt-4 pb-4'>
-                  <span className='text-xs text-foreground/50 mb-3'>
-                    Listed: {dayjs(item.listedAt).fromNow()}
-                  </span>
-                  <div className='flex justify-between'>
-                    {/* Only show chat button for listings where user is not the seller */}
-                    {item.author.id.toString() !== api.user?.username ? (
-                      <button
-                        className='button py-1.5 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center'
-                        onClick={(e) => {
-                          e.stopPropagation() // Prevent triggering parent onClick
-                          openChat(item)
-                        }}
-                      >
-                        <FiMessageCircle size={14} />
-                        <span>Chat</span>
-                      </button>
-                    ) : (
-                      <button
-                        className='button py-1.5 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center text-red-500'
-                        onClick={(e) => {
-                          e.stopPropagation() // Prevent triggering parent onClick
-                          if (
-                            confirm(
-                              `Are you sure you want to delete "${item.title}"?`,
-                            )
-                          ) {
-                            // In a real app, this would call an API to delete the listing
-                            alert(`Listing "${item.title}" has been deleted.`)
-                            // You would typically refresh the listings after deletion
-                          }
-                        }}
-                      >
-                        <span>Delete</span>
-                      </button>
-                    )}
-                    {/* Show different buttons based on whether user is the seller */}
-                    {item.author.id.toString() === api.user?.id ? (
-                      <button
-                        className='button-primary py-1.5 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center'
-                        onClick={(e) => {
-                          e.stopPropagation() // Prevent triggering parent onClick
-                          setEditingListing(item)
-                        }}
-                      >
-                        <span>Edit</span>
-                      </button>
-                    ) : (
-                      <button
-                        className='button-primary py-1.5 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center'
-                        onClick={(e) => {
-                          e.stopPropagation() // Prevent triggering parent onClick
-                          openBuyModal(item)
-                        }}
-                      >
-                        <FiShoppingCart size={14} />
-                        <span>Buy</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </button>
+                // TODO: Delete listing API call
+              }}
+            />
           ))}
         </div>
       ) : (
         <div className='space-y-4'>
           {listings?.data.map((item) => (
-            <div
+            <MarketListingListItem
               key={item.id.toString()}
-              className='bg-background-light border-2 border-foreground/10 rounded-lg p-4 flex gap-4 hover:shadow-md transition-shadow'
-            >
-              {/* Item image */}
-              <div className='h-24 w-24 bg-foreground/5 shrink-0 overflow-hidden'>
-                {item.pictures.length > 0 ? (
-                  <Image
-                    src={item.pictures[0]}
-                    width={100}
-                    height={100}
-                    alt='Market listing picture'
-                    className='w-full h-full object-cover rounded-md'
-                  />
-                ) : (
-                  <div className='h-full w-full flex items-center justify-center'>
-                    <span className='text-foreground/30'>Image</span>
-                  </div>
-                )}
-              </div>
+              listing={item}
+              isFavorite={favorites.some(
+                (fav) => fav.id.toString() === item.id.toString(),
+              )}
+              isMine={item.author.id.toString() === api.user?.id}
+              onClick={() => openDetailModal(item)}
+              onFavorite={() => {
+                setFavorites((favorites) => [...favorites, item])
+              }}
+              onUnfavorite={() => {
+                setFavorites(
+                  favorites.filter(
+                    (fav) => fav.id.toString() !== item.id.toString(),
+                  ),
+                )
+              }}
+              onChat={() => openChat(item)}
+              onBuy={() => openBuyModal(item)}
+              onEdit={() => setEditingListing(item)}
+              onDelete={() => {
+                if (
+                  !confirm(`Are you sure you want to delete "${item.title}"?`)
+                ) {
+                  return
+                }
 
-              <div className='flex-1 min-w-0'>
-                <div className='flex justify-between items-start'>
-                  <h3 className='font-medium'>{item.title}</h3>
-                  <p className='text-lg font-mono font-bold'>
-                    {formatCurrency(item.priceInCents)}
-                  </p>
-                </div>
-
-                <p className='text-sm mt-1 line-clamp-2 text-foreground/70'>
-                  {item.description}
-                </p>
-
-                <div className='flex flex-wrap items-center gap-x-4 gap-y-1 mt-2'>
-                  <span className='text-sm text-foreground/70'>
-                    Seller: {item.author?.username ?? item.author.id.toString()}
-                  </span>
-
-                  <span className='text-sm flex items-center text-foreground/70'>
-                    ★ {0} ({0} reviews)
-                  </span>
-
-                  <span className='text-sm text-foreground/70'>
-                    Location: {item.countries.join(', ')}
-                  </span>
-
-                  <span className='text-sm text-foreground/70'>
-                    Listed: {dayjs(item.listedAt).fromNow()}
-                  </span>
-                </div>
-
-                <div className='flex mt-3 gap-2'>
-                  <button
-                    className='button py-1 px-3 h-auto flex items-center gap-1'
-                    onClick={() => openChat(item)}
-                  >
-                    <FiMessageCircle size={14} />
-                    <span>Chat</span>
-                  </button>
-
-                  {/* Conditional rendering based on whether user is seller */}
-                  {item.author.id.toString() === api.user?.id ? (
-                    <button
-                      className='button-primary py-1 px-3 h-auto flex items-center gap-1'
-                      onClick={(e) => {
-                        e.stopPropagation() // Prevent triggering parent onClick
-                        setEditingListing(item)
-                      }}
-                    >
-                      <span>Edit</span>
-                    </button>
-                  ) : (
-                    <button
-                      className='button-primary py-1 px-3 h-auto flex items-center gap-1'
-                      onClick={() => openBuyModal(item)}
-                    >
-                      <FiShoppingCart size={14} />
-                      <span>Buy</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+                // TODO: Delete listing API call
+              }}
+            />
           ))}
         </div>
       )}
