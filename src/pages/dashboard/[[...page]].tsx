@@ -9,7 +9,6 @@ import {
   FiMessageSquare,
   FiSettings,
   FiList,
-  FiHeart,
 } from 'react-icons/fi'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -135,33 +134,15 @@ const Dashboard: PageWithLayout = () => {
         <Link href='/' className='font-bold text-xl'>
           The Jade Trail
         </Link>
-        <div className='flex items-center cursor-default gap-4'>
-          {/* Favorites Button */}
-          <button
-            className='relative p-2 rounded-full hover:bg-background-dark'
-            onClick={() => {
-              // We'll implement this functionality in the Marketplace component
-              if (activePage === Page.MARKETPLACE) {
-                // Using a custom event to communicate with the Marketplace component
-                window.dispatchEvent(new CustomEvent('toggle-favorites'))
-              } else {
-                router.replace(`/dashboard/${Page.MARKETPLACE}`)
-                // We'll use setTimeout to allow the component to mount before dispatching the event
-                setTimeout(() => {
-                  window.dispatchEvent(new CustomEvent('show-favorites'))
-                }, 100)
-              }
-            }}
-          >
-            <FiHeart className='w-5 h-5' />
-          </button>
 
+        <div className='flex items-center cursor-default gap-4'>
           {/* User Avatar or Placeholder */}
           <div className='w-8 h-8 rounded-full bg-foreground/10 flex justify-center items-center'>
             <span className='font-bold'>
               {api.user?.username.charAt(0) ?? ''}
             </span>
           </div>
+
           <span className='hidden sm:inline'>{api.user?.username ?? '--'}</span>
         </div>
       </header>
