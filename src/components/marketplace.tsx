@@ -19,11 +19,11 @@ import {
   FiPlus,
 } from 'react-icons/fi'
 import Image from 'next/image'
+import classNames from 'classnames'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import Input from '@/components/Input'
 import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
 import { QueryKeys } from '@/data/types/queries'
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
@@ -310,18 +310,18 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
       {/* Search and filter bar */}
       <div className='mb-6'>
         <div className='flex flex-col gap-4'>
-          <div className='relative flex-grow'>
-            <Input
+          <div className='flex flex-row flex-nowrap items-stretch flex-grow'>
+            <input
               type='text'
               placeholder='Search for items...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className='w-full px-4 py-2 pr-12 border-2 border-foreground/10 rounded-md text-black outline-none focus:outline-none focus:border-foreground/10'
+              className='flex-1 bg-background-light px-4 py-2 border-y border-l border-foreground-light/75 rounded-l-md text-foreground'
             />
             <button
               onClick={handleSearch}
-              className='absolute right-0 top-0 h-full px-4 rounded-r-md bg-foreground text-background flex items-center justify-center'
+              className='px-4 border border-foreground-light/75 rounded-r-md bg-background text-foreground flex items-center justify-center hover:bg-background-dark transition-colors'
               aria-label='Search'
             >
               <FiSearch />
@@ -346,7 +346,7 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className='h-full px-4 py-2 border-2 border-foreground/10 rounded-md appearance-none pr-8 bg-background'
+                  className='px-4 py-2 border border-foreground-light/50 rounded-md appearance-none pr-8 bg-background'
                 >
                   <option value='newest'>Newest</option>
                   <option value='price_low'>Price: Low to High</option>
@@ -359,18 +359,24 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
               <div className='hidden md:flex'>
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md ${
-                    viewMode === 'grid' ? 'bg-foreground/10' : ''
-                  }`}
+                  className={classNames(
+                    'p-2 rounded-md border',
+                    viewMode === 'grid'
+                      ? 'bg-foreground/10 border-foreground-light/75'
+                      : 'border-foreground-light/25',
+                  )}
                 >
                   <FiGrid />
                 </button>
 
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md ${
-                    viewMode === 'list' ? 'bg-foreground/10' : ''
-                  }`}
+                  className={classNames(
+                    'p-2 rounded-md border',
+                    viewMode === 'list'
+                      ? 'bg-foreground/10 border-foreground-light/75'
+                      : 'border-foreground-light/25',
+                  )}
                 >
                   <FiList />
                 </button>
@@ -492,7 +498,7 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
             className={`px-4 py-1 rounded-full text-sm ${
               selectedCategory === category.id
                 ? 'bg-foreground text-background'
-                : 'bg-background-light border border-foreground/10'
+                : 'bg-background-light border border-foreground-light/50'
             }`}
           >
             {category.name}
@@ -512,7 +518,7 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
           {listings?.data.map((item) => (
             <button
               key={item.id.toString()}
-              className='bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer h-[595px] flex flex-col'
+              className='text-left bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer h-[595px] flex flex-col'
               onClick={() => openDetailModal(item)}
             >
               {/* Item image - fixed height */}
@@ -675,8 +681,10 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
                 {item.pictures.length > 0 ? (
                   <Image
                     src={item.pictures[0]}
+                    width={100}
+                    height={100}
                     alt='Market listing picture'
-                    className='w-full h-full object-cover'
+                    className='w-full h-full object-cover rounded-md'
                   />
                 ) : (
                   <div className='h-full w-full flex items-center justify-center'>
