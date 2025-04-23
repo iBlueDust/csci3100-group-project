@@ -1,7 +1,7 @@
 import Joi from 'joi'
 
 const schema = Joi.object({
-	NEXT_PUBLIC_API_ENDPOINT: Joi.string().uri().required(),
+	NEXT_PUBLIC_API_ENDPOINT: Joi.string().min(1).required(),
 	NEXT_PUBLIC_UEK_DERIVATION_SALT: Joi.string().min(1).required(),
 
 	AUTH_TOKEN_SECRET: Joi.string().required(),
