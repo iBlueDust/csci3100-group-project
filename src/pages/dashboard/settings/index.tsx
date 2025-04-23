@@ -1,81 +1,70 @@
-import { useState } from 'react'
-import { FiUser, FiShield } from 'react-icons/fi'
-import dynamic from 'next/dynamic'
+import React from 'react'
 
-import type { PageWithLayout } from '@/data/types/layout'
-import classNames from 'classnames'
-import DashboardLayout from '@/layouts/DashboardLayout'
-const SettingsProfileTab = dynamic(
-  () => import('../../../components/SettingsProfileTab'),
-)
-const SettingsPrivacyTab = dynamic(
-  () => import('../../../components/SettingsPrivacyTab'),
-)
+import SubmitButton from '@/components/SubmitButton'
+import Input from '@/components/Input'
+import TextArea from '@/components/TextArea'
+import { PageWithLayout } from '@/data/types/layout'
+import SettingsLayout from '@/layouts/SettingsLayout'
+import { useApi } from '@/utils/frontend/api'
 
-// Tab interfaces
-type SettingsTab = 'profile' | 'privacy'
-
-const Settings: PageWithLayout = () => {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'profile':
-        return <SettingsProfileTab />
-
-      case 'privacy':
-        return <SettingsPrivacyTab />
-    }
-  }
+const SettingsProfilePage: PageWithLayout = () => {
+  const api = useApi()
 
   return (
-    <div className='h-full flex flex-col'>
-      <h2 className='text-3xl font-bold mb-6'>Settings</h2>
+    <section className='space-y-6'>
+      <div className='flex flex-col md:flex-row gap-8 items-start'>
+        <div className='w-32 h-32 rounded-full bg-foreground/10 flex items-center justify-center text-4xl'>
+          {api.user?.username.charAt(0).toUpperCase()}
+        </div>
 
-      {/* Tabs Navigation - removed the notifications tab */}
-      <div className='flex border-b-2 border-foreground/10 mb-6 overflow-x-auto hide-scrollbar'>
-        <button
-          onClick={() => setActiveTab('profile')}
-          className={`flex items-center gap-1 px-4 py-2 border-b-2 font-medium transition-colors ${
-            activeTab === 'profile'
-              ? 'border-foreground text-foreground'
-              : 'border-transparent text-foreground/50 hover:text-foreground/80'
-          }`}
-        >
-          <FiUser className='w-4 h-4' />
-          <span>Profile</span>
-        </button>
+        <div className='flex-1'>
+          <h3 className='text-xl font-bold mb-1'>Profile Picture</h3>
+          <p className='text-foreground/70 mb-4'>
+            Upload a photo to personalize your account
+          </p>
 
-        <button
-          className={classNames(
-            'flex items-center gap-1 px-4 py-2 border-b-2 font-medium transition-colors',
-            activeTab === 'privacy'
-              ? 'border-foreground text-foreground'
-              : 'border-transparent text-foreground/50 hover:text-foreground/80',
-          )}
-          onClick={() => setActiveTab('privacy')}
-        >
-          <FiShield className='w-4 h-4' />
-          <span>Privacy</span>
-        </button>
+          <div className='flex gap-3'>
+            <button className='button-primary py-1 px-4'>Upload</button>
+            <button className='button py-1 px-4'>Remove</button>
+          </div>
+        </div>
       </div>
 
-      {/* Tab Content */}
-      <div className='bg-background rounded-lg flex-1 overflow-y-auto'>
-        <div className='p-6'>{renderTabContent()}</div>
+      <div>
+        <h3 className='text-xl font-bold mb-4'>Personal Information</h3>
+
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+          <Input type='email' name='email' label='Email' />
+
+          <Input type='text' name='username' label='Username' />
+
+          <Input type='text' id='location' name='location' label='Location' />
+
+          <Input type='url' name='website' label='Website' />
+
+          <div className='md:col-span-2'>
+            <TextArea label='Bio' name='bio' rows={4} />
+          </div>
+        </div>
+
+        <SubmitButton look='primary' className='mt-6 ml-auto block px-4 py-2'>
+          Save Changes
+        </SubmitButton>
       </div>
-    </div>
+    </section>
   )
 }
 
-Settings.PageLayout = function SettingsLayout({ children }) {
+SettingsProfilePage.PageLayout = function SettingsProfilePageLayout({
+  children,
+}) {
   const GrandfatherLayout =
-    DashboardLayout.PageLayout ?? (({ children }) => children)
+    SettingsLayout.PageLayout ?? (({ children }) => children)
   return (
     <GrandfatherLayout>
-      <DashboardLayout>{children}</DashboardLayout>
+      <SettingsLayout>{children}</SettingsLayout>
     </GrandfatherLayout>
   )
 }
 
-export default Settings
+export default SettingsProfilePage

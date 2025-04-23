@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useApi } from '@/utils/frontend/api'
+import { PageWithLayout } from '@/data/types/layout'
+import SettingsLayout from '@/layouts/SettingsLayout'
 
-const DeleteAccountModal = dynamic(() => import('./DeleteAccountModal'))
+const DeleteAccountModal = dynamic(
+  () => import('../../../components/DeleteAccountModal'),
+)
 
-export type SettingsPrivacyTabProps = object
-
-const SettingsPrivacyTab: React.FC<SettingsPrivacyTabProps> = ({}) => {
+const SettingsPrivacyPage: PageWithLayout = () => {
   const api = useApi()
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
@@ -39,4 +41,16 @@ const SettingsPrivacyTab: React.FC<SettingsPrivacyTabProps> = ({}) => {
   )
 }
 
-export default SettingsPrivacyTab
+SettingsPrivacyPage.PageLayout = function SettingsPrivacyPageLayout({
+  children,
+}) {
+  const GrandfatherLayout =
+    SettingsLayout.PageLayout ?? (({ children }) => children)
+  return (
+    <GrandfatherLayout>
+      <SettingsLayout>{children}</SettingsLayout>
+    </GrandfatherLayout>
+  )
+}
+
+export default SettingsPrivacyPage
