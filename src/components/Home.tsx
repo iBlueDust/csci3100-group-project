@@ -197,7 +197,7 @@ const Home: React.FC<HomeProps> = ({ navigateToMarketplace }: HomeProps) => {
                   </div>
                 </>
               )
-            }, [])}
+            }, [listings])}
           </div>
           <button
             className='mt-4 button w-full'
