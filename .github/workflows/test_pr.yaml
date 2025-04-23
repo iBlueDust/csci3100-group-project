@@ -52,5 +52,8 @@ jobs:
       - name: Copy .env.example to .env
         run: cp .env.example .env && touch .env.local
 
-      - name: Validate docker-compose config
+      - name: Validate docker-compose.dev.yaml (DEV) config
         run: docker compose -f docker-compose.dev.yaml config
+
+      - name: Validate docker-compose.yaml (PROD) config
+        run: docker compose -f docker-compose.yaml config
