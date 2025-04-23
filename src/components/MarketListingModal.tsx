@@ -1,11 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { FiHeart, FiMessageCircle, FiShoppingCart, FiX } from 'react-icons/fi'
 import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-dayjs.extend(relativeTime)
 
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { formatCurrency } from '@/utils/format'
+import Image from 'next/image'
 
 export interface MarketListingModalProps {
   listing: MarketListingSearchResult
@@ -24,6 +23,8 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
   onEditListing,
   onClose,
 }) => {
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+
   return (
     <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
       <div className='bg-background rounded-lg max-w-3xl w-full shadow-xl border-2 border-foreground/10 max-h-[90vh] flex flex-col'>
@@ -44,19 +45,43 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
             {/* Image Gallery */}
             <div className='md:col-span-2 space-y-3'>
               {/* Main Image */}
-              <div className='bg-foreground/5 rounded-lg h-64 flex items-center justify-center'>
-                <span className='text-foreground/30 text-lg'>Item Images</span>
+              <div className='bg-foreground/5 rounded-lg h-72 overflow-'>
+                <Image
+                  className='rounded-md object-cover w-full h-full'
+                  width={620}
+                  height={288}
+                  src={listing.pictures[selectedImageIndex]}
+                  alt={`Listing Image #${selectedImageIndex + 1}`}
+                />
               </div>
 
               {/* Thumbnail Row */}
               <div className='grid grid-cols-5 gap-2'>
-                {[...Array(5)].map((_, i) => (
-                  <div
+                {listing.pictures.map((url, i) => (
+                  <label
                     key={i}
-                    className='bg-foreground/5 rounded-md h-12 flex items-center justify-center cursor-pointer hover:border-2 hover:border-foreground/30'
+                    className='rounded-md h-12 cursor-pointer hover:border hover:border-foreground/30 overflow-hidden'
+                    onClick={() => setSelectedImageIndex(i)}
                   >
-                    <span className='text-foreground/30 text-xs'>{i + 1}</span>
-                  </div>
+                    <Image
+                      className='w-full h-full object-cover'
+                      width={108}
+                      height={48}
+                      src={url}
+                      alt={`Listing Image #${i + 1}`}
+                    />
+
+                    <input
+                      type='radio'
+                      name='picture'
+                      value={i + 1}
+                      checked={i === selectedImageIndex}
+                      onChange={(e) =>
+                        e.target.checked && setSelectedImageIndex(i)
+                      }
+                      className='hidden'
+                    />
+                  </label>
                 ))}
               </div>
             </div>
@@ -140,7 +165,7 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                 <div>
                   <p className='text-xs text-foreground/70'>Listed</p>
                   <p className='font-medium'>
-                    {dayjs(listing.listedAt).fromNow()}
+                    {dayjs(listing.listedAt).format('DD MMM YYYY HH:mm')}
                   </p>
                 </div>
               </div>
