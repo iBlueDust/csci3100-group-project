@@ -9,7 +9,7 @@ export async function decryptChat(
 	myUserId: string,
 	myPrivateKey: CryptoKey
 ): Promise<ClientChat & { sharedKey: CryptoKey }> {
-	if (!chat.lastMessage?.e2e) {
+	if (chat.lastMessage && !chat.lastMessage.e2e) {
 		throw new Error("Chat message is not encrypted")
 	}
 
@@ -25,7 +25,9 @@ export async function decryptChat(
 
 	return {
 		...chat,
-		lastMessage: await decryptChatMessage(chat.lastMessage, sharedKey),
+		lastMessage: chat.lastMessage
+			? await decryptChatMessage(chat.lastMessage, sharedKey)
+			: undefined,
 		sharedKey,
 	}
 }

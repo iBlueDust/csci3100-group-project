@@ -23,7 +23,7 @@ import { queryChats } from '@/data/frontend/queries/queryChats'
 import PaginationControls from './PaginationControls'
 
 const NewChatModal = dynamic(() => import('@/components/NewChatModal'))
-const ChatThread = dynamic(() => import('@/components/ChatThread'), {
+const ChatBox = dynamic(() => import('@/components/ChatBox'), {
   ssr: false,
 })
 
@@ -269,7 +269,7 @@ const Messages: PageWithLayout = () => {
           }`}
         >
           {activeChat ? (
-            <ChatThread
+            <ChatBox
               className='h-full'
               chat={activeChat}
               sharedKey={activeChat.sharedKey}

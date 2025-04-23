@@ -9,7 +9,7 @@ const ChatRecipientLeftBanner: React.FC<ChatRecipientLeftBannerProps> = ({
   onDelete,
 }) => {
   return (
-    <div className='bg-amber-50 border-l-4 border-amber-400 p-4 text-amber-800 flex items-center gap-2 sticky top-0 z-10'>
+    <div className='bg-amber-50 border-l-4 border-amber-400 p-4 text-amber-800 flex items-center gap-4'>
       <FiAlertTriangle size={20} />
       <div>
         <p className='font-medium'>
