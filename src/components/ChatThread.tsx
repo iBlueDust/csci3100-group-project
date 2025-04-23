@@ -82,23 +82,28 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
   const formRef = useRef<HTMLFormElement>(null)
 
-  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+  const handleAttachmentChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files || !e.target.files[0]) {
+        return
+      }
+
       const file = e.target.files[0]
       setAttachment(file)
       setShowAttachmentPreview(true)
-    }
-  }
+    },
+    [],
+  )
 
-  const cancelAttachment = () => {
+  const cancelAttachment = useCallback(() => {
     setAttachment(null)
     setShowAttachmentPreview(false)
-  }
+  }, [])
 
   const handleSendMessage = useCallback(async () => {
     const messageInput = messageInputRef.current?.value || ''
     const attachment = attachmentInputRef.current?.files?.[0] || null
-    if (!messageInput.trim() || !attachment) {
+    if (!messageInput.trim() && !attachment) {
       console.warn('Message input is empty')
       return
     }
