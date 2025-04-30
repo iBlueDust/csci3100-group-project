@@ -207,7 +207,10 @@ export class RedisSessionStore extends SessionStore {
 
 	constructor() {
 		super()
-		this.client = createRedisClient()
+		this.client = createRedisClient({
+			url: 'redis://' + env.REDIS_HOST + ':' + env.REDIS_PORT,
+			password: env.REDIS_PASSWORD,
+		})
 		this.redisConnect = this.client.connect()
 	}
 
