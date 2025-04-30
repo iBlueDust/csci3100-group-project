@@ -18,7 +18,7 @@ import DashboardLayout from '@/layouts/DashboardLayout'
 import MiniPaginationControls from '@/components/MiniPaginationControls'
 // import { useDevice } from '@/hooks/useDevice'
 
-const NewChatModal = dynamic(() => import('@/components/NewChatModal'))
+const NewChatModal = dynamic(() => import('@/components/chat/NewChatModal'))
 
 export interface MessagesLayoutProps {
   children?: React.ReactNode

@@ -1,14 +1,14 @@
 import React from 'react'
 import { FiX } from 'react-icons/fi'
 
-import ImageUploadField from '@/components/ImageUploadField'
-import Select from '@/components/Select'
+import ImageUploadField from '@/components/form/ImageUploadField'
+import Select from '@/components/form/Select'
 import { useListingForm } from '@/hooks/useListingForm'
 import { countries } from '@/utils/countries'
 import { CategoryOption, ListingFormData } from '@/types/marketplace'
-import Input from './Input'
-import TextArea from './TextArea'
-import SubmitButton from './SubmitButton'
+import Input from '../form/Input'
+import TextArea from '../form/TextArea'
+import SubmitButton from '../form/SubmitButton'
 import env from '@/utils/frontend/env'
 
 // The same categories from the marketplace component

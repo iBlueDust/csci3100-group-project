@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import SubmitButton from './SubmitButton'
-import Input from './Input'
+import SubmitButton from './form/SubmitButton'
+import Input from './form/Input'
 
 export interface DeleteAccountModalProps {
   username: string

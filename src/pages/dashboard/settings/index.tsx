@@ -1,8 +1,8 @@
 import React from 'react'
 
-import SubmitButton from '@/components/SubmitButton'
-import Input from '@/components/Input'
-import TextArea from '@/components/TextArea'
+import SubmitButton from '@/components/form/SubmitButton'
+import Input from '@/components/form/Input'
+import TextArea from '@/components/form/TextArea'
 import { PageWithLayout } from '@/data/types/layout'
 import SettingsLayout from '@/layouts/SettingsLayout'
 import { useApi } from '@/utils/frontend/api'

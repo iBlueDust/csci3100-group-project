@@ -10,7 +10,7 @@ import { QueryKeys } from '@/data/types/queries'
 import { mockListings } from '@/data/mock/listings'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency, formatNumber } from '@/utils/format'
-import CreateListingForm from '../../components/CreateListingForm'
+import CreateListingForm from '../../components/marketplace/CreateListingForm'
 import { PageWithLayout } from '@/data/types/layout'
 import DashboardLayout from '@/layouts/DashboardLayout'
 

@@ -21,7 +21,7 @@ import type { PageWithLayout } from '@/data/types/layout'
 import { QueryKeys } from '@/data/types/queries'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency } from '@/utils/format'
-import CreateListingForm from '../../components/CreateListingForm'
+import CreateListingForm from '../../components/marketplace/CreateListingForm'
 import DashboardLayout from '@/layouts/DashboardLayout'
 
 export type MyListingsProps = object

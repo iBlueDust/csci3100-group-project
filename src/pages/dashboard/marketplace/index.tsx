@@ -29,17 +29,17 @@ import { countries } from '@/utils/countries'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency } from '@/utils/format'
 import PaginationControls from '../../../components/PaginationControls'
-import MarketListingGridItem from '../../../components/MarketListingGridItem'
+import MarketListingGridItem from '../../../components/marketplace/MarketListingGridItem'
 import { PageWithLayout } from '@/data/types/layout'
 import DashboardLayout from '@/layouts/DashboardLayout'
 const MarketListingListItem = dynamic(
-  () => import('../../../components/MarketListingListItem'),
+  () => import('../../../components/marketplace/MarketListingListItem'),
 )
 const CreateListingForm = dynamic(
-  () => import('../../../components/CreateListingForm'),
+  () => import('../../../components/marketplace/CreateListingForm'),
 )
 const MarketListingModal = dynamic(
-  () => import('../../../components/MarketListingModal'),
+  () => import('../../../components/marketplace/MarketListingModal'),
 )
 
 // Mock categories
