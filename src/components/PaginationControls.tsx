@@ -96,6 +96,7 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
                 name='page-number'
                 value={page}
                 checked={noData || currentPage === page}
+                readOnly={currentPage === page || !onPageClick}
                 onChange={
                   currentPage === page || !onPageClick
                     ? undefined
