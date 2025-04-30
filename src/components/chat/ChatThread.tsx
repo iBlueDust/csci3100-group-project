@@ -6,10 +6,11 @@ import {
   ClientChat,
   ClientChatMessage,
 } from '@/data/types/chats'
+import { isSupportedImage } from '@/utils'
 import { useApi } from '@/utils/frontend/api'
 import ChatInput from './ChatInput'
 import ChatTextMessage from './ChatTextMessage'
-import { ClientChatMarketListingMessage } from './ChatMarketListingMessage'
+import type { ClientChatMarketListingMessage } from './ChatMarketListingMessage'
 const ChatImageMessage = dynamic(() => import('./ChatImageMessage'))
 const ChatAttachmentMessage = dynamic(() => import('./ChatAttachmentMessage'))
 const ChatRecipientLeftBanner = dynamic(
@@ -19,6 +20,7 @@ const ChatRecipientLeftBanner = dynamic(
 export interface ChatThreadProps {
   chat: Pick<ClientChat, 'wasRequestedToDelete'>
   messages: (ClientChatMessage | ClientChatMarketListingMessage)[] | undefined
+  sharedKey: CryptoKey
   onSend: (message: string, attachment: File | null) => Promise<boolean>
   onDeleteChat?: () => void
 }
@@ -26,6 +28,7 @@ export interface ChatThreadProps {
 const ChatThread: React.FC<ChatThreadProps> = ({
   chat,
   messages,
+  sharedKey,
   onSend,
   onDeleteChat,
 }) => {
@@ -35,7 +38,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
   useLayoutEffect(() => {
     scrollHelperRef.current?.scrollIntoView({ behavior: 'instant' })
-  }, [chat, scrollHelperRef])
+  }, [messages, scrollHelperRef])
 
   /* Container for mobile that includes both the banner and messages with a single scroll */
   return (
@@ -62,7 +65,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             }
 
             if (message.type === ChatMessageType.Attachment) {
-              if (/\.(jpe?g|png|gif|webp)$/i.test(message.content.toString())) {
+              if (isSupportedImage(message.content)) {
                 return (
                   <ChatImageMessage
                     key={message.id}
@@ -77,6 +80,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   key={message.id}
                   message={message}
                   isMe={message.sender === api.user?.id}
+                  sharedKey={sharedKey}
                 />
               )
             }

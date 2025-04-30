@@ -1,10 +1,10 @@
-import type { ClientChat } from "@/data/types/chats"
+import type { EncryptedClientChat } from "@/data/types/chats"
 import type { Api } from "@/utils/frontend/api"
 
 export async function getChatById(
 	api: Api,
 	id: string
-): Promise<ClientChat> {
+): Promise<EncryptedClientChat> {
 	const response = await api.fetch(`/chats/${id}`, {
 		headers: { 'Content-Type': 'application/json' },
 	})

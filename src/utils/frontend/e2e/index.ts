@@ -137,8 +137,8 @@ export async function deriveKey(
 export async function encryptMessage(
 	message: Uint8Array<ArrayBufferLike>,
 	sharedKey: CryptoKey,
+	iv: Uint8Array<ArrayBuffer> = crypto.getRandomValues(new Uint8Array(16)),
 ) {
-	const iv = crypto.getRandomValues(new Uint8Array(16))
 	const ciphertext = await crypto.subtle.encrypt(
 		{ name: 'AES-GCM', iv },
 		sharedKey,
