@@ -65,12 +65,16 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             }
 
             if (message.type === ChatMessageType.Attachment) {
-              if (isSupportedImage(message.content)) {
+              if (
+                message.contentFilename &&
+                isSupportedImage(message.contentFilename)
+              ) {
                 return (
                   <ChatImageMessage
                     key={message.id}
                     message={message}
                     isMe={message.sender === api.user?.id}
+                    sharedKey={sharedKey}
                   />
                 )
               }
