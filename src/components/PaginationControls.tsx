@@ -67,9 +67,10 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
         <button
           onClick={onPrevClick}
           disabled={indexOfFirstItem === 0}
-          className={`px-3 sm:px-4 py-2 border-r border-foreground-light/50 flex items-center ${
-            indexOfFirstItem === 0 ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
+          className={classNames(
+            'px-3 sm:px-4 py-2 border-r border-foreground-light/50 flex items-center',
+            indexOfFirstItem === 0 && 'opacity-50 cursor-not-allowed',
+          )}
         >
           <FiChevronLeft className='mr-1' />
         </button>
