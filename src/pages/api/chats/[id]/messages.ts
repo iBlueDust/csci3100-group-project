@@ -93,7 +93,7 @@ async function POST(
 ) {
 
 	// Validate message content
-	const { fields, files, error } = await parseFormDataBody(
+	const { fields, error } = await parseFormDataBody(
 		req,
 		{
 			maxFileSize: Math.max(
@@ -109,10 +109,12 @@ async function POST(
 	}
 
 	const unvalidatedBody = {
-		content: fields?.content?.[0] ?? files?.content?.[0],
-		contentFilename: files?.contentFilename?.[0],
+		content: fields?.content?.[0],
+		contentFilename: fields?.contentFilename?.[0],
 		type: fields?.type?.[0],
-		e2e: fields?.e2e?.[0] ? JSON.parse(fields?.e2e?.[0]) : null,
+		e2e: typeof fields?.e2e?.[0] === 'string'
+			? JSON.parse(fields?.e2e?.[0])
+			: null,
 	}
 
 	const schema = Joi.object({
@@ -122,30 +124,18 @@ async function POST(
 				Joi.string().max(env.CHAT_TEXT_MESSAGE_MAX_SIZE).required(),
 				Joi.object({
 					data: Joi.binary().max(env.CHAT_TEXT_MESSAGE_MAX_SIZE).required(),
-					info: Joi
-						.custom((value, helper) => {
-							if (typeof value.toJSON !== 'function')
-								throw new Error('Invalid file metadata')
-							if (value.toJSON().size > env.CHAT_TEXT_MESSAGE_MAX_SIZE)
-								return helper.error('any.max')
-
-							return value
-						})
-						.required(),
+					size: Joi.number().max(env.CHAT_TEXT_MESSAGE_MAX_SIZE).required(),
+					filename: Joi.string().required(),
+					mimetype: Joi.string(),
+					encoding: Joi.string(),
 				})
 			),
 			otherwise: Joi.object({
 				data: Joi.binary().max(env.CHAT_ATTACHMENT_MAX_SIZE).required(),
-				info: Joi
-					.custom((value, helper) => {
-						if (typeof value.toJSON !== 'function')
-							throw new Error('Invalid file metadata')
-						if (value.toJSON().size > env.CHAT_ATTACHMENT_MAX_SIZE)
-							return helper.error('any.max')
-
-						return value
-					})
-					.required(),
+				size: Joi.number().max(env.CHAT_ATTACHMENT_MAX_SIZE).required(),
+				filename: Joi.string().required(),
+				mimetype: Joi.string(),
+				encoding: Joi.string(),
 			})
 		}),
 
@@ -225,20 +215,12 @@ async function POST(
 
 		return res.status(200).send({ id: doc.id })
 	} else if (body.type === ChatMessageType.Attachment) {
-		const attachment = files?.content?.[0]
-		if (!attachment) {
-			return res.status(400).json({
-				code: 'INVALID_REQUEST',
-				message: 'Attachment is required'
-			})
-		}
-
 		const objectName = uuid()
 		await minioClient.putObject(
 			env.MINIO_BUCKET_CHAT_ATTACHMENTS,
 			objectName,
-			attachment.data,
-			Math.min(attachment.data.length, env.CHAT_ATTACHMENT_MAX_SIZE),
+			body.content.data,
+			Math.min(body.content.data.length, env.CHAT_ATTACHMENT_MAX_SIZE),
 			{ 'Content-Type': 'application/octet-stream' } // binary
 		)
 

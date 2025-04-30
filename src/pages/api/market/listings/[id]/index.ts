@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import Joi from 'joi'
 import mongoose from 'mongoose'
-import type formidable from 'formidable'
 
 import env from '@/env'
 import minioClient, { putManyObjects } from '@/data/db/minio'
@@ -11,14 +10,13 @@ import { makeMarketListingClientFriendly, type MarketListingSearchResult } from 
 import { getMarketListingById } from '@/data/db/mongo/queries/market/getMarketListingById'
 import type { Error as ApiError } from '@/data/types/common'
 import { sessionStore } from '@/data/session'
+import { assertIsObjectId, parseFormDataBody, File } from '@/utils/api'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
-import { assertIsObjectId, parseFormDataBody } from '@/utils/api'
 import {
 	generatePictureObjectName,
 	isSupportedMimeType,
 	patchPictureArrayAllUnique,
 	patchPictureArrayUnusedPictures,
-	patchPictureArrayUsesAllNewPictures,
 	patchPictureArrayWithinBounds
 } from '@/utils/api/market'
 
@@ -79,7 +77,7 @@ async function PATCH(
 		return
 	}
 
-	const { fields, files, error: parseError } = await parseFormDataBody(req, {
+	const { fields, error: parseError } = await parseFormDataBody(req, {
 		maxFileSize: env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT,
 		filter: (part) => !!part.mimetype && isSupportedMimeType(part.mimetype),
 	})
@@ -107,41 +105,49 @@ async function PATCH(
 			)
 			.optional(),
 		pictures: Joi.array()
-			.items(Joi.number().integer().required())
-			.max(env.MARKET_LISTING_ATTACHMENT_LIMIT)
-			.optional(),
-		newPictures: Joi.array()
 			.items(
-				Joi.object({
-					info: Joi.custom((value, helpers) => {
-						if (!isSupportedMimeType(value.mimetype)) {
-							return helpers.error('any.invalid')
-						}
-						return value
-					}).required(),
-					data: Joi.binary().required(),
-				}),
-			)
-			.optional(),
+				Joi.alternatives().try(
+					Joi.number().integer().required(),
+					Joi.object({
+						data: Joi.binary()
+							.max(env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT)
+							.required(),
+						size: Joi.number()
+							.max(env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT)
+							.required(),
+						filename: Joi.string().required(),
+						mimetype: Joi.string(),
+						encoding: Joi.string(),
+					}),
+				)
+			).optional(),
 		priceInCents: Joi.number().min(0).integer().optional(),
 		countries: Joi.array()
 			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/))
 			.optional(),
 	})
 
-	const { error: bodyError, value: body } = schema.validate({
+	const validation = schema.validate({
 		title: fields?.title?.[0],
 		description: fields?.description?.[0],
 		pictures: fields?.pictures,
-		newPictures: files?.newPictures,
 		priceInCents: fields?.priceInCents?.[0],
 		countries: fields?.countries,
 	})
-	if (bodyError) {
-		res.status(400).json({ code: 'INVALID_REQUEST', message: bodyError.message })
+	if (validation.error) {
+		res.status(400)
+			.json({ code: 'INVALID_REQUEST', message: validation.error.message })
 		return
 	}
 
+	const body = validation.value as {
+		title?: string
+		description?: string
+		pictures?: (number | File)[]
+		priceInCents?: number
+		countries?: string[]
+	}
+	console.log({ body })
 
 	const listing = await MarketListing.findOne({
 		_id: listingId,
@@ -153,13 +159,13 @@ async function PATCH(
 		return
 	}
 
-
 	// validate `pictures`
 	if (body.pictures) {
 		const numOldPics = listing.pictures.length
-		const numNewPics = body.newPictures?.length ?? 0
+		const patchPictureArray = body.pictures
+			.filter((picture) => typeof picture === 'number')
 
-		if (!patchPictureArrayWithinBounds(body.pictures, numOldPics, numNewPics)) {
+		if (!patchPictureArrayWithinBounds(patchPictureArray, numOldPics)) {
 			res.status(400).json({
 				code: 'INVALID_REQUEST',
 				message: 'Picture index out of bounds',
@@ -167,37 +173,30 @@ async function PATCH(
 			return
 		}
 
-		if (!patchPictureArrayUsesAllNewPictures(body.pictures, numNewPics)) {
-			res.status(400).json({
-				code: 'INVALID_REQUEST',
-				message: 'Not all new pictures are used',
-			})
-			return
-		}
-
-		if (!patchPictureArrayAllUnique(body.pictures, numOldPics, numNewPics)) {
+		if (!patchPictureArrayAllUnique(patchPictureArray, numOldPics)) {
 			res.status(400)
 				.json({ code: 'INVALID_REQUEST', message: 'Duplicate picture index' })
 			return
 		}
 
-		const newPictures: { data: Buffer, info: formidable.File }[] | undefined =
-			body.newPictures
-		const newPictureObjectNames = newPictures?.map(generatePictureObjectName) ?? []
+		const newPictures: File[] = body.pictures
+			.filter((picture) => typeof picture === 'object')
+		const newPictureObjectNames =
+			newPictures?.map(generatePictureObjectName) ?? []
 
 		const uploadedAt = new Date().toISOString()
 		const uploadResults = await putManyObjects(
 			minioClient,
 			env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS,
-			newPictures?.map(({ data, info }, index: number) => {
+			newPictures?.map(({ data, filename, mimetype }, index: number) => {
 				const objectName = newPictureObjectNames[index]
 				return {
 					name: objectName,
 					data,
 					maxSize: env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT,
 					metadata: {
-						originalFilename: info.originalFilename,
-						mimetype: info.mimetype,
+						originalFilename: filename,
+						mimetype,
 						listingId: listingId.toString(),
 						uploadedAt,
 						uploadedBy: auth.data.userId,
@@ -218,7 +217,7 @@ async function PATCH(
 
 		// Delete pictures that are now unused
 		const picturesToDelete = patchPictureArrayUnusedPictures(
-			body.pictures, numOldPics, numNewPics
+			patchPictureArray, numOldPics
 		).filter(index => index >= 0)
 			.map((index) => listing.pictures[index])
 		console.log(`PATCH /market/listings/${listingId} | Deleting unused pictures:`, picturesToDelete)
@@ -231,14 +230,19 @@ async function PATCH(
 			console.error('PATCH /market/listings | Error deleting pictures:', err)
 		})
 
-		listing.pictures = body.pictures.map((index: number) => {
-			if (index < 0) {
-				const newIndex = -index - 1
-				return newPictureObjectNames[newIndex]
+		const newPictureArray: string[] = []
+		for (const value of body.pictures) {
+			if (typeof value === 'number') {
+				newPictureArray.push(listing.pictures[value])
 			} else {
-				return listing.pictures[index]
+				const picture = newPictureObjectNames.shift()
+				if (!picture) {
+					throw new Error('Unexpected error: no more picture object names')
+				}
+				newPictureArray.push(picture)
 			}
-		})
+		}
+		listing.pictures = newPictureArray
 	}
 	if (body.title) listing.title = body.title.trim()
 	if (body.description) listing.description = body.description.trim()
