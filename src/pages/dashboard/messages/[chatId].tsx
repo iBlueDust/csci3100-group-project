@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
@@ -5,15 +6,14 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 import MessagesLayout from '@/layouts/MessagesLayout'
-import ChatBox from '@/components/ChatBox'
+import ChatBox from '@/components/chat/ChatBox'
 import { QueryKeys } from '@/data/types/queries'
 import { queryChatById } from '@/data/frontend/queries/queryChatById'
 import type { PageWithLayout } from '@/data/types/layout'
-import { useApi } from '@/utils/frontend/api'
 import { PaginatedResult } from '@/data/types/common'
 import { ClientChat } from '@/data/types/chats'
-import { useCallback } from 'react'
 import { useDeviceInfo } from '@/hooks/useDeviceInfo'
+import { useApi } from '@/utils/frontend/api'
 
 const MessagesHome: PageWithLayout = () => {
   const api = useApi()
