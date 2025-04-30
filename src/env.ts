@@ -25,6 +25,8 @@ const schema = Joi.object({
 	MINIO_BUCKET_CHAT_ATTACHMENTS: Joi.string().min(1).default('chat-attachments'),
 	MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS: Joi.string().min(1).default('market-listing-attachments'),
 
+	REDIS_HOST: Joi.string().min(1).default('localhost'),
+	REDIS_PORT: Joi.number().default(6379),
 	REDIS_PASSWORD: Joi.string().min(1).required(),
 
 	CHAT_TEXT_MESSAGE_MAX_SIZE: Joi.number().default(1024 * 1024),
