@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react'
+
 import { ListingFormData } from '@/types/marketplace'
 import { createListing, updateListing } from '@/services/marketplace'
+import env from '@/utils/frontend/env'
 
 interface UseListingFormProps {
   initialData?: ListingFormData
@@ -36,7 +38,7 @@ export const useListingForm = ({ initialData, listingId, onSuccess }: UseListing
     if (!e.target.files || e.target.files.length === 0) { return }
 
     // Limit to 5 images
-    const MAX_FILES = 5
+    const MAX_FILES = env.NEXT_PUBLIC_MARKET_LISTING_ATTACHMENT_LIMIT
     const newImages = Array.from(e.target.files).slice(0, MAX_FILES - images.length)
     setImages(prev => [...prev, ...newImages])
   }, [images.length])
