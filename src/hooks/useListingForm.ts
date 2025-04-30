@@ -12,13 +12,13 @@ interface UseListingFormProps {
 
 export const useListingForm = ({ initialData, listingId, onSuccess }: UseListingFormProps = {}) => {
   // Initialize with default values or provided initialData
-  const [formData, setFormData] = useState<ListingFormData>({
+  const [formData, setFormData] = useState<ListingFormData>(() => ({
     title: initialData?.title || '',
     description: initialData?.description || '',
     priceInCents: initialData?.priceInCents || 0,
     category: initialData?.category || 'jade',
     countries: initialData?.countries || ['hk'],
-  })
+  }))
 
   const [images, setImages] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -30,6 +30,15 @@ export const useListingForm = ({ initialData, listingId, onSuccess }: UseListing
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }))
+  }
+
+  // Handle form field changes
+  const handlePriceInCentsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      priceInCents: Math.floor(parseFloat(value) * 100)
     }))
   }
 
@@ -80,6 +89,7 @@ export const useListingForm = ({ initialData, listingId, onSuccess }: UseListing
     isSubmitting,
     error,
     handleChange,
+    handlePriceInCentsChange,
     handleImageChange,
     removeImage,
     handleSubmit

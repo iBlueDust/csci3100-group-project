@@ -1,15 +1,15 @@
 import React from 'react'
 import { FiX } from 'react-icons/fi'
 
-import {
-  InputField,
-  TextAreaField,
-  SelectField,
-  ImageUploadField,
-} from '@/components/ui/FormComponents'
+import ImageUploadField from '@/components/ImageUploadField'
+import Select from '@/components/Select'
 import { useListingForm } from '@/hooks/useListingForm'
 import { countries } from '@/utils/countries'
 import { CategoryOption, ListingFormData } from '@/types/marketplace'
+import Input from './Input'
+import TextArea from './TextArea'
+import SubmitButton from './SubmitButton'
+import env from '@/utils/frontend/env'
 
 // The same categories from the marketplace component
 const categories: CategoryOption[] = [
@@ -41,6 +41,7 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
     isSubmitting,
     error,
     handleChange,
+    handlePriceInCentsChange,
     handleImageChange,
     removeImage,
     handleSubmit,
@@ -71,8 +72,7 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
             </div>
           )}
 
-          <InputField
-            id='title'
+          <Input
             name='title'
             label='Title'
             value={formData.title}
@@ -81,42 +81,40 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
             maxLength={100}
           />
 
-          <TextAreaField
-            id='description'
+          <TextArea
             name='description'
             label='Description'
             value={formData.description}
-            onChange={handleChange}
-            required
+            rows={4}
             maxLength={1000}
+            required
+            onChange={handleChange}
           />
 
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-            <InputField
-              id='priceInCents'
+            <Input
               name='priceInCents'
-              label='Price ($)'
-              value={formData.priceInCents}
-              onChange={handleChange}
+              label='Price (USD)'
+              value={formData.priceInCents / 100}
+              onChange={handlePriceInCentsChange}
               type='number'
               step='0.01'
-              min='0'
+              min='0.00'
               required
             />
 
-            <SelectField
+            <Select
               id='country'
               name='country'
               label='Country'
-              value={formData.countries[0]}
+              value={formData.countries[0].toUpperCase()}
               onChange={handleChange}
               options={countries.filter((country) => country.id !== 'all')}
               required
             />
           </div>
 
-          <SelectField
-            id='category'
+          <Select
             name='category'
             label='Category'
             value={formData.category}
@@ -127,25 +125,20 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
 
           <ImageUploadField
             images={images}
-            maxImages={5}
+            maxImages={env.NEXT_PUBLIC_MARKET_LISTING_ATTACHMENT_LIMIT}
             onChange={handleImageChange}
             onRemove={removeImage}
           />
 
           <div className='flex gap-3 justify-end'>
-            <button
+            <SubmitButton
               type='button'
               onClick={onClose}
-              className='button px-5 py-2'
               disabled={isSubmitting}
             >
               Cancel
-            </button>
-            <button
-              type='submit'
-              className='button-primary px-5 py-2'
-              disabled={isSubmitting}
-            >
+            </SubmitButton>
+            <SubmitButton type='submit' look='primary' loading={isSubmitting}>
               {isSubmitting
                 ? isEditing
                   ? 'Updating...'
@@ -153,7 +146,7 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
                 : isEditing
                 ? 'Update Listing'
                 : 'Create Listing'}
-            </button>
+            </SubmitButton>
           </div>
         </form>
       </div>
