@@ -1,6 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { FiTrash2, FiUpload } from 'react-icons/fi'
+import classNames from 'classnames'
 
 interface FormFieldProps {
   id: string
@@ -58,7 +59,10 @@ export const InputField: React.FC<FormFieldProps> = ({
         name={name}
         value={value}
         onChange={onChange}
-        className={`w-full p-2 border-2 border-foreground/10 rounded-md ${className}`}
+        className={classNames(
+          'w-full p-2 border-2 border-foreground/10 rounded-md',
+          className,
+        )}
         required={required}
         maxLength={maxLength}
         min={min}
@@ -90,7 +94,10 @@ export const TextAreaField: React.FC<FormFieldProps> = ({
         name={name}
         value={value}
         onChange={onChange}
-        className={`w-full p-2 border-2 border-foreground/10 rounded-md h-32 ${className}`}
+        className={classNames(
+          'w-full p-2 border-2 border-foreground/10 rounded-md h-32',
+          className,
+        )}
         required={required}
         maxLength={maxLength}
         placeholder={placeholder}
@@ -119,7 +126,10 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         name={name}
         value={value}
         onChange={onChange}
-        className={`w-full p-2 border-2 border-foreground/10 rounded-md bg-background ${className}`}
+        className={classNames(
+          'w-full p-2 border-2 border-foreground/10 rounded-md bg-background',
+          className,
+        )}
         required={required}
       >
         {options.map((option) => (

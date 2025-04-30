@@ -7,6 +7,7 @@ import {
   FiShoppingCart,
   FiTrash2,
 } from 'react-icons/fi'
+import classNames from 'classnames'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
@@ -70,11 +71,13 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
             {listing.title}
           </h3>
           <button
-            className={`flex-shrink-0 ${
+            className={classNames(
+              'flex-shrink-0',
               isFavorite
                 ? 'text-red-500'
-                : 'text-foreground/50 hover:text-red-500'
-            }`}
+                : 'text-foreground/50 hover:text-red-500',
+            )}
+            title='Add to favorites'
             onClick={(e) => {
               e.stopPropagation() // Prevent triggering parent onClick
               // Add to favorites logic
