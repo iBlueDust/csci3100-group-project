@@ -27,7 +27,7 @@ export interface ClientChat {
 	wasRequestedToDelete: boolean
 }
 
-interface BaseClientChatMessage {
+export interface BaseClientChatMessage {
 	id: string
 	sender: string
 	e2e?: {
@@ -45,6 +45,12 @@ export interface ClientAttachmentChatMessage extends BaseClientChatMessage {
 	type: ChatMessageType.Attachment
 	content: Buffer
 	contentFilename: string
+}
+
+export interface ClientMarketListingChatMessage extends BaseClientChatMessage {
+	type: ChatMessageType.Text
+	content: string
+	listingId: string
 }
 
 export type ClientChatMessage = ClientTextChatMessage | ClientAttachmentChatMessage

@@ -4,8 +4,8 @@ import classNames from 'classnames'
 import { useRouter } from 'next/router'
 
 import { geistMono, geistSans } from '@/styles/fonts'
-import Input from '@/components/Input'
-import SubmitButton from '@/components/SubmitButton'
+import Input from '@/components/form/Input'
+import SubmitButton from '@/components/form/SubmitButton'
 import { toPasskey } from '@/utils/frontend/e2e/auth'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { PageWithLayout } from '@/data/types/layout'
@@ -123,11 +123,11 @@ const Login: PageWithLayout = () => {
       className={classNames(
         geistSans.variable,
         geistMono.variable,
-        'grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-body',
+        'grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-4 pb-10 gap-8 sm:p-8 md:p-20 md:pb-20 md:gap-16 font-body',
       )}
     >
-      <main className='flex flex-col gap-8 row-start-2 items-center w-full max-w-md'>
-        <h1 className='text-4xl font-bold border-b border-foreground font-mono'>
+      <main className='flex flex-col gap-6 sm:gap-8 row-start-2 items-center w-full max-w-md'>
+        <h1 className='text-4xl font-bold border-b-2 border-foreground font-mono text-center'>
           Log In
         </h1>
 

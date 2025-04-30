@@ -23,19 +23,21 @@
 }
 
 .button {
-  @apply rounded-full border border-solid border-foreground-light/30;
+  @apply rounded-full border border-solid border-foreground-light/75;
   @apply transition-colors flex items-center justify-center;
-  @apply hover:bg-background-dark hover:border-transparent;
+  @apply hover:bg-background-dark;
   @apply disabled:bg-background-dark disabled:border-transparent;
   @apply text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5;
+  @apply disabled:cursor-not-allowed;
 }
 
 .button-primary {
   @apply rounded-full border border-solid border-transparent transition-colors;
   @apply flex items-center justify-center gap-2;
   @apply bg-foreground text-background;
-  @apply hover:bg-foreground-light disabled:bg-foreground-light;
+  @apply hover:bg-foreground-light disabled:bg-foreground-light/50;
   @apply text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5;
+  @apply disabled:cursor-not-allowed;
 }
 
 .link {
@@ -55,8 +57,98 @@ code {
   @apply font-mono;
 }
 
+/* Container */
+.toggle-button {
+  position: relative;
+  display: inline-block;
+  width: 64px;
+  height: 36px;
+}
+
+/* Hide default checkbox */
+.toggle-button input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Track (label) */
+.toggle-button label {
+  display: block;
+  height: 100%;
+  background-color: #d1d5db; /* gray-300 light */
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+/* Knob (span) */
+.toggle-button label span {
+  display: block;
+  height: 28px;
+  width: 28px;
+  background-color: #ffffff; /* white */
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
+  transform: translateX(0);
+}
+
+/* Checked State */
+.toggle-button input:checked + label {
+  background-color: #14b8a6; /* teal-500 */
+}
+
+.toggle-button input:checked + label span {
+  transform: translateX(28px);
+}
+
+/* === DARK MODE SUPPORT === */
+
+/* If you're using Tailwind's class-based dark mode (`class` strategy) */
+.dark .toggle-button label {
+  background-color: #4b5563; /* gray-600 */
+}
+
+.dark .toggle-button input:checked + label {
+  background-color: #2dd4bf; /* teal-400 */
+}
+
+/* Optional: dark knob color (slightly off-white) */
+.dark .toggle-button label span {
+  background-color: #f9fafb;
+}
+
+/* OR: Media-query based dark mode (if not using Tailwind's .dark class) */
+@media (prefers-color-scheme: dark) {
+  .toggle-button label {
+    background-color: #4b5563; /* gray-600 */
+  }
+
+  .toggle-button input:checked + label {
+    background-color: #2dd4bf; /* teal-400 */
+  }
+
+  .toggle-button label span {
+    background-color: #f9fafb;
+  }
+}
+
 body {
   color: rgb(var(--foreground));
   background: rgb(var(--background));
   font-family: Arial, Helvetica, sans-serif;
+
+  scrollbar-color: rgba(205, 205, 205, 0.5) rgb(var(--background-dark));
+}
+
+.overflow-auto, .overflow-scroll, .overflow-x-auto, .overflow-y-auto, .overflow-x-scroll, .overflow-y-scroll {
+  scrollbar-color: rgba(205, 205, 205, 0.5) rgb(var(--background-dark));
+}
+
+.scroll-thin {
+  scrollbar-width: thin;
 }

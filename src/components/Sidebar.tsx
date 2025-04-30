@@ -4,10 +4,12 @@ import { FiLogOut } from 'react-icons/fi'
 
 import { useRouter } from 'next/router'
 import { useApi } from '@/utils/frontend/api'
+import Link from 'next/link'
 
 export interface SidebarProps {
   navItems: {
     key: string | number
+    path: string
     label: React.ReactNode
     icon?: React.ReactNode
     isActive?: boolean
@@ -47,11 +49,14 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems, value, onChange }) => {
   }, [router, api])
 
   return (
-    <aside className='w-16 sm:w-64 border-r border-foreground/10 h-[calc(100vh-4rem)] p-4 flex flex-col'>
+    <aside className='w-16 sm:w-64 border-r-2 border-foreground/10 min-h-screen h-full p-4 flex flex-col bg-background'>
+      {' '}
+      {/* Added bg-background, removed sticky top-0 */}
       <nav className='space-y-1'>
         {navItems.map((item) => (
-          <button
+          <Link
             key={item.key}
+            href={item.path}
             onClick={() => {
               item.onClick?.()
               onChange?.(item.key)
@@ -65,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems, value, onChange }) => {
           >
             {item.icon}
             <span className='hidden sm:inline'>{item.label}</span>
-          </button>
+          </Link>
         ))}
 
         {/* Logout button moved here, right after the settings button */}
@@ -77,7 +82,6 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems, value, onChange }) => {
           <span className='hidden sm:inline'>Logout</span>
         </button>
       </nav>
-
       {/* Remove the div with mt-auto class that previously contained the logout link */}
       <div className='mt-auto'>
         {/* You can keep this div empty or remove it if it's no longer needed */}

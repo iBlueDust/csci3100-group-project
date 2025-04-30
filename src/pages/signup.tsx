@@ -4,8 +4,8 @@ import classNames from 'classnames'
 import { useRouter } from 'next/router'
 
 import { geistMono, geistSans } from '@/styles/fonts'
-import Input from '@/components/Input'
-import SubmitButton from '@/components/SubmitButton'
+import Input from '@/components/form/Input'
+import SubmitButton from '@/components/form/SubmitButton'
 import { toPasskey } from '@/utils/frontend/e2e/auth'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { PageWithLayout } from '@/data/types/layout'
@@ -22,6 +22,7 @@ const SignUp: PageWithLayout = () => {
     general?: string
     username?: string
     email?: string
+    licenseKey?: string
     password?: string
     confirmPassword?: string
   }>({})
@@ -36,6 +37,7 @@ const SignUp: PageWithLayout = () => {
 
       const data = {
         username: formData.get('username') as string,
+        licenseKey: formData.get('licenseKey') as string,
         password: formData.get('password') as string,
         confirmPassword: formData.get('confirmPassword') as string,
       }
@@ -46,6 +48,16 @@ const SignUp: PageWithLayout = () => {
         setFormErrors((prev) => ({
           ...prev,
           username: 'Username must be alphanumeric and between 1-64 characters',
+        }))
+        isValid = false
+      }
+
+      if (
+        !/^(?:[A-HJ-NP-Z2-9]{4}-){3}[A-HJ-NP-Z2-9]{4}$/.test(data.licenseKey)
+      ) {
+        setFormErrors((prev) => ({
+          ...prev,
+          licenseKey: 'License key must be in the format XXXX-XXXX-XXXX-XXXX',
         }))
         isValid = false
       }
@@ -118,7 +130,7 @@ const SignUp: PageWithLayout = () => {
           username: data.username,
           passkey: await toPasskey(data.username, data.password),
           publicKey: jwk,
-          licenseKey: '2222-2222-2222-2222',
+          licenseKey: data.licenseKey,
         }
 
         const response = await api.fetch('/auth/signup', {
@@ -187,6 +199,17 @@ const SignUp: PageWithLayout = () => {
             label='Username'
             autoComplete='off'
             error={formErrors.username}
+            required
+          />
+
+          <Input
+            type='text'
+            name='licenseKey'
+            label='License Key'
+            autoComplete={isDev ? undefined : 'off'}
+            error={formErrors.licenseKey}
+            placeholder='XXXX-XXXX-XXXX-XXXX'
+            pattern='(?:[A-HJ-NP-Z2-9]{4}-){3}[A-HJ-NP-Z2-9]{4}'
             required
           />
 
