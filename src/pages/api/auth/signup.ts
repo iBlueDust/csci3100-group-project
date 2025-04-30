@@ -8,6 +8,7 @@ import User from "@/data/db/mongo/models/user"
 import { sessionStore, sessionToCookie } from "@/data/session"
 import { UserRole } from "@/data/types/auth"
 import { isLicenseKey, isValidLicenseKey } from "@/data/licenses"
+import { sleep } from "@/utils"
 
 type Data = {
 	id: string
@@ -55,6 +56,7 @@ async function POST(
 	}
 
 	if (!isValidLicenseKey(body.licenseKey)) {
+		await sleep(Math.random() * 2000) // delay response to prevent timing attacks
 		res.status(403).json({
 			code: 'INVALID_LICENSE_KEY',
 			message: 'Invalid license key'
