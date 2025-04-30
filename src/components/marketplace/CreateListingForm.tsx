@@ -1,14 +1,14 @@
 import React from 'react'
 import { FiX } from 'react-icons/fi'
 
-import ImageUploadField from '@/components/form/ImageUploadField'
+import Input from '@/components/form/Input'
 import Select from '@/components/form/Select'
+import TextArea from '@/components/form/TextArea'
+import ImageUploadField from '@/components/form/ImageUploadField'
+import SubmitButton from '@/components/form/SubmitButton'
 import { useListingForm } from '@/hooks/useListingForm'
-import { countries } from '@/utils/countries'
 import { CategoryOption, ListingFormData } from '@/types/marketplace'
-import Input from '../form/Input'
-import TextArea from '../form/TextArea'
-import SubmitButton from '../form/SubmitButton'
+import { countries } from '@/utils/countries'
 import env from '@/utils/frontend/env'
 
 // The same categories from the marketplace component
@@ -124,6 +124,7 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
           />
 
           <ImageUploadField
+            name='pictures'
             images={images}
             maxImages={env.NEXT_PUBLIC_MARKET_LISTING_ATTACHMENT_LIMIT}
             onChange={handleImageChange}
