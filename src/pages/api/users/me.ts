@@ -1,11 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import Joi from 'joi'
 
 import User from '@/data/db/mongo/models/user'
 import dbConnect from '@/data/db/mongo'
 import { sessionStore } from '@/data/session'
 import { Error as ApiError } from '@/data/types/common'
-import { sleep } from "@/utils"
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { deleteAllChatsByUserId } from '@/data/db/mongo/queries/chats/deleteAllChatsByUserId'
 import { deleteAllMarketListingsByUserId } from '@/data/db/mongo/queries/market/deleteMarketListingsByUserId'
@@ -17,21 +15,9 @@ async function DELETE(
 	res: NextApiResponse<Data | ApiError>,
 	auth: AuthData,
 ) {
-	const schema = Joi.object({
-		passkey: Joi.string().base64().required(),
-	})
-	const { value: body, error } = schema.validate(req.body)
-
-	if (error) {
-		res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
-		return
-	}
-
 	await dbConnect()
 	const user = await User.findById(auth.data.userId)
-	if (!user || !user.verifyPasskey(body.passkey)) {
-		// delay response to prevent timing attacks
-		await sleep(Math.random() * 2000)
+	if (!user) {
 		res.status(401).json({ code: 'INVALID_CREDENTIALS' })
 		return
 	}
