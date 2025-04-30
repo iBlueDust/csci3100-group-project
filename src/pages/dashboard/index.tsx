@@ -10,7 +10,9 @@ import { QueryKeys } from '@/data/types/queries'
 import { mockListings } from '@/data/mock/listings'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency, formatNumber } from '@/utils/format'
-import CreateListingForm from './CreateListingForm'
+import CreateListingForm from '../../components/CreateListingForm'
+import { PageWithLayout } from '@/data/types/layout'
+import DashboardLayout from '@/layouts/DashboardLayout'
 
 // Get recent listings (first 4)
 // const recentListings = getRecentListings(4)
@@ -140,7 +142,9 @@ const StatsPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   )
 }
 
-const Home: React.FC<HomeProps> = ({ navigateToMarketplace }: HomeProps) => {
+const Home: PageWithLayout<HomeProps> = ({
+  navigateToMarketplace,
+}: HomeProps) => {
   const api = useApi()
   const { data: listings } = useQuery({
     queryKey: [QueryKeys.MARKET_LISTINGS],
@@ -287,6 +291,16 @@ const Home: React.FC<HomeProps> = ({ navigateToMarketplace }: HomeProps) => {
         <StatsPopup onClose={() => setShowStatsPopup(false)} />
       )}
     </div>
+  )
+}
+
+Home.PageLayout = function HomeLayout({ children }) {
+  const GrandfatherLayout =
+    DashboardLayout.PageLayout ?? (({ children }) => children)
+  return (
+    <GrandfatherLayout>
+      <DashboardLayout>{children}</DashboardLayout>
+    </GrandfatherLayout>
   )
 }
 

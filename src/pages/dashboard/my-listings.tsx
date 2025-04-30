@@ -19,9 +19,10 @@ import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings
 import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import type { PageWithLayout } from '@/data/types/layout'
 import { QueryKeys } from '@/data/types/queries'
-import { ApiProvider, useApi } from '@/utils/frontend/api'
+import { useApi } from '@/utils/frontend/api'
 import { formatCurrency } from '@/utils/format'
-import CreateListingForm from './CreateListingForm'
+import CreateListingForm from '../../components/CreateListingForm'
+import DashboardLayout from '@/layouts/DashboardLayout'
 
 export type MyListingsProps = object
 
@@ -403,7 +404,13 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
 }
 
 MyListings.PageLayout = function MyListingsLayout({ children }) {
-  return <ApiProvider>{children}</ApiProvider>
+  const GrandfatherLayout =
+    DashboardLayout.PageLayout ?? (({ children }) => children)
+  return (
+    <GrandfatherLayout>
+      <DashboardLayout>{children}</DashboardLayout>
+    </GrandfatherLayout>
+  )
 }
 
 export default MyListings

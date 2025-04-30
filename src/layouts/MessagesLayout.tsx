@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import classNames from 'classnames'
@@ -16,23 +10,31 @@ dayjs.extend(relativeTime)
 
 import type { PageWithLayout } from '@/data/types/layout'
 import type { ClientChat } from '@/data/types/chats'
-import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { QueryKeys } from '@/data/types/queries'
-import { isDev } from '@/utils/frontend/env'
 import { queryChats } from '@/data/frontend/queries/queryChats'
-import MiniPaginationControls from './MiniPaginationControls'
+import { useApi } from '@/utils/frontend/api'
+import { isDev } from '@/utils/frontend/env'
+import DashboardLayout from '@/layouts/DashboardLayout'
+import MiniPaginationControls from '@/components/MiniPaginationControls'
+// import { useDevice } from '@/hooks/useDevice'
 
 const NewChatModal = dynamic(() => import('@/components/NewChatModal'))
-const ChatBox = dynamic(() => import('@/components/ChatBox'), {
-  ssr: false,
-})
 
-const Messages: PageWithLayout = () => {
+export interface MessagesLayoutProps {
+  children?: React.ReactNode
+}
+
+const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
   const api = useApi()
   const router = useRouter()
 
-  const [activeChatId, setActiveChatId] = useState<string | null>(null)
-  const [mobileChatVisible, setMobileChatVisible] = useState(false)
+  const activeChatId = router.query.chatId
+    ? (router.query.chatId as string)
+    : undefined
+  const mobileChatVisible = !!activeChatId
+  // const { isMobile } = useDevice({
+  //   mobileThreshold: 768, // equivalent to Tailwind CSS 'md' breakpoint
+  // })
 
   // Search functionality
   const [searchQuery, setSearchQuery] = useState('')
@@ -46,32 +48,29 @@ const Messages: PageWithLayout = () => {
 
   // Separate effect to handle active conversation changes for message content search
   useEffect(() => {
-    if (searchQuery.trim() && activeChatId) {
-      // // Re-run the search when active conversation changes, but don't reset the page
-      // const filtered = mockConversations.filter(conversation => {
-      //   const userMatch = conversation.user.toLowerCase().includes(searchQuery.toLowerCase());
-      //   const messageMatch = conversation.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
-      //   // Also search in message content if the conversation is active
-      //   let messageContentMatch = false;
-      //   if (Number(activeConversation) === conversation.id) {
-      //     const messagesForConversation = mockMessages[conversation.id as keyof typeof mockMessages];
-      //     if (messagesForConversation) {
-      //       messageContentMatch = messagesForConversation.some(msg =>
-      //         msg.content.toLowerCase().includes(searchQuery.toLowerCase())
-      //       );
-      //     }
-      //   }
-      //   return userMatch || messageMatch || messageContentMatch;
-      // });
-      // setFilteredConversations(filtered);
-      // Notice: we don't reset page number here
+    if (!searchQuery.trim()) {
+      return
     }
-  }, [activeChatId, searchQuery])
 
-  const openConversation = (id: string) => {
-    setActiveChatId(id)
-    setMobileChatVisible(true)
-  }
+    // // Re-run the search when active conversation changes, but don't reset the page
+    // const filtered = mockConversations.filter(conversation => {
+    //   const userMatch = conversation.user.toLowerCase().includes(searchQuery.toLowerCase());
+    //   const messageMatch = conversation.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
+    //   // Also search in message content if the conversation is active
+    //   let messageContentMatch = false;
+    //   if (Number(activeConversation) === conversation.id) {
+    //     const messagesForConversation = mockMessages[conversation.id as keyof typeof mockMessages];
+    //     if (messagesForConversation) {
+    //       messageContentMatch = messagesForConversation.some(msg =>
+    //         msg.content.toLowerCase().includes(searchQuery.toLowerCase())
+    //       );
+    //     }
+    //   }
+    //   return userMatch || messageMatch || messageContentMatch;
+    // });
+    // setFilteredConversations(filtered);
+    // Notice: we don't reset page number here
+  }, [searchQuery])
 
   const { data: chats } = useQuery({
     queryKey: [QueryKeys.CHATS],
@@ -90,11 +89,6 @@ const Messages: PageWithLayout = () => {
   const indexOfLastConversation = currentPage * conversationsPerPage
   const indexOfFirstConversation =
     indexOfLastConversation - conversationsPerPage
-
-  const activeChat = useMemo(() => {
-    if (!activeChatId) return null
-    return chats?.data.find((chat) => chat.id === activeChatId)
-  }, [activeChatId, chats])
 
   const otherParty = useCallback(
     (chat: ClientChat) => {
@@ -133,28 +127,6 @@ const Messages: PageWithLayout = () => {
     console.log('Creating new conversation with:', recipient)
   }, [])
 
-  // Handle delete chat
-  const handleDeleteChat = useCallback(() => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this conversation? This action cannot be undone.',
-      )
-    ) {
-      return
-    }
-
-    setMobileChatVisible(false)
-    console.log(`Deleted conversation: ${activeChatId}`)
-  }, [activeChatId])
-
-  useLayoutEffect(() => {
-    if (!api.user) {
-      router.replace('/')
-      return
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   return (
     <div className='h-screen md:h-[calc(100vh-7rem)] flex flex-col overflow-hidden'>
       <h1 className='text-3xl font-bold mb-4 md:block hidden'>Messages</h1>
@@ -174,7 +146,7 @@ const Messages: PageWithLayout = () => {
               <h3 className='text-lg font-bold'>Conversations</h3>
               <button
                 onClick={() => setIsNewChatModalOpen(true)}
-                className='px-4 py-2 rounded-md bg-background border border-foreground-light/75 text-foreground items-center gap-2 text-sm font-medium hover:bg-background-dark transition-colors shadow-sm md:flex hidden'
+                className='px-4 py-2 rounded-md bg-background border border-foreground-light/25 text-foreground items-center gap-2 text-sm font-medium hover:bg-background-dark transition-colors shadow-sm md:flex hidden'
               >
                 <FiPlus />
                 <span>New</span>
@@ -218,7 +190,7 @@ const Messages: PageWithLayout = () => {
             {chats?.data.map((chat) => (
               <div
                 key={chat.id}
-                onClick={() => openConversation(String(chat.id))}
+                onClick={() => router.replace(`/dashboard/messages/${chat.id}`)}
                 className={classNames(
                   'md:p-4 p-2 border-b-2 border-foreground/5 hover:bg-background-dark/10 cursor-pointer',
                   activeChatId === chat.id && 'bg-background-dark/20',
@@ -264,28 +236,12 @@ const Messages: PageWithLayout = () => {
 
         {/* Chat Area */}
         <div
-          className={`w-full md:w-2/3 flex flex-col ${
-            !mobileChatVisible ? 'hidden md:flex' : 'flex'
-          }`}
-        >
-          {activeChat ? (
-            <ChatBox
-              className='h-full'
-              chat={activeChat}
-              sharedKey={activeChat.sharedKey}
-              onMobileCloseClick={() => {
-                setActiveChatId(null)
-                setMobileChatVisible(false)
-              }}
-              onDeleteChat={handleDeleteChat}
-            />
-          ) : (
-            <div className='flex-1 flex items-center justify-center text-foreground/50'>
-              <div className='text-center'>
-                <p>Select a conversation to start messaging</p>
-              </div>
-            </div>
+          className={classNames(
+            'w-full md:w-2/3 flex flex-col',
+            !mobileChatVisible ? 'hidden md:flex' : 'flex',
           )}
+        >
+          {children}
         </div>
       </div>
 
@@ -300,8 +256,14 @@ const Messages: PageWithLayout = () => {
   )
 }
 
-Messages.PageLayout = function MessagesLayout({ children }) {
-  return <ApiProvider>{children}</ApiProvider>
+MessagesLayout.PageLayout = function MessagesLayout({ children }) {
+  const GrandfatherLayout =
+    DashboardLayout.PageLayout ?? (({ children }) => children)
+  return (
+    <GrandfatherLayout>
+      <DashboardLayout>{children}</DashboardLayout>
+    </GrandfatherLayout>
+  )
 }
 
-export default Messages
+export default MessagesLayout

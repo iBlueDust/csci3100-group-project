@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import classNames from 'classnames'
@@ -14,22 +13,11 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import Sidebar from '@/components/Sidebar'
 import { geistMono, geistSans } from '@/styles/fonts'
-import type { PageWithLayout } from '@/data/types/layout'
 import { QueryKeys } from '@/data/types/queries'
+import { PageWithLayout } from '@/data/types/layout'
 import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
 import { queryChats } from '@/data/frontend/queries/queryChats'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
-
-// TODO: Add loading component
-const Home = dynamic(() => import('@/components/Home'), { ssr: false })
-const Messages = dynamic(() => import('@/components/messages'), { ssr: false })
-const Marketplace = dynamic(() => import('@/components/marketplace'), {
-  ssr: false,
-})
-const MyListings = dynamic(() => import('@/components/MyListings'), {
-  ssr: false,
-})
-const Settings = dynamic(() => import('@/components/settings'), { ssr: false })
 
 enum Page {
   HOME = 'home',
@@ -42,34 +30,60 @@ enum Page {
 const navItems = [
   {
     key: Page.HOME,
+    path: '/dashboard',
     icon: <FiHome className='w-5 h-5 min-w-5' />,
     label: 'Home',
   },
   {
     key: Page.MARKETPLACE,
+    path: '/dashboard/marketplace',
     icon: <FiPackage className='w-5 h-5 min-w-5' />,
     label: 'Marketplace',
   },
   {
     key: Page.MY_LISTINGS,
+    path: '/dashboard/my-listings',
     icon: <FiList className='w-5 h-5 min-w-5' />,
     label: 'My Listings',
   },
   {
     key: Page.MESSAGES,
+    path: '/dashboard/messages',
     icon: <FiMessageSquare className='w-5 h-5 min-w-5' />,
     label: 'Messages',
   },
   {
     key: Page.SETTINGS,
+    path: '/dashboard/settings',
     icon: <FiSettings className='w-5 h-5 min-w-5' />,
     label: 'Settings',
   },
 ]
 
-const Dashboard: PageWithLayout = () => {
+for (const item of navItems) {
+  Object.freeze(item)
+}
+
+export interface DashboardLayoutProps {
+  children?: React.ReactNode
+}
+
+const DashboardLayout: PageWithLayout<DashboardLayoutProps> = ({
+  children,
+}) => {
   const router = useRouter()
   const api = useApi()
+
+  const pathMatches = /^(\/dashboard\/[a-zA-Z0-9_-]+)\/?/.exec(router.pathname)
+  const activePage = pathMatches?.[1]
+    ? navItems.find((item) => item.path === pathMatches[1])?.key ?? undefined
+    : Page.HOME
+
+  useEffect(() => {
+    if (activePage == null) {
+      router.replace('/dashboard')
+    }
+  }, [activePage, router])
 
   const queryClient = useQueryClient()
   useEffect(() => {
@@ -93,33 +107,6 @@ const Dashboard: PageWithLayout = () => {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api.isInitialized])
-
-  const pageKeys: (string | undefined)[] = [
-    undefined,
-    Page.MARKETPLACE,
-    Page.MY_LISTINGS,
-    Page.MESSAGES,
-    Page.SETTINGS,
-  ]
-  // Only
-  // /dashboard
-  // /dashboard/marketplace
-  // /dashboard/messages
-  // /dashboard/settings
-  // are recognized. No nested routes.
-  const activePage =
-    pageKeys.includes(router.query.page?.[0]) &&
-    (!router.query.page || router.query.page.length === 1)
-      ? router.query.page?.[0] || Page.HOME
-      : null // 404
-
-  // Redirect to /dashboard if activePage is null (invalid route)
-  useEffect(() => {
-    if (activePage == null) {
-      router.replace('/dashboard')
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router])
 
   return (
     <div
@@ -153,24 +140,10 @@ const Dashboard: PageWithLayout = () => {
         {/* Fixed Sidebar (hidden on mobile) */}
         <div className='hidden sm:block fixed left-0 top-16 bottom-0'>
           {/* Sidebar */}
-          <Sidebar
-            navItems={navItems}
-            value={activePage ?? ''}
-            onChange={(page) => router.replace(`/dashboard/${page}`)}
-          />
+          <Sidebar navItems={navItems} value={activePage ?? ''} />
         </div>
         {/* Main content */}
-        <main className='flex-1 p-6 pb-16 sm:pb-0 sm:ml-64'>
-          {activePage === Page.HOME && <Home />}
-
-          {activePage === Page.MESSAGES && <Messages />}
-
-          {activePage === Page.MARKETPLACE && <Marketplace />}
-
-          {activePage === Page.MY_LISTINGS && <MyListings />}
-
-          {activePage === Page.SETTINGS && <Settings />}
-        </main>
+        <main className='flex-1 p-6 pb-16 sm:pb-0 sm:ml-64'>{children}</main>
       </div>
 
       {/* Mobile Bottom Navigation */}
@@ -178,7 +151,6 @@ const Dashboard: PageWithLayout = () => {
         {navItems.map((item) => (
           <button
             key={item.key}
-            onClick={() => router.replace(`/dashboard/${item.key}`)}
             className={classNames(
               'p-2 rounded-md transition-colors',
               item.key === activePage
@@ -194,8 +166,10 @@ const Dashboard: PageWithLayout = () => {
   )
 }
 
-Dashboard.PageLayout = function DashboardLayout({ children }) {
+DashboardLayout.PageLayout = function DashboardLayoutPageLayout({
+  children,
+}: DashboardLayoutProps) {
   return <ApiProvider>{children}</ApiProvider>
 }
 
-export default Dashboard
+export default DashboardLayout

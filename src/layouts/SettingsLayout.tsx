@@ -1,28 +1,29 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { FiUser, FiShield } from 'react-icons/fi'
-import dynamic from 'next/dynamic'
 
 import type { PageWithLayout } from '@/data/types/layout'
-import { ApiProvider } from '@/utils/frontend/api'
 import classNames from 'classnames'
-const SettingsProfileTab = dynamic(() => import('./SettingsProfileTab'))
-const SettingsPrivacyTab = dynamic(() => import('./SettingsPrivacyTab'))
+import DashboardLayout from '@/layouts/DashboardLayout'
+import { useRouter } from 'next/router'
+import Link from 'next/link'
 
-// Tab interfaces
-type SettingsTab = 'profile' | 'privacy'
+export interface SettingsLayoutProps {
+  children?: React.ReactNode
+}
 
-const Settings: PageWithLayout = () => {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
+const SettingsLayout: PageWithLayout<SettingsLayoutProps> = ({ children }) => {
+  const router = useRouter()
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'profile':
-        return <SettingsProfileTab />
+  const pathMatches = /^\/dashboard\/settings(\/[a-zA-Z0-9_-]+)/.exec(
+    router.pathname,
+  )
+  const activeTab = pathMatches?.[1] ?? ''
 
-      case 'privacy':
-        return <SettingsPrivacyTab />
+  useEffect(() => {
+    if (!['', '/', '/privacy'].includes(activeTab)) {
+      router.replace('/dashboard/settings')
     }
-  }
+  }, [activeTab, router])
 
   return (
     <div className='h-full flex flex-col'>
@@ -30,42 +31,50 @@ const Settings: PageWithLayout = () => {
 
       {/* Tabs Navigation - removed the notifications tab */}
       <div className='flex border-b-2 border-foreground/10 mb-6 overflow-x-auto hide-scrollbar'>
-        <button
-          onClick={() => setActiveTab('profile')}
+        <Link
+          href='/dashboard/settings'
+          replace
           className={`flex items-center gap-1 px-4 py-2 border-b-2 font-medium transition-colors ${
-            activeTab === 'profile'
+            activeTab === '' || activeTab === '/'
               ? 'border-foreground text-foreground'
               : 'border-transparent text-foreground/50 hover:text-foreground/80'
           }`}
         >
           <FiUser className='w-4 h-4' />
           <span>Profile</span>
-        </button>
+        </Link>
 
-        <button
+        <Link
+          href='/dashboard/settings/privacy'
+          replace
           className={classNames(
             'flex items-center gap-1 px-4 py-2 border-b-2 font-medium transition-colors',
-            activeTab === 'privacy'
+            activeTab === '/privacy'
               ? 'border-foreground text-foreground'
               : 'border-transparent text-foreground/50 hover:text-foreground/80',
           )}
-          onClick={() => setActiveTab('privacy')}
         >
           <FiShield className='w-4 h-4' />
           <span>Privacy</span>
-        </button>
+        </Link>
       </div>
 
       {/* Tab Content */}
       <div className='bg-background rounded-lg flex-1 overflow-y-auto'>
-        <div className='p-6'>{renderTabContent()}</div>
+        <div className='p-6'>{children}</div>
       </div>
     </div>
   )
 }
 
-Settings.PageLayout = function SettingsLayout({ children }) {
-  return <ApiProvider>{children}</ApiProvider>
+SettingsLayout.PageLayout = function SettingsMetaLayout({ children }) {
+  const GrandfatherLayout =
+    DashboardLayout.PageLayout ?? (({ children }) => children)
+  return (
+    <GrandfatherLayout>
+      <DashboardLayout>{children}</DashboardLayout>
+    </GrandfatherLayout>
+  )
 }
 
-export default Settings
+export default SettingsLayout

@@ -28,11 +28,19 @@ import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { countries } from '@/utils/countries'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency } from '@/utils/format'
-import PaginationControls from './PaginationControls'
-import MarketListingGridItem from './MarketListingGridItem'
-const MarketListingListItem = dynamic(() => import('./MarketListingListItem'))
-const CreateListingForm = dynamic(() => import('./CreateListingForm'))
-const MarketListingModal = dynamic(() => import('./MarketListingModal'))
+import PaginationControls from '../../../components/PaginationControls'
+import MarketListingGridItem from '../../../components/MarketListingGridItem'
+import { PageWithLayout } from '@/data/types/layout'
+import DashboardLayout from '@/layouts/DashboardLayout'
+const MarketListingListItem = dynamic(
+  () => import('../../../components/MarketListingListItem'),
+)
+const CreateListingForm = dynamic(
+  () => import('../../../components/CreateListingForm'),
+)
+const MarketListingModal = dynamic(
+  () => import('../../../components/MarketListingModal'),
+)
 
 // Mock categories
 const categories = [
@@ -56,7 +64,7 @@ const categories = [
 // Add interface for the Marketplace component props
 export type MarketplaceProps = object
 
-const Marketplace: React.FC<MarketplaceProps> = () => {
+const Marketplace: PageWithLayout<MarketplaceProps> = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [minPrice, setMinPrice] = useState(0)
   const [maxPrice, setMaxPrice] = useState(Number.POSITIVE_INFINITY)
@@ -986,6 +994,16 @@ const Marketplace: React.FC<MarketplaceProps> = () => {
         />
       )}
     </div>
+  )
+}
+
+Marketplace.PageLayout = function MarketplaceLayout({ children }) {
+  const GrandfatherLayout =
+    DashboardLayout.PageLayout ?? (({ children }) => children)
+  return (
+    <GrandfatherLayout>
+      <DashboardLayout>{children}</DashboardLayout>
+    </GrandfatherLayout>
   )
 }
 

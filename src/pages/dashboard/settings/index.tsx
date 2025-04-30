@@ -1,12 +1,13 @@
 import React from 'react'
-import SubmitButton from './SubmitButton'
-import Input from './Input'
+
+import SubmitButton from '@/components/SubmitButton'
+import Input from '@/components/Input'
+import TextArea from '@/components/TextArea'
+import { PageWithLayout } from '@/data/types/layout'
+import SettingsLayout from '@/layouts/SettingsLayout'
 import { useApi } from '@/utils/frontend/api'
-import TextArea from './TextArea'
 
-export type SettingsProfileTabProps = object
-
-const SettingsProfileTab: React.FC<SettingsProfileTabProps> = ({}) => {
+const SettingsProfilePage: PageWithLayout = () => {
   const api = useApi()
 
   return (
@@ -54,4 +55,16 @@ const SettingsProfileTab: React.FC<SettingsProfileTabProps> = ({}) => {
   )
 }
 
-export default SettingsProfileTab
+SettingsProfilePage.PageLayout = function SettingsProfilePageLayout({
+  children,
+}) {
+  const GrandfatherLayout =
+    SettingsLayout.PageLayout ?? (({ children }) => children)
+  return (
+    <GrandfatherLayout>
+      <SettingsLayout>{children}</SettingsLayout>
+    </GrandfatherLayout>
+  )
+}
+
+export default SettingsProfilePage

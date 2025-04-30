@@ -42,12 +42,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     <div className='relative overflow-y-auto scroll-thin'>
       <div className='flex flex-col min-h-full flex-nowrap'>
         {/* Deletion banner */}
-        {chat.wasRequestedToDelete ||
-          (true && (
-            <div className='sticky top-0 z-10'>
-              <ChatRecipientLeftBanner onDelete={onDeleteChat} />
-            </div>
-          ))}
+        {chat.wasRequestedToDelete && (
+          <div className='sticky top-0 z-10'>
+            <ChatRecipientLeftBanner onDelete={onDeleteChat} />
+          </div>
+        )}
 
         {/* Messages */}
         <div className='mt-auto p-4 space-y-4'>
