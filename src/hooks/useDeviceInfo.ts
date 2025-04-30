@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
 
-export interface DeviceHookOptions {
+export interface DeviceInfoHookOptions {
 	mobileThreshold?: number
 }
 
-export function useDevice({ mobileThreshold = 768 }: DeviceHookOptions = {}) {
+export function useDeviceInfo({ mobileThreshold = 768 }: DeviceInfoHookOptions = {}) {
 	const [isMobile, setIsMobile] = useState<boolean>(false)
 
 	// use useEffect instead of useLayoutEffect to avoid blocking the browser paint

@@ -72,14 +72,6 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
     // Notice: we don't reset page number here
   }, [searchQuery])
 
-  const openChat = useCallback(
-    (id: string) => {
-      console.log('Opening chat:', id)
-      router.replace(`/dashboard/messages/${id}`)
-    },
-    [router],
-  )
-
   const { data: chats } = useQuery({
     queryKey: [QueryKeys.CHATS],
     queryFn: () => queryChats(api),
@@ -134,23 +126,6 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
     // In a real app, you would make an API call to create a new conversation with this user
     console.log('Creating new conversation with:', recipient)
   }, [])
-
-  // Handle delete chat
-  // const handleDeleteChat = useCallback(() => {
-  //   if (
-  //     !activeChatId ||
-  //     !window.confirm(
-  //       'Are you sure you want to delete this conversation? This action cannot be undone.',
-  //     )
-  //   ) {
-  //     return
-  //   }
-
-  //   if (isMobile) {
-  //     router.replace('/dashboard/messages')
-  //   }
-  //   console.log(`Deleted conversation: ${activeChatId}`)
-  // }, [activeChatId, isMobile, router])
 
   return (
     <div className='h-screen md:h-[calc(100vh-7rem)] flex flex-col overflow-hidden'>
@@ -215,7 +190,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
             {chats?.data.map((chat) => (
               <div
                 key={chat.id}
-                onClick={() => openChat(chat.id)}
+                onClick={() => router.replace(`/dashboard/messages/${chat.id}`)}
                 className={classNames(
                   'md:p-4 p-2 border-b-2 border-foreground/5 hover:bg-background-dark/10 cursor-pointer',
                   activeChatId === chat.id && 'bg-background-dark/20',
