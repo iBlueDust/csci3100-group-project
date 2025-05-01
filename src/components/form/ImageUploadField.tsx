@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { FiTrash2, FiUpload } from 'react-icons/fi'
 import classNames from 'classnames'
+import { useDragDrop } from '@/hooks/useDragDrop'
 
 export interface ImageUploadProps {
   name: string
@@ -18,8 +19,7 @@ const ImageUploadField: React.FC<ImageUploadProps> = ({
   onChange,
   onRemove,
 }) => {
-  const fileDropRef = useRef<HTMLInputElement>(null)
-  const [isDraggingOver, setIsDraggingOver] = useState(false)
+  const dragDrop = useDragDrop()
 
   const [imageUrls, setImageUrls] = useState<string[]>([])
   useEffect(() => {
@@ -32,32 +32,6 @@ const ImageUploadField: React.FC<ImageUploadProps> = ({
     }
   }, [images])
 
-  useEffect(() => {
-    if (!fileDropRef.current) return
-
-    const onDragEnter = () => {
-      console.log('dragenter')
-      setIsDraggingOver(true)
-    }
-    const onDragLeave = () => {
-      console.log('dragleave')
-      setIsDraggingOver(false)
-    }
-
-    const elem = fileDropRef.current
-    elem.addEventListener('dragenter', onDragEnter)
-    elem.addEventListener('dragleave', onDragLeave)
-    elem.addEventListener('dragend', onDragLeave)
-    elem.addEventListener('drop', onDragLeave)
-
-    return () => {
-      elem.removeEventListener('dragenter', onDragEnter)
-      elem.removeEventListener('dragleave', onDragLeave)
-      elem.removeEventListener('dragend', onDragLeave)
-      elem.removeEventListener('drop', onDragLeave)
-    }
-  }, [fileDropRef])
-
   return (
     <div className='mb-6'>
       <label className='block text-sm font-medium mb-1'>
@@ -68,17 +42,26 @@ const ImageUploadField: React.FC<ImageUploadProps> = ({
         <label
           className={classNames(
             'gap-8 justify-center flex flex-row items-center relative border-2 border-dashed border-foreground/30 rounded-md p-8 text-center cursor-pointer transition-colors mb-2',
-            isDraggingOver
+            dragDrop.isDraggingOver
               ? 'bg-sky-500/15 border-sky-500'
               : 'hover:bg-background-dark focus:bg-background-dark/10',
           )}
         >
-          <FiUpload size={24} color={isDraggingOver ? '#3b82f6' : '#999999'} />
-          <p className={isDraggingOver ? 'text-sky-500' : 'text-foreground/70'}>
-            {isDraggingOver ? 'Release to upload' : 'Click to upload images'}
+          <FiUpload
+            size={24}
+            color={dragDrop.isDraggingOver ? '#3b82f6' : '#999999'}
+          />
+          <p
+            className={
+              dragDrop.isDraggingOver ? 'text-sky-500' : 'text-foreground/70'
+            }
+          >
+            {dragDrop.isDraggingOver
+              ? 'Release to upload'
+              : 'Click to upload images'}
           </p>
           <input
-            ref={fileDropRef}
+            ref={dragDrop.dropAreaRef}
             type='file'
             name={name}
             className='inset-0 w-full h-full absolute opacity-0 cursor-pointer'
