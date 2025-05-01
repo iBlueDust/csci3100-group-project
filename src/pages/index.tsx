@@ -21,7 +21,10 @@ export default function Home() {
         </p>
 
         <div className='flex gap-4 items-center flex-col sm:flex-row w-full max-w-xs sm:max-w-none justify-center'>
-          <Link className='button-primary w-full sm:w-auto px-6 py-3' href='/signup'>
+          <Link
+            className='button-primary w-full sm:w-auto px-6 py-3'
+            href='/signup'
+          >
             Sign up
           </Link>
           <Link className='button w-full sm:w-auto px-6 py-3' href='/login'>

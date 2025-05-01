@@ -13,6 +13,7 @@ import { formatCurrency, formatNumber } from '@/utils/format'
 import CreateListingForm from '../../components/marketplace/CreateListingForm'
 import { PageWithLayout } from '@/data/types/layout'
 import DashboardLayout from '@/layouts/DashboardLayout'
+import Link from 'next/link'
 
 // Get recent listings (first 4)
 // const recentListings = getRecentListings(4)
@@ -227,12 +228,12 @@ const Home: PageWithLayout<HomeProps> = ({
               <span className='font-mono font-bold'>5</span>
             </div>
           </div>
-          <button
-            onClick={() => setShowCreateForm(true)}
-            className='mt-4 button-primary w-full flex items-center justify-center gap-2'
+          <Link
+            className='block mt-4 button-primary w-full flex items-center justify-center gap-2'
+            href='/dashboard/marketplace/create'
           >
             <FiPlus /> Create New Listing
-          </button>
+          </Link>
         </div>
       </div>
 

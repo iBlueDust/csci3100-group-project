@@ -41,8 +41,8 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
   onDelete,
 }) => {
   return (
-    <button
-      className='text-left bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer h-[595px] flex flex-col'
+    <div
+      className='text-left bg-background-light w-full border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer h-[500px] flex flex-col'
       onClick={onClick}
     >
       {/* Item image - fixed height */}
@@ -170,7 +170,7 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
           </div>
         </div>
       </div>
-    </button>
+    </div>
   )
 }
 
