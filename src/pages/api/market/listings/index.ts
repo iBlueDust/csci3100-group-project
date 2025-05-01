@@ -6,12 +6,11 @@ import dbConnect from '@/data/db/mongo'
 import { Error as ApiError, PaginatedResult } from '@/data/types/common'
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { searchMarketListings } from '@/data/db/mongo/queries/market/searchMarketListings'
-import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { sessionStore } from '@/data/session'
 import minioClient, { putManyObjects } from '@/data/db/minio'
 import { isSupportedImageMimeType } from '@/utils'
-import { parseFormDataBody, File } from '@/utils/api'
-import { generatePictureObjectName } from '@/utils/api/market'
+import { parseFormDataBody, File, generateMinioObjectName } from '@/utils/api'
+import { AuthData, protectedRoute } from '@/utils/api/auth'
 import env from '@/env'
 
 type GetData = PaginatedResult<MarketListingSearchResult>
@@ -132,37 +131,47 @@ async function POST(
 			.default([]),
 	})
 
-	const { value: body, error: validationError } = schema.validate(unvalidatedBody)
+	const validation = schema.validate(unvalidatedBody)
 
-	if (validationError) {
-		console.warn('POST /market/listings | Rejected request for invalid body:', validationError)
-		res.status(400).json({ code: 'INVALID_REQUEST', message: validationError.message })
+	if (validation.error) {
+		console.warn('POST /market/listings | Rejected request for invalid body:', validation.error)
+		res.status(400)
+			.json({ code: 'INVALID_REQUEST', message: validation.error.message })
 		return
 	}
 
-	const filesToUpload = (body.pictures as File[]).map((picture) => ({
+	const body = validation.value as {
+		title: string
+		description: string
+		pictures: File[]
+		priceInCents: number
+		countries: string[]
+	}
+
+	const filesToUpload = body.pictures.map((picture) => ({
 		...picture,
-		name: generatePictureObjectName(picture),
+		objectName: generateMinioObjectName(picture),
 	}))
+	filesToUpload.forEach(({ objectName, size, filename, mimetype, encoding }) => {
+		console.log(`POST /market/listings | Uploading picture: target=${objectName} size=${size} filename=${filename} mimetype=${mimetype} encoding=${encoding}`)
+	})
+
 	const uploadedAt = new Date().toISOString()
+	const minioObjects = filesToUpload.map(({ objectName, data, filename, mimetype }) => ({
+		name: objectName,
+		data,
+		maxSize: env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT,
+		metadata: {
+			originalFilename: filename,
+			mimetype,
+			uploadedAt,
+			uploadedBy: auth.data.userId,
+		}
+	}))
 	const uploadResults = await putManyObjects(
 		minioClient,
 		env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS,
-		filesToUpload.map(({ name, data, filename, size, encoding, mimetype }) => {
-			console.log(`POST /market/listings | Uploading picture: fieldname=${name} filename=${filename} size=${size} encoding=${encoding} mimetype=${mimetype}`)
-
-			return {
-				name,
-				data,
-				maxSize: env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT,
-				metadata: {
-					originalFilename: filename,
-					mimetype,
-					uploadedAt,
-					uploadedBy: auth.data.userId,
-				}
-			}
-		}),
+		minioObjects,
 	)
 
 	if (!uploadResults.success) {
@@ -175,7 +184,7 @@ async function POST(
 	const listing = await MarketListing.create({
 		title: body.title,
 		description: body.description,
-		pictures: filesToUpload.map(({ name }) => name),
+		pictures: filesToUpload.map(({ objectName }) => objectName),
 		author: auth.data.userId,
 		priceInCents: body.priceInCents,
 		countries: body.countries,
