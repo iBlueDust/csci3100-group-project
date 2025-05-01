@@ -1,0 +1,1 @@
+export { deleteMyAccount } from "@/data/frontend/fetches/deleteMyAccount"
