@@ -40,9 +40,13 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     scrollHelperRef.current?.scrollIntoView({ behavior: 'instant' })
   }, [messages, scrollHelperRef])
 
+  useLayoutEffect(() => {
+    scrollHelperRef.current?.scrollIntoView({ behavior: 'instant' })
+  }, [])
+
   /* Container for mobile that includes both the banner and messages with a single scroll */
   return (
-    <div className='relative overflow-y-auto scroll-thin'>
+    <div className='relative overflow-y-auto h-full scroll-thin'>
       <div className='flex flex-col min-h-full flex-nowrap'>
         {/* Deletion banner */}
         {chat.wasRequestedToDelete && (
@@ -52,25 +56,36 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         )}
 
         {/* Messages */}
-        <div className='mt-auto p-4 space-y-4'>
-          {messages?.map((message) => {
-            if (message.type === ChatMessageType.Text) {
-              return (
-                <ChatTextMessage
-                  key={message.id}
-                  message={message}
-                  isMe={message.sender === api.user?.id}
-                />
-              )
-            }
-
-            if (message.type === ChatMessageType.Attachment) {
-              if (
-                message.contentFilename &&
-                isSupportedImage(message.contentFilename)
-              ) {
+        {messages && messages.length > 0 ? (
+          <div className='mt-auto p-4 space-y-4'>
+            {messages.map((message) => {
+              if (message.type === ChatMessageType.Text) {
                 return (
-                  <ChatImageMessage
+                  <ChatTextMessage
+                    key={message.id}
+                    message={message}
+                    isMe={message.sender === api.user?.id}
+                  />
+                )
+              }
+
+              if (message.type === ChatMessageType.Attachment) {
+                if (
+                  message.contentFilename &&
+                  isSupportedImage(message.contentFilename)
+                ) {
+                  return (
+                    <ChatImageMessage
+                      key={message.id}
+                      message={message}
+                      isMe={message.sender === api.user?.id}
+                      sharedKey={sharedKey}
+                    />
+                  )
+                }
+
+                return (
+                  <ChatAttachmentMessage
                     key={message.id}
                     message={message}
                     isMe={message.sender === api.user?.id}
@@ -78,20 +93,24 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   />
                 )
               }
-
-              return (
-                <ChatAttachmentMessage
-                  key={message.id}
-                  message={message}
-                  isMe={message.sender === api.user?.id}
-                  sharedKey={sharedKey}
-                />
-              )
-            }
-          })}
-
-          <div ref={scrollHelperRef} />
-        </div>
+            })}
+            <div ref={scrollHelperRef} />
+          </div>
+        ) : (
+          <div className='flex-1 flex justify-center items-center'>
+            <p className='text-center text-foreground-light/50 text-2xl'>
+              {messages ? (
+                <>
+                  No messages yet
+                  <br />
+                  Send one now
+                </>
+              ) : (
+                'Loading...'
+              )}
+            </p>
+          </div>
+        )}
 
         {/* Message Input - Fixed at bottom for mobile */}
         <div className='sticky bottom-0'>

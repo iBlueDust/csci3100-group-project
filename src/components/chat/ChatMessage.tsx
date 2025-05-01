@@ -1,8 +1,8 @@
 import classNames from 'classnames'
 import React from 'react'
 import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-dayjs.extend(relativeTime)
+import isToday from 'dayjs/plugin/isToday'
+dayjs.extend(isToday)
 
 export interface ChatMessageProps {
   key?: string | number
@@ -17,6 +17,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   isMe = false,
   sentAt,
 }) => {
+  const date = dayjs(sentAt)
+
   return (
     <div
       key={key}
@@ -30,10 +32,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       <p
         className={classNames(
           'text-xs mt-1',
-          isMe ? 'text-white/70' : 'text-foreground/50',
+          isMe ? 'text-white/70 text-right' : 'text-foreground/50',
         )}
       >
-        {dayjs(sentAt).fromNow()}
+        {date.isToday()
+          ? date.format('HH:mm')
+          : date.year() === dayjs().year()
+          ? date.format('DD/MM HH:mm')
+          : date.format('DD/MM/YYYY HH:mm')}
       </p>
     </div>
   )

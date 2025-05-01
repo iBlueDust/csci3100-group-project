@@ -19,11 +19,13 @@ import type { PaginatedResult } from '@/data/types/common'
 import { useApi } from '@/utils/frontend/api'
 import { isDev } from '@/utils/frontend/env'
 import ChatThread from './ChatThread'
+import BasicSpinner from '../BasicSpinner'
 
 export interface ChatBoxProps {
   className?: string
   chat: ClientChat
   sharedKey: CryptoKey
+  isDeleting?: boolean
   onMobileCloseClick?: () => void
   onDeleteChat?: () => void
 }
@@ -32,6 +34,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   className,
   chat,
   sharedKey,
+  isDeleting = false,
   onMobileCloseClick,
   onDeleteChat,
 }) => {
@@ -114,31 +117,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           </div>
           <h3 className='font-medium'>{otherParty?.username}</h3>
         </div>
+
         <button
           className='h-10 w-10 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20 hover:text-red-500 transition-colors'
           onClick={onDeleteChat}
+          disabled={isDeleting}
         >
-          <FiTrash2 size={18} />
+          {!isDeleting ? (
+            <FiTrash2 size={16} />
+          ) : (
+            <BasicSpinner className='w-4 h-4' />
+          )}
         </button>
       </div>
-
-      {/* <div className='relative flex-1 bg-red-500 overflow-y-auto'>
-        <div className='flex flex-col min-h-full flex-nowrap'>
-          <div className='bg-green-200 h-24 sticky top-0'></div>
-
-          <div className='space-y-4 p-4 mt-auto'>
-            <div className='w-50 h-16 bg-blue-300' />
-            <div className='w-50 h-16 bg-blue-300' />
-            <div className='w-50 h-16 bg-blue-300' />
-            <div className='w-50 h-16 bg-blue-300' />
-            <div className='w-50 h-16 bg-blue-300' />
-            <div className='w-50 h-16 bg-blue-300' />
-            <div className='w-50 h-16 bg-blue-300' />
-            <div className='w-50 h-16 bg-blue-300' />
-          </div>
-
-          <div className='bg-gray-500 h-24 sticky flex bottom-0'></div>
-        </div> */}
 
       <ChatThread
         chat={chat}

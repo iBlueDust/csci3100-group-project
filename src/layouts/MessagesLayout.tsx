@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
+import Link from 'next/link'
 import classNames from 'classnames'
-import { useQuery } from '@tanstack/react-query'
-import { FiFile, FiPlus, FiSearch } from 'react-icons/fi'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { FiFile, FiPlus } from 'react-icons/fi'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
@@ -32,45 +33,15 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
     ? (router.query.chatId as string)
     : undefined
   const mobileChatVisible = !!activeChatId
-  // const { isMobile } = useDevice({
-  //   mobileThreshold: 768, // equivalent to Tailwind CSS 'md' breakpoint
-  // })
-
-  // Search functionality
-  const [searchQuery, setSearchQuery] = useState('')
 
   // Create conversation modal state
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false)
+  const openNewChatModal = useCallback(() => setIsNewChatModalOpen(true), [])
+  const closeNewChatModal = useCallback(() => setIsNewChatModalOpen(false), [])
 
   // Pagination state for conversations
   const [currentPage, setCurrentPage] = useState(1)
   const [conversationsPerPage /* , setConversationsPerPage */] = useState(10)
-
-  // Separate effect to handle active conversation changes for message content search
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      return
-    }
-
-    // // Re-run the search when active conversation changes, but don't reset the page
-    // const filtered = mockConversations.filter(conversation => {
-    //   const userMatch = conversation.user.toLowerCase().includes(searchQuery.toLowerCase());
-    //   const messageMatch = conversation.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
-    //   // Also search in message content if the conversation is active
-    //   let messageContentMatch = false;
-    //   if (Number(activeConversation) === conversation.id) {
-    //     const messagesForConversation = mockMessages[conversation.id as keyof typeof mockMessages];
-    //     if (messagesForConversation) {
-    //       messageContentMatch = messagesForConversation.some(msg =>
-    //         msg.content.toLowerCase().includes(searchQuery.toLowerCase())
-    //       );
-    //     }
-    //   }
-    //   return userMatch || messageMatch || messageContentMatch;
-    // });
-    // setFilteredConversations(filtered);
-    // Notice: we don't reset page number here
-  }, [searchQuery])
 
   const { data: chats } = useQuery({
     queryKey: [QueryKeys.CHATS],
@@ -109,23 +80,11 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
     setCurrentPage(pageNumber)
   }
 
-  // Handle search
-  const handleSearch = useCallback(() => {
-    // The search is already handled by the useEffect above
-    // This function is mainly for the search button click
-    console.log('Searching for:', searchQuery)
-  }, [searchQuery])
-
-  // Handle creating a new conversation
-  const handleNewChat = useCallback((recipient: string) => {
-    setIsNewChatModalOpen(false)
-    if (!recipient.trim()) {
-      return
-    }
-
-    // In a real app, you would make an API call to create a new conversation with this user
-    console.log('Creating new conversation with:', recipient)
-  }, [])
+  const queryClient = useQueryClient()
+  const handleNewChatSuccess = useCallback(() => {
+    closeNewChatModal()
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.CHATS] })
+  }, [closeNewChatModal, queryClient])
 
   return (
     <div className='h-screen md:h-[calc(100vh-7rem)] flex flex-col overflow-hidden'>
@@ -145,7 +104,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
             <div className='h-12 md:h-16 flex items-center md:px-4 px-2 border-b border-foreground/25 justify-between'>
               <h3 className='text-lg font-bold'>Conversations</h3>
               <button
-                onClick={() => setIsNewChatModalOpen(true)}
+                onClick={openNewChatModal}
                 className='px-4 py-2 rounded-md bg-background border border-foreground-light/25 text-foreground items-center gap-2 text-sm font-medium hover:bg-background-dark transition-colors shadow-sm md:flex hidden'
               >
                 <FiPlus />
@@ -154,7 +113,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
             </div>
 
             {/* Adjusted padding for mobile */}
-            <div className='md:px-4 px-2 py-2 border-b border-foreground-light/25 bg-background-light'>
+            {/* <div className='md:px-4 px-2 py-2 border-b border-foreground-light/25 bg-background-light'>
               <div className='relative'>
                 <input
                   type='text'
@@ -173,26 +132,27 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
                 </button>
               </div>
 
-              {/* Mobile New Chat button below search */}
+              {\/* Mobile New Chat button below search *\/}
               <div className='md:hidden mt-2'>
                 <button
-                  onClick={() => setIsNewChatModalOpen(true)}
+                  onClick={openNewChatModal}
                   className='w-full py-2 rounded-md bg-foreground text-background flex items-center justify-center gap-2 text-sm font-medium hover:bg-foreground/80 transition-colors shadow-sm'
                 >
                   <span>New Chat</span>
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Conversation items list - Make sure this is scrollable in all views */}
           <div className='flex-1 overflow-y-auto pointer-events-auto'>
             {chats?.data.map((chat) => (
-              <div
+              <Link
                 key={chat.id}
-                onClick={() => router.replace(`/dashboard/messages/${chat.id}`)}
+                href={`/dashboard/messages/${chat.id}`}
+                replace
                 className={classNames(
-                  'md:p-4 p-2 border-b-2 border-foreground/5 hover:bg-background-dark/10 cursor-pointer',
+                  'md:p-4 p-2 block border-b-2 border-foreground/5 hover:bg-background-dark/10 cursor-pointer',
                   activeChatId === chat.id && 'bg-background-dark/20',
                 )}
               >
@@ -227,7 +187,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
                     )}
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
@@ -257,8 +217,8 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
       {/* Create Conversation Modal */}
       {isNewChatModalOpen && (
         <NewChatModal
-          onCancel={() => setIsNewChatModalOpen(false)}
-          onConfirm={handleNewChat}
+          onCancel={closeNewChatModal}
+          onConfirm={handleNewChatSuccess}
         />
       )}
     </div>
