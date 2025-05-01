@@ -1,30 +1,19 @@
-import Joi from "joi"
-import { v4 as uuid } from "uuid"
+export const patchPictureArrayUsesAllNewPictures = (
+	pictures: number[],
+	numNewPictures: number = 0,
+) => {
+	const newPicturesUsedVector = new Array(numNewPictures).fill(false)
 
-import env from "@/env"
-import { FileInfo } from "."
+	for (const index of pictures) {
+		if (index >= 0) continue // refers to an existing picture
 
-export const mimeTypeToExtension = {
-	'image/jpeg': 'jpg',
-	'image/png': 'png',
-	'image/gif': 'gif',
-	'image/webp': 'webp',
-} as Record<string, string>
-
-export const isSupportedMimeType = (mimeType: string) =>
-	!!mimeTypeToExtension[mimeType]
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const joiValidateFileInfo = (value: any, helpers: Joi.CustomHelpers) => {
-	if (typeof value !== 'object' || !isSupportedMimeType(value.mimetype)) {
-		return helpers.error('any.invalid')
-	}
-	if (value.size > env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT) {
-		const limitInKib = env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT / 1024
-		throw new Error(`File size exceeds ${limitInKib} KiB`)
+		const newIndex = -index - 1
+		if (newIndex < numNewPictures) {
+			newPicturesUsedVector[newIndex] = true
+		}
 	}
 
-	return value
+	return newPicturesUsedVector.every((used) => used)
 }
 
 export const patchPictureArrayWithinBounds = (
@@ -65,10 +54,4 @@ export const patchPictureArrayUnusedPictures = (
 	return usedVector.map((used, index) => [used, index])
 		.filter(([used]) => !used)
 		.map(([, index]) => index - numNewPictures)
-}
-
-export const generatePictureObjectName = (info: FileInfo) => {
-	const extension = mimeTypeToExtension[info.mimetype]
-	const objectName = `${uuid()}.${extension}`
-	return objectName
 }

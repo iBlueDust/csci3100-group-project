@@ -10,11 +10,15 @@ import { makeMarketListingClientFriendly, type MarketListingSearchResult } from 
 import { getMarketListingById } from '@/data/db/mongo/queries/market/getMarketListingById'
 import type { Error as ApiError } from '@/data/types/common'
 import { sessionStore } from '@/data/session'
-import { assertIsObjectId, parseFormDataBody, File } from '@/utils/api'
+import { isSupportedImageMimeType } from '@/utils'
+import {
+	assertIsObjectId,
+	parseFormDataBody,
+	File,
+	generateMinioObjectName,
+} from '@/utils/api'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import {
-	generatePictureObjectName,
-	isSupportedMimeType,
 	patchPictureArrayAllUnique,
 	patchPictureArrayUnusedPictures,
 	patchPictureArrayWithinBounds
@@ -79,7 +83,7 @@ async function PATCH(
 
 	const { fields, error: parseError } = await parseFormDataBody(req, {
 		maxFileSize: env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT,
-		filter: (part) => !!part.mimetype && isSupportedMimeType(part.mimetype),
+		filter: (part) => !!part.mimetype && isSupportedImageMimeType(part.mimetype),
 	})
 
 	if (parseError) {
@@ -182,7 +186,7 @@ async function PATCH(
 		const newPictures: File[] = body.pictures
 			.filter((picture) => typeof picture === 'object')
 		const newPictureObjectNames =
-			newPictures?.map(generatePictureObjectName) ?? []
+			newPictures?.map(generateMinioObjectName) ?? []
 
 		const uploadedAt = new Date().toISOString()
 		const uploadResults = await putManyObjects(
