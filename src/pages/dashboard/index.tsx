@@ -229,7 +229,7 @@ const Home: PageWithLayout<HomeProps> = ({
             </div>
           </div>
           <Link
-            className='block mt-4 button-primary w-full flex items-center justify-center gap-2'
+            className='mt-4 button-primary w-full flex items-center justify-center gap-2'
             href='/dashboard/marketplace/create'
           >
             <FiPlus /> Create New Listing
@@ -295,14 +295,10 @@ const Home: PageWithLayout<HomeProps> = ({
   )
 }
 
-Home.PageLayout = function HomeLayout({ children }) {
-  const GrandfatherLayout =
-    DashboardLayout.PageLayout ?? (({ children }) => children)
-  return (
-    <GrandfatherLayout>
-      <DashboardLayout>{children}</DashboardLayout>
-    </GrandfatherLayout>
-  )
+Home.getLayout = (page) => {
+  const GrandfatherLayout = DashboardLayout.getLayout ?? ((page) => page)
+  return GrandfatherLayout(<DashboardLayout>{page}</DashboardLayout>)
+}
 }
 
 export default Home

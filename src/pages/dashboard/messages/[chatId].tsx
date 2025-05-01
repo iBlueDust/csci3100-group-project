@@ -91,14 +91,9 @@ const MessagesHome: PageWithLayout = () => {
   )
 }
 
-MessagesHome.PageLayout = function MessagesHomeLayout({ children }) {
-  const GrandfatherLayout =
-    MessagesLayout.PageLayout ?? (({ children }) => children)
-  return (
-    <GrandfatherLayout>
-      <MessagesLayout>{children}</MessagesLayout>
-    </GrandfatherLayout>
-  )
+MessagesHome.getLayout = (page) => {
+  const GrandfatherLayout = MessagesLayout.getLayout ?? ((page) => page)
+  return GrandfatherLayout(<MessagesLayout>{page}</MessagesLayout>)
 }
 
 export default MessagesHome

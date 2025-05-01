@@ -166,8 +166,8 @@ const Login: PageWithLayout = () => {
   )
 }
 
-Login.PageLayout = function LoginLayout({ children }) {
-  return <ApiProvider>{children}</ApiProvider>
+Login.getLayout = (page) => {
+  return <ApiProvider>{page}</ApiProvider>
 }
 
 export default Login

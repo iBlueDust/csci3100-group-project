@@ -225,14 +225,9 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
   )
 }
 
-MessagesLayout.PageLayout = function MessagesLayout({ children }) {
-  const GrandfatherLayout =
-    DashboardLayout.PageLayout ?? (({ children }) => children)
-  return (
-    <GrandfatherLayout>
-      <DashboardLayout>{children}</DashboardLayout>
-    </GrandfatherLayout>
-  )
+MessagesLayout.getLayout = (page) => {
+  const GrandfatherLayout = DashboardLayout.getLayout ?? ((page) => page)
+  return GrandfatherLayout(<DashboardLayout>{page}</DashboardLayout>)
 }
 
 export default MessagesLayout

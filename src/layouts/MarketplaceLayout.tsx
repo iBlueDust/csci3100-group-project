@@ -467,40 +467,38 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
       {viewMode === 'grid' ? (
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
           {listings?.data.map((item) => (
-            <Link
+            /* Cannot use Link because buttons are nested inside */
+            <MarketListingGridItem
               key={item.id.toString()}
-              href={`/dashboard/marketplace/${item.id}`}
-            >
-              <MarketListingGridItem
-                listing={item}
-                isFavorite={favorites.some(
-                  (fav) => fav.id.toString() === item.id.toString(),
-                )}
-                isMine={item.author.id.toString() === api.user?.id}
-                onFavorite={() => {
-                  setFavorites((favorites) => [...favorites, item])
-                }}
-                onUnfavorite={() => {
-                  setFavorites(
-                    favorites.filter(
-                      (fav) => fav.id.toString() !== item.id.toString(),
-                    ),
-                  )
-                }}
-                onChat={() => openChat(item)}
-                onEdit={() =>
-                  router.push(`/dashboard/marketplace/${item.id}/edit`)
+              listing={item}
+              isFavorite={favorites.some(
+                (fav) => fav.id.toString() === item.id.toString(),
+              )}
+              isMine={item.author.id.toString() === api.user?.id}
+              onClick={() => router.push(`/dashboard/marketplace/${item.id}`)}
+              onFavorite={() => {
+                setFavorites((favorites) => [...favorites, item])
+              }}
+              onUnfavorite={() => {
+                setFavorites(
+                  favorites.filter(
+                    (fav) => fav.id.toString() !== item.id.toString(),
+                  ),
+                )
+              }}
+              onChat={() => openChat(item)}
+              onEdit={() =>
+                router.push(`/dashboard/marketplace/${item.id}/edit`)
+              }
+              onDelete={() => {
+                if (
+                  !confirm(`Are you sure you want to delete "${item.title}"?`)
+                ) {
+                  return
                 }
-                onDelete={() => {
-                  if (
-                    !confirm(`Are you sure you want to delete "${item.title}"?`)
-                  ) {
-                    return
-                  }
-                  // TODO: Delete listing API call
-                }}
-              />
-            </Link>
+                // TODO: Delete listing API call
+              }}
+            />
           ))}
         </div>
       ) : (
@@ -513,6 +511,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                 (fav) => fav.id.toString() === item.id.toString(),
               )}
               isMine={item.author.id.toString() === api.user?.id}
+              onClick={() => router.push(`/dashboard/marketplace/${item.id}`)}
               onFavorite={() => {
                 setFavorites((favorites) => [...favorites, item])
               }}
@@ -681,14 +680,9 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   )
 }
 
-MarketplaceLayout.PageLayout = function MarketplaceMetaLayout({ children }) {
-  const GrandfatherLayout =
-    DashboardLayout.PageLayout ?? (({ children }) => children)
-  return (
-    <GrandfatherLayout>
-      <DashboardLayout>{children}</DashboardLayout>
-    </GrandfatherLayout>
-  )
+MarketplaceLayout.getLayout = (page) => {
+  const GrandfatherLayout = DashboardLayout.getLayout ?? ((page) => page)
+  return GrandfatherLayout(<DashboardLayout>{page}</DashboardLayout>)
 }
 
 export default MarketplaceLayout

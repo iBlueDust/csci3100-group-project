@@ -262,8 +262,8 @@ const SignUp: PageWithLayout = () => {
   )
 }
 
-SignUp.PageLayout = function SignUpLayout({ children }) {
-  return <ApiProvider>{children}</ApiProvider>
+SignUp.getLayout = (page) => {
+  return <ApiProvider>{page}</ApiProvider>
 }
 
 export default SignUp

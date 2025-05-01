@@ -48,16 +48,9 @@ const MarketplaceEditListingPage: PageWithLayout = () => {
   ) : null
 }
 
-MarketplaceEditListingPage.PageLayout = function MarketplaceEditListingLayout({
-  children,
-}) {
-  const GrandfatherLayout =
-    MarketplaceLayout.PageLayout ?? (({ children }) => children)
-  return (
-    <GrandfatherLayout>
-      <MarketplaceLayout>{children}</MarketplaceLayout>
-    </GrandfatherLayout>
-  )
+MarketplaceEditListingPage.getLayout = (page) => {
+  const GrandfatherLayout = MarketplaceLayout.getLayout ?? ((page) => page)
+  return GrandfatherLayout(<MarketplaceLayout>{page}</MarketplaceLayout>)
 }
 
 export default MarketplaceEditListingPage

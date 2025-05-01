@@ -9,14 +9,9 @@ const MarketplaceHome: PageWithLayout = () => {
   return ''
 }
 
-MarketplaceHome.PageLayout = function MarketplaceHomeLayout({ children }) {
-  const GrandfatherLayout =
-    MarketplaceLayout.PageLayout ?? (({ children }) => children)
-  return (
-    <GrandfatherLayout>
-      <MarketplaceLayout>{children}</MarketplaceLayout>
-    </GrandfatherLayout>
-  )
+MarketplaceHome.getLayout = (page) => {
+  const GrandfatherLayout = MarketplaceLayout.getLayout ?? ((page) => page)
+  return GrandfatherLayout(<MarketplaceLayout>{page}</MarketplaceLayout>)
 }
 
 export default MarketplaceHome
