@@ -40,6 +40,10 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     scrollHelperRef.current?.scrollIntoView({ behavior: 'instant' })
   }, [messages, scrollHelperRef])
 
+  useLayoutEffect(() => {
+    scrollHelperRef.current?.scrollIntoView({ behavior: 'instant' })
+  }, [])
+
   /* Container for mobile that includes both the banner and messages with a single scroll */
   return (
     <div className='relative overflow-y-auto h-full scroll-thin'>
