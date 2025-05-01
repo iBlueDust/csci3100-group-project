@@ -1,0 +1,1 @@
+export { deleteChat } from "@/data/frontend/fetches/deleteChat"

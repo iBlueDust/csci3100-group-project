@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
+import Link from 'next/link'
 import classNames from 'classnames'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FiFile, FiPlus, FiSearch } from 'react-icons/fi'
@@ -185,11 +186,12 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
           {/* Conversation items list - Make sure this is scrollable in all views */}
           <div className='flex-1 overflow-y-auto pointer-events-auto'>
             {chats?.data.map((chat) => (
-              <div
+              <Link
                 key={chat.id}
-                onClick={() => router.replace(`/dashboard/messages/${chat.id}`)}
+                href={`/dashboard/messages/${chat.id}`}
+                replace
                 className={classNames(
-                  'md:p-4 p-2 border-b-2 border-foreground/5 hover:bg-background-dark/10 cursor-pointer',
+                  'md:p-4 p-2 block border-b-2 border-foreground/5 hover:bg-background-dark/10 cursor-pointer',
                   activeChatId === chat.id && 'bg-background-dark/20',
                 )}
               >
@@ -224,7 +226,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
                     )}
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 

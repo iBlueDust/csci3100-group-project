@@ -1,11 +1,16 @@
 import React from 'react'
 import { FiAlertTriangle } from 'react-icons/fi'
+import classNames from 'classnames'
+
+import BasicSpinner from '@/components/BasicSpinner'
 
 export interface ChatRecipientLeftBannerProps {
+  isDeleting?: boolean
   onDelete?: () => void
 }
 
 const ChatRecipientLeftBanner: React.FC<ChatRecipientLeftBannerProps> = ({
+  isDeleting = false,
   onDelete,
 }) => {
   return (
@@ -21,10 +26,23 @@ const ChatRecipientLeftBanner: React.FC<ChatRecipientLeftBannerProps> = ({
       </div>
 
       <button
-        className='ml-auto text-xs text-amber-800 underline'
+        className={classNames(
+          'ml-auto align-middle text-xs',
+          isDeleting
+            ? 'text-amber-800/50 flex flex-row flex-nowrap gap-1 items-center'
+            : 'text-amber-800 underline',
+        )}
+        disabled={isDeleting}
         onClick={onDelete}
       >
-        Delete Chat
+        {isDeleting ? (
+          <>
+            <BasicSpinner />
+            <span>Deleting...</span>
+          </>
+        ) : (
+          'Delete Chat'
+        )}
       </button>
     </div>
   )
