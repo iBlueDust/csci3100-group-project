@@ -1,6 +1,9 @@
 import mongoose from "mongoose"
 import type { NextApiRequest } from "next"
 import Busboy from "@fastify/busboy"
+import { v4 as uuid } from "uuid"
+
+import { getExtension } from ".."
 
 export async function parseJsonBody<T>(
 	req: NextApiRequest

@@ -204,7 +204,9 @@ async function POST(
 		const doc = new ChatMessage({
 			chatId,
 			sender: auth.data.userId,
-			content: body.content,
+			content: typeof body.content === 'string'
+				? body.content
+				: body.content.data,
 			type: body.type,
 		})
 		if (body.e2e) {
@@ -215,10 +217,10 @@ async function POST(
 		}
 
 		await doc.save()
-
 		return res.status(200).send({ id: doc.id })
+
 	} else if (body.type === ChatMessageType.Attachment) {
-		const objectName = uuid()
+		const objectName = generateMinioObjectName(body.content)
 		await minioClient.putObject(
 			env.MINIO_BUCKET_CHAT_ATTACHMENTS,
 			objectName,
