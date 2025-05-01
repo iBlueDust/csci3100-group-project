@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import classNames from 'classnames'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { FiFile, FiPlus, FiSearch } from 'react-icons/fi'
+import { FiFile, FiPlus } from 'react-icons/fi'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
