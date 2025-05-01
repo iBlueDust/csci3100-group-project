@@ -10,13 +10,10 @@ import {
   FiMessageCircle,
   FiX,
   FiPaperclip,
-  FiCreditCard,
-  FiCheckCircle,
   FiMapPin,
   FiPlus,
 } from 'react-icons/fi'
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
 import classNames from 'classnames'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -27,19 +24,19 @@ import { QueryKeys } from '@/data/types/queries'
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { countries } from '@/utils/countries'
 import { useApi } from '@/utils/frontend/api'
-import { formatCurrency } from '@/utils/format'
-import PaginationControls from '../../../components/PaginationControls'
-import MarketListingGridItem from '../../../components/marketplace/MarketListingGridItem'
+import PaginationControls from '@/components/PaginationControls'
+import MarketListingGridItem from '@/components/marketplace/MarketListingGridItem'
 import { PageWithLayout } from '@/data/types/layout'
 import DashboardLayout from '@/layouts/DashboardLayout'
+import ChatMarketListingMessage from '@/components/chat/ChatMarketListingMessage'
 const MarketListingListItem = dynamic(
-  () => import('../../../components/marketplace/MarketListingListItem'),
+  () => import('@/components/marketplace/MarketListingListItem'),
 )
 const CreateListingForm = dynamic(
-  () => import('../../../components/marketplace/CreateListingForm'),
+  () => import('@/components/marketplace/CreateListingForm'),
 )
 const MarketListingModal = dynamic(
-  () => import('../../../components/marketplace/MarketListingModal'),
+  () => import('@/components/marketplace/MarketListingModal'),
 )
 
 // Mock categories
@@ -206,39 +203,6 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false)
   const [editingListing, setEditingListing] =
     useState<MarketListingSearchResult | null>(null)
-
-  // Buy modal state
-  const [isBuyModalOpen, setIsBuyModalOpen] = useState(false)
-  const [buyingListing, setBuyingListing] =
-    useState<MarketListingSearchResult | null>(null)
-  const [purchaseStep, setPurchaseStep] = useState<
-    'confirm' | 'payment' | 'complete'
-  >('confirm')
-
-  // Open buy modal with a specific listing
-  const openBuyModal = (item: MarketListingSearchResult) => {
-    setBuyingListing(item)
-    setIsBuyModalOpen(true)
-    setPurchaseStep('confirm')
-  }
-
-  // Handle the purchase flow
-  const handlePurchase = () => {
-    if (purchaseStep === 'confirm') {
-      setPurchaseStep('payment')
-    } else if (purchaseStep === 'payment') {
-      // In a real app, you would process the payment here
-      setPurchaseStep('complete')
-      // Simulate completion after 2 seconds
-      setTimeout(() => {
-        setIsBuyModalOpen(false)
-        setBuyingListing(null)
-        setPurchaseStep('confirm')
-        // Show success message or notification
-        alert('Purchase completed successfully!')
-      }, 2000)
-    }
-  }
 
   const clearFilters = useCallback(() => {
     setSearchQuery('')
@@ -543,7 +507,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
                 )
               }}
               onChat={() => openChat(item)}
-              onBuy={() => openBuyModal(item)}
+              // onBuy={() => openBuyModal(item)}
               onEdit={() => setEditingListing(item)}
               onDelete={() => {
                 if (
@@ -579,7 +543,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
                 )
               }}
               onChat={() => openChat(item)}
-              onBuy={() => openBuyModal(item)}
+              // onBuy={() => openBuyModal(item)}
               onEdit={() => setEditingListing(item)}
               onDelete={() => {
                 if (
@@ -623,213 +587,6 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
         />
       </div>
 
-      {/* Buy Modal */}
-      {isBuyModalOpen && buyingListing && (
-        <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
-          <div className='bg-background rounded-lg w-full max-w-screen-sm md:max-w-2xl mx-4 md:mx-auto shadow-xl overflow-hidden'>
-            <div className='flex justify-between items-center mb-4'>
-              <h2 className='text-2xl font-bold'>
-                {purchaseStep === 'confirm'
-                  ? 'Purchase Item'
-                  : purchaseStep === 'payment'
-                  ? 'Payment Details'
-                  : 'Order Complete'}
-              </h2>
-
-              {purchaseStep !== 'complete' && (
-                <button
-                  onClick={() => setIsBuyModalOpen(false)}
-                  className='p-1 hover:bg-background-dark rounded-full'
-                >
-                  <FiX size={24} />
-                </button>
-              )}
-            </div>
-
-            {purchaseStep === 'confirm' && (
-              <div className='space-y-4'>
-                <div className='flex gap-4 items-start'>
-                  {/* Image placeholder */}{' '}
-                  <div className='h-24 w-24 bg-foreground/5 shrink-0 overflow-hidden'>
-                    {buyingListing.pictures.length > 0 ? (
-                      <Image
-                        width={96}
-                        height={96}
-                        src={buyingListing.pictures[0]}
-                        alt='Market listing picture'
-                        className='w-full h-full object-cover'
-                      />
-                    ) : (
-                      <div className='h-full w-full flex items-center justify-center'>
-                        <span className='text-foreground/30'>Image</span>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className='font-medium text-lg'>
-                      {buyingListing.title}
-                    </h3>
-                    <p className='text-foreground/70 text-sm mb-1'>
-                      {buyingListing.description}
-                    </p>
-                    <div className='flex items-center text-sm'>
-                      <span>
-                        Seller:{' '}
-                        {buyingListing.author.username ??
-                          buyingListing.author.id.toString()}
-                      </span>
-                      <span className='mx-2'>•</span>
-                      <span className='flex items-center'>★ {0}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className='border-t-2 border-b-2 border-foreground/10 py-4 my-4'>
-                  <div className='flex justify-between mb-2'>
-                    <span>Item price</span>
-                    <span className='font-mono font-bold'>
-                      {formatCurrency(buyingListing.priceInCents)}
-                    </span>
-                  </div>
-                  <div className='flex justify-between mb-2'>
-                    <span>Platform fee</span>
-                    <span className='font-mono'>$10.00</span>
-                  </div>
-                  <div className='flex justify-between mb-2'>
-                    <span>Shipping</span>
-                    <span className='font-mono'>$8.50</span>
-                  </div>
-                  <div className='flex justify-between font-bold mt-4 pt-2 border-t border-foreground/10'>
-                    <span>Total</span>
-                    <span className='font-mono'>
-                      {formatCurrency(buyingListing.priceInCents + 1000 + 850)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className='flex justify-end gap-3'>
-                  <button
-                    onClick={() => setIsBuyModalOpen(false)}
-                    className='button px-5'
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handlePurchase}
-                    className='button-primary px-5'
-                  >
-                    Proceed to Payment
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {purchaseStep === 'payment' && (
-              <div className='space-y-4'>
-                <p className='text-foreground/70 mb-4'>
-                  Please enter your payment details to complete the purchase.
-                </p>
-
-                <div className='space-y-3'>
-                  <div>
-                    <label className='block text-sm font-medium mb-1'>
-                      Card Number
-                    </label>
-                    <div className='relative'>
-                      <input
-                        type='text'
-                        className='w-full p-2 border-2 border-foreground/10 rounded-md pl-10'
-                        placeholder='1234 5678 9012 3456'
-                      />
-                      <FiCreditCard className='absolute left-3 top-2.5 text-foreground/50' />
-                    </div>
-                  </div>
-
-                  <div className='grid grid-cols-2 gap-3'>
-                    <div>
-                      <label className='block text-sm font-medium mb-1'>
-                        Expiry Date
-                      </label>
-                      <input
-                        type='text'
-                        className='w-full p-2 border-2 border-foreground/10 rounded-md'
-                        placeholder='MM/YY'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium mb-1'>
-                        CVC
-                      </label>
-                      <input
-                        type='text'
-                        className='w-full p-2 border-2 border-foreground/10 rounded-md'
-                        placeholder='123'
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className='block text-sm font-medium mb-1'>
-                      Name on Card
-                    </label>
-                    <input
-                      type='text'
-                      className='w-full p-2 border-2 border-foreground/10 rounded-md'
-                      placeholder='John Doe'
-                    />
-                  </div>
-                </div>
-
-                <div className='flex justify-between items-center py-4 mt-2 border-t-2 border-foreground/10'>
-                  <div>
-                    <p className='font-bold'>Total to pay:</p>
-                    <p className='font-mono font-bold text-lg'>
-                      {formatCurrency(buyingListing.priceInCents + 1000 + 850)}
-                    </p>
-                  </div>
-                  <button
-                    onClick={handlePurchase}
-                    className='button-primary px-5'
-                  >
-                    Complete Purchase
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {purchaseStep === 'complete' && (
-              <div className='text-center py-6'>
-                <div className='flex justify-center mb-4'>
-                  <FiCheckCircle size={64} className='text-green-500' />
-                </div>
-                <h3 className='text-xl font-bold mb-2'>Purchase Successful!</h3>
-                <p className='text-foreground/70 mb-6'>
-                  Thank you for your purchase. The seller has been notified.
-                </p>
-                <div className='bg-background-light p-4 rounded-lg border-2 border-foreground/10 mb-6'>
-                  <p className='font-medium'>{buyingListing.title}</p>
-                  <p className='font-mono font-bold'>
-                    {formatCurrency(buyingListing.priceInCents)}
-                  </p>
-                  <p className='text-sm text-foreground/70'>
-                    Order #:{' '}
-                    {Math.floor(Math.random() * 1000000)
-                      .toString()
-                      .padStart(6, '0')}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsBuyModalOpen(false)}
-                  className='button-primary px-5'
-                >
-                  Done
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Floating Chat Bubble */}
       {isChatOpen && selectedListing && (
         // <HoveringChatBox key={selectedListing.id} onClose={() => setIsChatOpen(false)} />
@@ -868,50 +625,46 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
 
           {/* Chat Messages */}
           <div className='flex-1 overflow-y-auto p-3 space-y-3'>
-            {chatMessages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${
-                  msg.sender === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-              >
+            {chatMessages.map((msg, i) =>
+              msg.type === 'listing' && msg.listing ? (
+                <ChatMarketListingMessage
+                  key={i}
+                  message={{
+                    type: 'market-listing',
+                    content: msg.listing,
+                    sentAt: new Date().toISOString(),
+                    sender: '00000000',
+                    id: '00000001',
+                  }}
+                />
+              ) : (
                 <div
-                  className={`max-w-[80%] rounded-xl px-3 py-2 ${
-                    msg.sender === 'user'
-                      ? 'bg-black text-white border-2 border-foreground/20'
-                      : 'bg-white text-black border-2 border-foreground/20'
+                  key={i}
+                  className={`flex ${
+                    msg.sender === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  {msg.type === 'text' && (
-                    <p className='text-sm'>{msg.content}</p>
-                  )}
+                  <div
+                    className={`max-w-[80%] rounded-xl px-3 py-2 ${
+                      msg.sender === 'user'
+                        ? 'bg-black text-white border-2 border-foreground/20'
+                        : 'bg-white text-black border-2 border-foreground/20'
+                    }`}
+                  >
+                    {msg.type === 'text' && (
+                      <p className='text-sm'>{msg.content}</p>
+                    )}
 
-                  {msg.type === 'attachment' && (
-                    <div className='flex items-center gap-2 bg-background-light rounded p-2'>
-                      <FiPaperclip size={14} />
-                      <span className='text-sm'>{msg.content}</span>
-                    </div>
-                  )}
-
-                  {msg.type === 'listing' && msg.listing && (
-                    <div className='bg-background-light rounded p-2 space-y-1'>
-                      <div className='flex justify-between'>
-                        <p className='text-sm font-medium text-foreground'>
-                          {msg.listing.title}
-                        </p>
-                        <p className='text-sm font-mono font-bold text-foreground'>
-                          {formatCurrency(msg.listing.priceInCents)}
-                        </p>
+                    {msg.type === 'attachment' && (
+                      <div className='flex items-center gap-2 bg-background-light rounded p-2'>
+                        <FiPaperclip size={14} />
+                        <span className='text-sm'>{msg.content}</span>
                       </div>
-                      <div className='h-16 bg-foreground/5 flex items-center justify-center text-xs text-foreground/30'>
-                        Item Image
-                      </div>
-                      <p className='text-xs text-foreground'>{msg.content}</p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
 
           {/* Chat Input */}
@@ -948,7 +701,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
           onClose={closeDetailModal}
           onBuy={() => {
             closeDetailModal()
-            openBuyModal(detailedListing)
+            // openBuyModal(detailedListing)
           }}
           onChat={() => {
             closeDetailModal()
