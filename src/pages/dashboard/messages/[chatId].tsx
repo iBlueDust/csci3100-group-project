@@ -12,7 +12,6 @@ import { queryChatById } from '@/data/frontend/queries/queryChatById'
 import type { PageWithLayout } from '@/data/types/layout'
 import { PaginatedResult } from '@/data/types/common'
 import { ClientChat } from '@/data/types/chats'
-import { useDeviceInfo } from '@/hooks/useDeviceInfo'
 import { useApi } from '@/utils/frontend/api'
 import { deleteChat } from '@/data/frontend/mutations/deleteChat'
 
@@ -20,7 +19,6 @@ const MessagesHome: PageWithLayout = () => {
   const api = useApi()
   const router = useRouter()
   const chatId = router.query.chatId as string
-  const { isMobile } = useDeviceInfo()
 
   const queryClient = useQueryClient()
   const { data: chat, isLoading } = useQuery({
