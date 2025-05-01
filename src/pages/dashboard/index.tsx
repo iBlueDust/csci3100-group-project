@@ -299,6 +299,5 @@ Home.getLayout = (page) => {
   const GrandfatherLayout = DashboardLayout.getLayout ?? ((page) => page)
   return GrandfatherLayout(<DashboardLayout>{page}</DashboardLayout>)
 }
-}
 
 export default Home
