@@ -9,8 +9,9 @@ import { searchMarketListings } from '@/data/db/mongo/queries/market/searchMarke
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { sessionStore } from '@/data/session'
 import minioClient, { putManyObjects } from '@/data/db/minio'
-import { parseFormDataBody } from '@/utils/api'
-import { joiFileSchema, generatePictureObjectName, isSupportedMimeType } from '@/utils/api/market'
+import { isSupportedImageMimeType } from '@/utils'
+import { parseFormDataBody, File } from '@/utils/api'
+import { generatePictureObjectName } from '@/utils/api/market'
 import env from '@/env'
 
 type GetData = PaginatedResult<MarketListingSearchResult>
@@ -68,11 +69,11 @@ async function POST(
 	res: NextApiResponse<PostData | ApiError>,
 	auth: AuthData,
 ) {
-	const { fields, files, error } = await parseFormDataBody(
+	const { fields, error } = await parseFormDataBody(
 		req,
 		{
 			maxFileSize: env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT,
-			filter: part => !!part.mimetype && isSupportedMimeType(part.mimetype),
+			filter: part => !!part.mimetype && isSupportedImageMimeType(part.mimetype),
 		},
 	)
 
@@ -87,7 +88,7 @@ async function POST(
 	const unvalidatedBody = {
 		title: fields?.title?.[0],
 		description: fields?.description?.[0],
-		pictures: files?.pictures,
+		pictures: fields?.pictures,
 		priceInCents: tryParseInt(fields?.priceInCents?.[0]),
 		countries: fields?.countries,
 	}
@@ -110,11 +111,25 @@ async function POST(
 			)
 			.required(),
 		pictures: Joi.array()
-			.items(joiFileSchema)
+			.items(
+				Joi.object({
+					data: Joi.binary()
+						.max(env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT)
+						.required(),
+					size: Joi.number()
+						.max(env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT)
+						.required(),
+					filename: Joi.string().required(),
+					mimetype: Joi.string(),
+					encoding: Joi.string(),
+				})
+			)
 			.max(env.MARKET_LISTING_ATTACHMENT_LIMIT)
 			.default([]),
 		priceInCents: Joi.number().min(0).integer().required(),
-		countries: Joi.array().items(Joi.string().pattern(/^[a-zA-Z]{2}$/)).default([]),
+		countries: Joi.array()
+			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/))
+			.default([]),
 	})
 
 	const { value: body, error: validationError } = schema.validate(unvalidatedBody)
@@ -125,25 +140,24 @@ async function POST(
 		return
 	}
 
-	const filesToUpload =
-		(body.pictures as NonNullable<typeof files>[string]).map((picture) => ({
-			...picture,
-			name: generatePictureObjectName(picture),
-		}))
+	const filesToUpload = (body.pictures as File[]).map((picture) => ({
+		...picture,
+		name: generatePictureObjectName(picture),
+	}))
 	const uploadedAt = new Date().toISOString()
 	const uploadResults = await putManyObjects(
 		minioClient,
 		env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS,
-		filesToUpload.map(({ name, data, info }) => {
-			console.log(`POST /market/listings | Uploading picture: info=${info.toJSON()}, target=${name}`)
+		filesToUpload.map(({ name, data, filename, size, encoding, mimetype }) => {
+			console.log(`POST /market/listings | Uploading picture: fieldname=${name} filename=${filename} size=${size} encoding=${encoding} mimetype=${mimetype}`)
 
 			return {
 				name,
 				data,
 				maxSize: env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT,
 				metadata: {
-					originalFilename: info.originalFilename,
-					mimetype: info.mimetype,
+					originalFilename: filename,
+					mimetype,
 					uploadedAt,
 					uploadedBy: auth.data.userId,
 				}

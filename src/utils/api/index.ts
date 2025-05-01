@@ -1,7 +1,9 @@
-import formidable from "formidable"
 import mongoose from "mongoose"
 import type { NextApiRequest } from "next"
-import { Writable } from "stream"
+import Busboy from "@fastify/busboy"
+import { v4 as uuid } from "uuid"
+
+import { getExtension } from ".."
 
 export async function parseJsonBody<T>(
 	req: NextApiRequest
@@ -19,8 +21,14 @@ export async function parseJsonBody<T>(
 	}
 }
 
-export interface File {
-	info: formidable.File
+export interface FileInfo {
+	filename: string
+	encoding: string
+	mimetype: string
+}
+
+export interface File extends FileInfo {
+	size: number
 	data: Buffer
 }
 
@@ -28,70 +36,79 @@ export async function parseFormDataBody(
 	req: NextApiRequest,
 	options: {
 		maxFileSize?: number,
-		filter?: (part: formidable.Part) => boolean,
+		filter?: (info: FileInfo) => boolean,
 	},
 ): Promise<
 	{
-		fields: formidable.Fields,
-		files: Record<string, File[]>,
+		fields: Record<string, (string | File)[]>,
 		error?: never,
 	}
-	| { error: unknown, fields?: never, files?: never }
+	| { error: unknown, fields?: never }
 > {
+	return new Promise((resolve) => {
+		const busboy = new Busboy({
+			headers: {
+				...req.headers,
+				'content-type': req.headers['content-type'] ?? '',
+			},
+		})
 
-	const fileContents = new Map<string, Buffer[]>()
+		const fields: Record<string, (string | File)[]> = {}
 
-	const formidableOptions: formidable.Options = {
-		maxFileSize: options.maxFileSize,
-		keepExtensions: true,
-		fileWriteStreamHandler: (file) => {
-			if (!file) return new Writable()
+		busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+			const info: FileInfo = { filename, encoding, mimetype }
+			const buffers: Buffer[] = []
+			let size = 0
 
-			const filename = file.toJSON().originalFilename!
-
-			if (!fileContents.has(filename)) {
-				fileContents.set(filename, [])
+			if (options.filter && !options.filter(info)) {
+				file.destroy()
+				resolve({ error: new Error('File did not pass filter') })
+				return
 			}
-			const buffers = fileContents.get(filename)!
 
-			const stream = new Writable({
-				write(chunk: Buffer, _, callback) {
-					buffers.push(chunk)
-					callback()
+			if (!fields[fieldname]) {
+				fields[fieldname] = []
+			}
+			fields[fieldname].push(info as File)
+
+			file.on('data', (data: Buffer) => {
+				size += data.length
+
+				if (options.maxFileSize && size > options.maxFileSize) {
+					file.destroy()
+					resolve({ error: new Error('File size exceeds limit') })
+					return
 				}
+
+				buffers.push(data)
 			})
 
-			return stream
-		}
-	}
-	if (options.filter) {
-		formidableOptions.filter = options.filter
-	}
+			file.on('end', () => {
+				if (options.maxFileSize && size > options.maxFileSize) {
+					resolve({ error: new Error('File size exceeds limit') })
+					return
+				}
 
-	const form = formidable(formidableOptions)
+				(info as File).data = Buffer.concat(buffers);
+				(info as File).size = size
+			})
+		})
 
-	let fields: formidable.Fields
-	let files: formidable.Files
-	try {
-		[fields, files] = await form.parse(req)
-	} catch (error) {
-		return { error }
-	}
+		busboy.on('field', (fieldname, value) => {
+			if (!fields[fieldname]) {
+				fields[fieldname] = []
+			}
+			fields[fieldname].push(value)
+		})
 
-	return {
-		fields,
-		files: Object.fromEntries(
-			Object.entries(files).map(([field, files]) => [
-				field,
-				files?.map(file => ({
-					info: file,
-					data: Buffer.concat(
-						fileContents.get(file.toJSON().originalFilename!) ?? []
-					)
-				})) ?? []
-			] as const)
-		)
-	}
+		busboy.on('finish', () => {
+			resolve({ fields })
+		})
+
+		busboy.on('error', error => resolve({ error }))
+
+		req.pipe(busboy)
+	})
 }
 
 export function assertIsObjectId(
@@ -113,4 +130,14 @@ export function toObjectId(
 	} catch (error) {
 		return [null, error] as const
 	}
+}
+
+export const generateMinioObjectName = (info: FileInfo) => {
+	const extension = getExtension(info.filename)
+	console.log({ info, extension })
+	if (!extension) {
+		return uuid()
+	}
+
+	return `${uuid()}.${extension}`
 }

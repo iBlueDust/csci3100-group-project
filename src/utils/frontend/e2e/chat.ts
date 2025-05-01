@@ -1,11 +1,20 @@
-import { ChatMessageType, ClientChat, ClientChatMessage } from "@/data/types/chats"
+import {
+	ChatMessageType,
+	ClientChat,
+	ClientChatMessage,
+	EncryptedClientChat,
+	EncryptedClientChatMessage,
+} from "@/data/types/chats"
+import {
+	EncryptedPostChatMessagePayload,
+	PostChatMessagePayload,
+} from "@/data/frontend/fetches/postChatMessage"
 import { str2ab } from "@/utils"
-import { PostChatMessagePayload } from "@/data/frontend/fetches/postChatMessage"
 import { decryptMessage, deriveKey, encryptMessage, importKey } from "."
 
 
 export async function decryptChat(
-	chat: ClientChat,
+	chat: EncryptedClientChat,
 	myUserId: string,
 	myPrivateKey: CryptoKey
 ): Promise<ClientChat & { sharedKey: CryptoKey }> {
@@ -33,7 +42,7 @@ export async function decryptChat(
 }
 
 export async function decryptChats(
-	chats: ClientChat[],
+	chats: EncryptedClientChat[],
 	myUserId: string,
 	myPrivateKey: CryptoKey,
 ): Promise<(ClientChat & { sharedKey: CryptoKey })[]> {
@@ -49,30 +58,40 @@ export async function decryptChats(
 }
 
 export async function decryptChatMessage(
-	message: ClientChatMessage,
+	message: EncryptedClientChatMessage,
 	sharedKey: CryptoKey,
 ): Promise<ClientChatMessage> {
-	if (message.type === ChatMessageType.Attachment) {
-		throw new Error("Attachment messages are not supported yet")
-	}
-
 	if (!message.e2e) {
-		return message
+		throw new Error("No decryption data to decrypt message")
 	}
 
-	const cipher = str2ab(atob(message.content as string))
+	const iv = new Uint8Array(str2ab(atob(message.e2e.iv)))
 
-	const iv = str2ab(atob(message.e2e.iv))
-	const content = await decryptMessage(cipher, new Uint8Array(iv), sharedKey)
-	const newMessage: ClientChatMessage = {
-		...message,
-		content: new TextDecoder().decode(content),
+	if (message.type === ChatMessageType.Text) {
+		const cipher = str2ab(atob(message.content as string))
+		const content = await decryptMessage(cipher, iv, sharedKey)
+		const newMessage: ClientChatMessage = {
+			...message,
+			content: new TextDecoder().decode(content),
+		}
+		return newMessage
+	} else {
+		let decryptedFilename: string | undefined = undefined
+		if (message.contentFilename) {
+			const filenameCipher = str2ab(atob(message.contentFilename))
+			const filename = await decryptMessage(filenameCipher, iv, sharedKey)
+			decryptedFilename = new TextDecoder().decode(filename)
+		}
+
+		return {
+			...message,
+			contentFilename: decryptedFilename,
+		}
 	}
-	return newMessage
 }
 
 export async function decryptChatMessages(
-	messages: ClientChatMessage[],
+	messages: EncryptedClientChatMessage[],
 	sharedKey: CryptoKey,
 ): Promise<ClientChatMessage[]> {
 	const result = new Array(messages.length).fill(null)
@@ -87,24 +106,38 @@ export async function decryptChatMessages(
 }
 
 export async function encryptChatMessage(
-	message: PostChatMessagePayload<string | ArrayBuffer>,
+	message: PostChatMessagePayload,
 	sharedKey: CryptoKey,
-): Promise<PostChatMessagePayload> {
-	if (message.type !== ChatMessageType.Text) {
-		throw new Error("Only text messages are supported right now")
-	}
-
-	const messageBytes: Uint8Array<ArrayBufferLike> =
+): Promise<EncryptedPostChatMessagePayload> {
+	const contentBytes: Uint8Array<ArrayBufferLike> =
 		typeof message.content === "string"
 			? new TextEncoder().encode(message.content)
 			: new Uint8Array(message.content)
-	const encrypted = await encryptMessage(messageBytes, sharedKey)
+	const encryptedContent = await encryptMessage(contentBytes, sharedKey)
+	const iv = encryptedContent.iv
 
-	return {
-		...message,
-		content: encrypted.ciphertext,
-		e2e: {
-			iv: encrypted.iv.buffer,
-		},
+	if (message.type === ChatMessageType.Text) {
+		return {
+			...message,
+			content: encryptedContent.ciphertext,
+			e2e: { iv: iv.buffer },
+		}
+	} else {
+		let encryptedFilename: {
+			iv: Uint8Array<ArrayBufferLike>
+			ciphertext: ArrayBuffer
+		} | undefined = undefined
+
+		if (message.contentFilename) {
+			const filenameBytes = new TextEncoder().encode(message.contentFilename)
+			encryptedFilename = await encryptMessage(filenameBytes, sharedKey, iv)
+		}
+
+		return {
+			...message,
+			content: encryptedContent.ciphertext,
+			contentFilename: encryptedFilename?.ciphertext,
+			e2e: { iv: iv.buffer },
+		}
 	}
 }
