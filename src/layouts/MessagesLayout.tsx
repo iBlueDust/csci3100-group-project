@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import classNames from 'classnames'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FiFile, FiPlus, FiSearch } from 'react-icons/fi'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -41,6 +41,8 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
 
   // Create conversation modal state
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false)
+  const openNewChatModal = useCallback(() => setIsNewChatModalOpen(true), [])
+  const closeNewChatModal = useCallback(() => setIsNewChatModalOpen(false), [])
 
   // Pagination state for conversations
   const [currentPage, setCurrentPage] = useState(1)
@@ -116,16 +118,11 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
     console.log('Searching for:', searchQuery)
   }, [searchQuery])
 
-  // Handle creating a new conversation
-  const handleNewChat = useCallback((recipient: string) => {
-    setIsNewChatModalOpen(false)
-    if (!recipient.trim()) {
-      return
-    }
-
-    // In a real app, you would make an API call to create a new conversation with this user
-    console.log('Creating new conversation with:', recipient)
-  }, [])
+  const queryClient = useQueryClient()
+  const handleNewChatSuccess = useCallback(() => {
+    closeNewChatModal()
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.CHATS] })
+  }, [closeNewChatModal, queryClient])
 
   return (
     <div className='h-screen md:h-[calc(100vh-7rem)] flex flex-col overflow-hidden'>
@@ -145,7 +142,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
             <div className='h-12 md:h-16 flex items-center md:px-4 px-2 border-b border-foreground/25 justify-between'>
               <h3 className='text-lg font-bold'>Conversations</h3>
               <button
-                onClick={() => setIsNewChatModalOpen(true)}
+                onClick={openNewChatModal}
                 className='px-4 py-2 rounded-md bg-background border border-foreground-light/25 text-foreground items-center gap-2 text-sm font-medium hover:bg-background-dark transition-colors shadow-sm md:flex hidden'
               >
                 <FiPlus />
@@ -176,7 +173,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
               {/* Mobile New Chat button below search */}
               <div className='md:hidden mt-2'>
                 <button
-                  onClick={() => setIsNewChatModalOpen(true)}
+                  onClick={openNewChatModal}
                   className='w-full py-2 rounded-md bg-foreground text-background flex items-center justify-center gap-2 text-sm font-medium hover:bg-foreground/80 transition-colors shadow-sm'
                 >
                   <span>New Chat</span>
@@ -257,8 +254,8 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
       {/* Create Conversation Modal */}
       {isNewChatModalOpen && (
         <NewChatModal
-          onCancel={() => setIsNewChatModalOpen(false)}
-          onConfirm={handleNewChat}
+          onCancel={closeNewChatModal}
+          onConfirm={handleNewChatSuccess}
         />
       )}
     </div>

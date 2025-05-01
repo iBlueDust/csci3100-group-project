@@ -11,6 +11,7 @@ import { getRecentChats } from '@/data/db/mongo/queries/chats/getRecentChats'
 import { sessionStore } from '@/data/session'
 import { ChatWithPopulatedFields } from '@/data/types/chats'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
+import { assertIsObjectId } from '@/utils/api'
 
 type GetData = PaginatedResult<ChatWithPopulatedFields>
 type PostData = { id: string }
@@ -45,42 +46,59 @@ async function POST(
   auth: AuthData,
 ) {
   const schema = Joi.object({
-    recipient: Joi.string().required()
-  })
+    recipient: Joi.string().custom(assertIsObjectId).optional(),
+    recipientUsername: Joi.string().optional(),
+  }).xor('recipient', 'recipientUsername')
+
   const { value: body, error } = schema.validate(req.body)
-  const recipientId = body.recipient as string
 
   if (error) {
     res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
     return
   }
 
-  let recipient: mongoose.Types.ObjectId
-  try {
-    recipient = new mongoose.Types.ObjectId(recipientId)
-  } catch {
-    return res.status(400).json({ code: 'INVALID_REQUEST', message: 'Invalid recipient ID' })
+  if (body.recipient && body.recipient.equals(auth.data.userId)) {
+    return res.status(400)
+      .json({ code: 'INVALID_REQUEST', message: 'Cannot create chat with self' })
   }
 
-  if (recipient.equals(auth.data.userId)) {
-    return res.status(400).json({ code: 'INVALID_REQUEST', message: 'Cannot create chat with self' })
+  let recipientId: mongoose.Types.ObjectId
+  if (body.recipientUsername) {
+    const userDoc = await User.findOne({ username: body.recipientUsername })
+    if (!userDoc) {
+      return res.status(404)
+        .json({ code: 'NOT_FOUND', message: 'Recipient not found' })
+    }
+
+    if (userDoc._id.equals(auth.data.userId)) {
+      return res.status(400)
+        .json({ code: 'INVALID_REQUEST', message: 'Cannot create chat with self' })
+    }
+
+    recipientId = userDoc._id
+  } else {
+    recipientId = body.recipient as mongoose.Types.ObjectId
   }
 
   await dbConnect()
 
   const chatExists = await Chat.exists({
-    participants: { $all: [auth.data.userId, recipient], $size: 2 }
+    participants: { $all: [auth.data.userId, recipientId], $size: 2 }
   })
   if (chatExists) {
-    return res.status(400).json({ code: 'CHAT_ALREADY_EXISTS', message: 'Chat already exists' })
+    return res.status(400)
+      .json({ code: 'CHAT_ALREADY_EXISTS', message: 'Chat already exists' })
   }
 
-  const recipientExists = await User.exists({ _id: recipient })
+  const recipientExists = await User.exists({ _id: recipientId })
   if (!recipientExists) {
-    return res.status(404).json({ code: 'NOT_FOUND', message: 'Recipient not found' })
+    return res.status(404)
+      .json({ code: 'NOT_FOUND', message: 'Recipient not found' })
   }
 
-  const chat = await Chat.create({ participants: [auth.data.userId, recipient] })
+  const chat = await Chat.create({
+    participants: [auth.data.userId, recipientId]
+  })
 
   res.status(200).json({ id: chat.id })
 }
