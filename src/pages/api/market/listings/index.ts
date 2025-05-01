@@ -9,8 +9,9 @@ import { searchMarketListings } from '@/data/db/mongo/queries/market/searchMarke
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { sessionStore } from '@/data/session'
 import minioClient, { putManyObjects } from '@/data/db/minio'
+import { isSupportedImageMimeType } from '@/utils'
 import { parseFormDataBody, File } from '@/utils/api'
-import { generatePictureObjectName, isSupportedMimeType } from '@/utils/api/market'
+import { generatePictureObjectName } from '@/utils/api/market'
 import env from '@/env'
 
 type GetData = PaginatedResult<MarketListingSearchResult>
