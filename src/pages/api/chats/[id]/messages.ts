@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import Joi from 'joi'
 import mongoose from 'mongoose'
-import { v4 as uuid } from 'uuid'
 
 import dbConnect from '@/data/db/mongo'
 import type { Error as ApiError, PaginatedResult } from '@/data/types/common'
@@ -12,7 +11,7 @@ import { ChatMessageType, ClientChatMessage } from '@/data/types/chats'
 import minioClient from '@/data/db/minio'
 import env from '@/env'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
-import { parseFormDataBody, toObjectId } from '@/utils/api'
+import { parseFormDataBody, toObjectId, generateMinioObjectName, File } from '@/utils/api'
 import { makeChatMessageClientFriendly } from '@/data/db/mongo/queries/chats'
 
 type GetData = PaginatedResult<ClientChatMessage>
@@ -146,38 +145,42 @@ async function POST(
 					.binary()
 					.max(env.CHAT_ATTACHMENT_FILENAME_MAX_SIZE)
 					.required(),
-				info: Joi
-					.custom((value, helpers) => {
-						if (typeof value !== 'object') {
-							return helpers.error('any.invalid')
-						}
-						if (value.size > env.CHAT_ATTACHMENT_FILENAME_MAX_SIZE) {
-							const sizeInKib = env.CHAT_ATTACHMENT_FILENAME_MAX_SIZE / 1024
-							throw new Error(`Content filename exceeds ${sizeInKib} KiB`)
-						}
-
-						return value
-					})
-					.required(),
+				size: Joi.number().max(env.CHAT_ATTACHMENT_FILENAME_MAX_SIZE).required(),
+				filename: Joi.string().optional(),
+				mimetype: Joi.string(),
+				encoding: Joi.string(),
 			}),
 			otherwise: Joi.forbidden(),
-		}),
+		}).optional(),
 
-		type: Joi.string().valid(
-			ChatMessageType.Text,
-			ChatMessageType.Attachment
-		).required(),
+		type: Joi.string()
+			.valid(
+				ChatMessageType.Text,
+				ChatMessageType.Attachment
+			)
+			.required(),
 
 		e2e: Joi.alternatives().try(Joi.object(), Joi.allow(null)).optional()
 	})
 
-	const { value: body, error: validationError } = schema.validate(unvalidatedBody)
-	if (validationError) {
+	const validation = schema.validate(unvalidatedBody)
+	if (validation.error) {
 		return res.status(400).json({
 			code: 'INVALID_REQUEST',
-			message: validationError.message
+			message: validation.error.message
 		})
 	}
+
+	const body = validation.value as ({
+		e2e?: { iv: string } | null
+	} & ({
+		type: ChatMessageType.Text
+		content: string | File
+	} | {
+		type: ChatMessageType.Attachment
+		content: File
+		contentFilename?: File
+	}))
 
 	// Validate chat ID
 	if (typeof req.query.id !== 'string') {
@@ -228,7 +231,7 @@ async function POST(
 			chatId,
 			sender: auth.data.userId,
 			content: objectName,
-			contentFilename: body.contentFilename.data,
+			contentFilename: body.contentFilename?.data,
 			type: body.type,
 			e2e: body.e2e,
 		})

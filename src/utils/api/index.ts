@@ -128,3 +128,13 @@ export function toObjectId(
 		return [null, error] as const
 	}
 }
+
+export const generateMinioObjectName = (info: FileInfo) => {
+	const extension = getExtension(info.filename)
+	console.log({ info, extension })
+	if (!extension) {
+		return uuid()
+	}
+
+	return `${uuid()}.${extension}`
+}

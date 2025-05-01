@@ -47,12 +47,16 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
 
   const handleSendMessage = useCallback(async () => {
     if (onSend) {
+      console.log({ attachment })
       const sendSuccess = await onSend(messageInput, attachment)
       if (!sendSuccess) {
         return
       }
     }
-    setMessageInput('')
+
+    if (!attachment) {
+      setMessageInput('')
+    }
     setAttachment(null)
     setShowAttachmentPreview(false)
   }, [onSend, messageInput, attachment])

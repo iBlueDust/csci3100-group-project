@@ -72,7 +72,7 @@ async function POST(
 		req,
 		{
 			maxFileSize: env.MARKET_LISTING_ATTACHMENT_SIZE_LIMIT,
-			filter: part => !!part.mimetype && isSupportedMimeType(part.mimetype),
+			filter: part => !!part.mimetype && isSupportedImageMimeType(part.mimetype),
 		},
 	)
 

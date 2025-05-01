@@ -18,9 +18,9 @@ import { queryChatMessages } from '@/data/frontend/queries/queryChatMessages'
 import type { PaginatedResult } from '@/data/types/common'
 import { useApi } from '@/utils/frontend/api'
 import { isDev } from '@/utils/frontend/env'
-import ChatThreadContent from './ChatThread'
+import ChatThread from './ChatThread'
 
-export interface ChatThreadProps {
+export interface ChatBoxProps {
   className?: string
   chat: ClientChat
   sharedKey: CryptoKey
@@ -28,7 +28,7 @@ export interface ChatThreadProps {
   onDeleteChat?: () => void
 }
 
-const ChatBox: React.FC<ChatThreadProps> = ({
+const ChatBox: React.FC<ChatBoxProps> = ({
   className,
   chat,
   sharedKey,
@@ -46,7 +46,7 @@ const ChatBox: React.FC<ChatThreadProps> = ({
   })
 
   const mutation = useMutation({
-    mutationFn: async (arg: PostChatMessagePayload<string>) =>
+    mutationFn: async (arg: PostChatMessagePayload) =>
       sendChatMessage(api, chat.id, arg, sharedKey),
     onSuccess: () => {
       // Reload chat messages
@@ -74,16 +74,23 @@ const ChatBox: React.FC<ChatThreadProps> = ({
         return false
       }
 
-      // In a real app, you would send the message to an API
-      const messagePayload: PostChatMessagePayload<string> = {
-        type: ChatMessageType.Text,
-        content: message,
-      }
+      const payload: PostChatMessagePayload = !attachment
+        ? {
+            type: ChatMessageType.Text,
+            content: message,
+          }
+        : {
+            type: ChatMessageType.Attachment,
+            content: await attachment.arrayBuffer(),
+            contentFilename: attachment.name,
+          }
+      console.log({ payload })
 
       try {
-        await mutation.mutateAsync(messagePayload)
+        await mutation.mutateAsync(payload)
       } catch (error) {
         console.error('Error sending message:', error)
+        return false
       }
 
       return true
@@ -133,9 +140,10 @@ const ChatBox: React.FC<ChatThreadProps> = ({
           <div className='bg-gray-500 h-24 sticky flex bottom-0'></div>
         </div> */}
 
-      <ChatThreadContent
+      <ChatThread
         chat={chat}
         messages={messages?.data}
+        sharedKey={sharedKey}
         onSend={handleSendMessage}
         onDeleteChat={onDeleteChat}
       />

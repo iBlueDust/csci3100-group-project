@@ -66,3 +66,36 @@ export function hex2base64url(hex: string) {
 	// convert to base64url
 	return b64.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
 }
+
+export function toBinaryBlob(...parts: BlobPart[]) {
+	return new Blob(parts, { type: 'application/octet-stream' })
+}
+
+
+export const mimeTypeToExtension = {
+	'image/jpeg': 'jpg',
+	'image/png': 'png',
+	'image/gif': 'gif',
+	'image/webp': 'webp',
+} as Record<string, string>
+export const extensionToMimeType = Object.fromEntries(
+	Object.entries(mimeTypeToExtension).map(([key, value]) => [value, key])
+)
+
+export const isSupportedImageMimeType = (mimeType: string) =>
+	!!mimeTypeToExtension[mimeType]
+
+export const isSupportedImageExtension = (mimeType: string) =>
+	!!extensionToMimeType[mimeType]
+
+export const isSupportedImage = (filename: string) => {
+	return /\.(jpe?g|png|gif|webp)$/i.test(filename)
+}
+
+export const getExtension = (filename: string) => {
+	const match = filename.match(/\.([a-zA-Z0-9]+)$/)
+	if (!match) {
+		return null
+	}
+	return match[1].toLowerCase()
+}

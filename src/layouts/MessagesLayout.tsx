@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import classNames from 'classnames'
 import { useQuery } from '@tanstack/react-query'
-import { FiPlus, FiSearch } from 'react-icons/fi'
+import { FiFile, FiPlus, FiSearch } from 'react-icons/fi'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
@@ -213,7 +213,16 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
                     </div>
                     {chat.lastMessage && (
                       <p className='text-sm text-foreground/70 truncate'>
-                        {chat.lastMessage.content.toString()}
+                        {!chat.lastMessage.contentFilename ? (
+                          chat.lastMessage.content.toString()
+                        ) : (
+                          <>
+                            <FiFile className='inline-block mr-1' size={14} />
+                            <span className='h-full align-middle'>
+                              {chat.lastMessage.contentFilename}
+                            </span>
+                          </>
+                        )}
                       </p>
                     )}
                   </div>
