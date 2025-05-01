@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import Image from 'next/image'
 import {
   FiEdit,
@@ -11,7 +11,8 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency, formatTruncatedList } from '@/utils/format'
+import { getCountryNameById } from '@/utils/countries'
 
 export interface MarketListingListItemProps {
   listing: MarketListingSearchResult
@@ -38,6 +39,11 @@ const MarketListingListItem: React.FC<MarketListingListItemProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const countries = useMemo(
+    () => listing.countries.map((c) => c.toUpperCase()).map(getCountryNameById),
+    [listing.countries],
+  )
+
   return (
     <button
       key={listing.id.toString()}
@@ -85,8 +91,11 @@ const MarketListingListItem: React.FC<MarketListingListItemProps> = ({
                 ★ {0} ({0} reviews)
               </span>
 
-              <span className='text-sm text-foreground/70'>
-                Location: {listing.countries.join(', ')}
+              <span
+                className='text-sm text-foreground/70'
+                title={countries.join(', ')}
+              >
+                Location: {formatTruncatedList(countries, 3)}
               </span>
 
               <span className='text-sm text-foreground/70'>
