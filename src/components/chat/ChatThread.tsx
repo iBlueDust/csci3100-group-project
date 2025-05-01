@@ -11,7 +11,6 @@ import { useApi } from '@/utils/frontend/api'
 import ChatInput from './ChatInput'
 import ChatTextMessage from './ChatTextMessage'
 import type { ClientChatMarketListingMessage } from './ChatMarketListingMessage'
-import { useDragDrop } from '@/hooks/useDragDrop'
 const ChatImageMessage = dynamic(() => import('./ChatImageMessage'))
 const ChatAttachmentMessage = dynamic(() => import('./ChatAttachmentMessage'))
 const ChatRecipientLeftBanner = dynamic(
@@ -36,7 +35,6 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   const api = useApi()
 
   const scrollHelperRef = useRef<HTMLDivElement>(null)
-  const dragDrop = useDragDrop()
 
   useLayoutEffect(() => {
     scrollHelperRef.current?.scrollIntoView({ behavior: 'instant' })
@@ -44,10 +42,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
   /* Container for mobile that includes both the banner and messages with a single scroll */
   return (
-    <div
-      ref={dragDrop.dropAreaRef}
-      className='relative overflow-y-auto h-full scroll-thin'
-    >
+    <div className='relative overflow-y-auto h-full scroll-thin'>
       <div className='flex flex-col min-h-full flex-nowrap'>
         {/* Deletion banner */}
         {chat.wasRequestedToDelete && (
@@ -118,24 +113,6 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           <ChatInput onSend={onSend} />
         </div>
       </div>
-
-      {dragDrop.isDraggingOver && (
-        <>
-          <input
-            className='absolute inset-0 opacity-0'
-            type='file'
-            multiple
-            onChange={() => {}}
-          />
-          <div className='absolute inset-0 bg-sky-500/20 p-16'>
-            <div className='border-2 border-sky-500 rounded-lg border-dash-2'>
-              <p className='w-full h-full align-middle'>
-                Release to drop files
-              </p>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   )
 }
