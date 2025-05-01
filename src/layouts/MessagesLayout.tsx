@@ -33,12 +33,6 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
     ? (router.query.chatId as string)
     : undefined
   const mobileChatVisible = !!activeChatId
-  // const { isMobile } = useDevice({
-  //   mobileThreshold: 768, // equivalent to Tailwind CSS 'md' breakpoint
-  // })
-
-  // Search functionality
-  const [searchQuery, setSearchQuery] = useState('')
 
   // Create conversation modal state
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false)
@@ -48,32 +42,6 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
   // Pagination state for conversations
   const [currentPage, setCurrentPage] = useState(1)
   const [conversationsPerPage /* , setConversationsPerPage */] = useState(10)
-
-  // Separate effect to handle active conversation changes for message content search
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      return
-    }
-
-    // // Re-run the search when active conversation changes, but don't reset the page
-    // const filtered = mockConversations.filter(conversation => {
-    //   const userMatch = conversation.user.toLowerCase().includes(searchQuery.toLowerCase());
-    //   const messageMatch = conversation.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
-    //   // Also search in message content if the conversation is active
-    //   let messageContentMatch = false;
-    //   if (Number(activeConversation) === conversation.id) {
-    //     const messagesForConversation = mockMessages[conversation.id as keyof typeof mockMessages];
-    //     if (messagesForConversation) {
-    //       messageContentMatch = messagesForConversation.some(msg =>
-    //         msg.content.toLowerCase().includes(searchQuery.toLowerCase())
-    //       );
-    //     }
-    //   }
-    //   return userMatch || messageMatch || messageContentMatch;
-    // });
-    // setFilteredConversations(filtered);
-    // Notice: we don't reset page number here
-  }, [searchQuery])
 
   const { data: chats } = useQuery({
     queryKey: [QueryKeys.CHATS],
@@ -112,13 +80,6 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
     setCurrentPage(pageNumber)
   }
 
-  // Handle search
-  const handleSearch = useCallback(() => {
-    // The search is already handled by the useEffect above
-    // This function is mainly for the search button click
-    console.log('Searching for:', searchQuery)
-  }, [searchQuery])
-
   const queryClient = useQueryClient()
   const handleNewChatSuccess = useCallback(() => {
     closeNewChatModal()
@@ -152,7 +113,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
             </div>
 
             {/* Adjusted padding for mobile */}
-            <div className='md:px-4 px-2 py-2 border-b border-foreground-light/25 bg-background-light'>
+            {/* <div className='md:px-4 px-2 py-2 border-b border-foreground-light/25 bg-background-light'>
               <div className='relative'>
                 <input
                   type='text'
@@ -171,7 +132,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
                 </button>
               </div>
 
-              {/* Mobile New Chat button below search */}
+              {\/* Mobile New Chat button below search *\/}
               <div className='md:hidden mt-2'>
                 <button
                   onClick={openNewChatModal}
@@ -180,7 +141,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
                   <span>New Chat</span>
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Conversation items list - Make sure this is scrollable in all views */}
