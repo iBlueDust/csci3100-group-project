@@ -1,4 +1,4 @@
-import env, { isDev } from "@/env"
+import env from "@/env"
 import type { NextConfig } from "next"
 
 const matches = /^https?:\/\/([a-zA-Z0-9\._-]*):(\d+)$/.exec(env.MINIO_PUBLIC_ENDPOINT)
@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   images: {
-    remotePatterns: isDev ? [
+    remotePatterns: [
       {
         protocol: 'http',
         hostname: MINIO_PUBLIC_HOST,
@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
         port: MINIO_PUBLIC_PORT,
         pathname: `/${env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS}/**`,
       },
-    ] : [],
+    ],
   }
 }
 
