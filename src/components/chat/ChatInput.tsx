@@ -6,7 +6,9 @@ import React, {
   useState,
 } from 'react'
 import { FiPaperclip, FiSend, FiTrash2 } from 'react-icons/fi'
+import Image from 'next/image'
 import TextareaAutosize from 'react-textarea-autosize'
+import { formatCurrency } from '@/utils/format'
 
 export interface ChatInputProps {
   /**
@@ -95,16 +97,16 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
   }, [messageInputRef])
 
   return (
-    <div className='p-2 md:p-4 border-t-2 border-foreground/10 bg-background'>
+    <div className='border-t-2 border-foreground/10 bg-background p-2 md:p-4'>
       {/* Attachment preview */}
       {showAttachmentPreview && attachment && (
-        <div className='mb-2 p-2 border-2 border-foreground/10 rounded-lg bg-background-dark/10 flex items-center justify-between'>
+        <div className='mb-2 flex items-center justify-between rounded-lg border-2 border-foreground/10 bg-background-dark/10 p-2'>
           <div className='flex items-center gap-2'>
-            <div className='bg-foreground/5 p-2 rounded-lg'>
+            <div className='rounded-lg bg-foreground/5 p-2'>
               <FiPaperclip size={18} />
             </div>
             <div>
-              <p className='text-sm truncate'>{attachment.name}</p>
+              <p className='truncate text-sm'>{attachment.name}</p>
               <p className='text-xs text-foreground/70'>
                 {(attachment.size / 1024).toFixed(1)} KB
               </p>
@@ -112,12 +114,52 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
           </div>
           <button
             onClick={cancelAttachment}
-            className='text-foreground/70 hover:text-red-500 transition-colors'
+            className='text-foreground/70 transition-colors hover:text-red-500'
           >
             <FiTrash2 size={16} />
           </button>
         </div>
       )}
+
+      <div className='group mb-2 flex items-stretch gap-4 rounded-lg border-2 border-foreground/10 bg-background-dark/10'>
+        <Image
+          src='http://ec2-13-229-119-2.ap-southeast-1.compute.amazonaws.com:9000/market-listing-attachments/aa3fe78b-6a4a-4f2f-99e5-a72e51354366.jpg'
+          alt='Attachment preview: market listing picture'
+          width={80}
+          height={80}
+          className='size-20 rounded-l-md bg-background-dark object-cover'
+        />
+
+        <div className='flex flex-1 flex-col flex-nowrap justify-between gap-2 py-2'>
+          <div className='flex justify-between gap-2'>
+            <div className='inline-block'>
+              <p className='mb-1 truncate'>{'title goes here'}</p>
+              <p className='line-clamp-2 text-xs text-foreground/70'>
+                {
+                  'Adipisicing nulla dolor ipsum proident pariatur ipsum in labore magna culpa. Commodo est cillum ex anim proident et exercitation do consectetur aute. In ut elit velit ut occaecat labore consequat fugiat enim sit tempor.'
+                }
+              </p>
+            </div>
+            <p className='text-right md:font-bold'>{formatCurrency(1000)}</p>
+          </div>
+
+          <div className='group:md:block hidden space-x-4 text-xs text-foreground-light'>
+            <span>by {'seller'}</span>
+            <span className='group:md:inline-block hidden text-xs'>
+              ★ {0} ({0} reviews)
+            </span>
+            <span className='group:md:inline-block hidden'>{'Canada'}</span>
+            <span>{'a day ago'}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={cancelAttachment}
+          className='mr-2 self-center text-foreground/70 transition-colors hover:text-red-500'
+        >
+          <FiTrash2 size={16} />
+        </button>
+      </div>
 
       <div className='flex items-center gap-2'>
         <form
@@ -128,7 +170,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
           <TextareaAutosize
             ref={messageInputRef}
             name='message'
-            className='flex-1 rounded-md border border-foreground/20 bg-background px-3 py-2 min-h-[2.5rem] max-h-[10rem] resize-none'
+            className='max-h-40 min-h-10 flex-1 resize-none rounded-md border border-foreground/20 bg-background px-3 py-2'
             placeholder='Type a message...'
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
@@ -136,7 +178,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
             maxRows={10}
             cacheMeasurements
           />
-          <label className='h-10 w-10 rounded-full bg-foreground/10 flex items-center justify-center cursor-pointer hover:bg-foreground/20 transition-colors'>
+          <label className='flex size-10 cursor-pointer items-center justify-center rounded-full bg-foreground/10 transition-colors hover:bg-foreground/20'>
             <FiPaperclip size={18} />
             <input
               type='file'
@@ -146,7 +188,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
           </label>
           <button
             type='submit'
-            className='h-10 w-10 rounded-full bg-foreground text-background flex items-center justify-center disabled:opacity-50 border-2 border-background-dark'
+            className='flex size-10 items-center justify-center rounded-full border-2 border-background-dark bg-foreground text-background disabled:opacity-50'
             disabled={!messageInput.trim() && !attachment}
           >
             <FiSend size={18} />

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss"
+import LineClamp from "@tailwindcss/line-clamp"
 
 export default {
   content: [
@@ -24,5 +25,7 @@ export default {
       borderOpacity: ({ theme }) => theme("opacity"),
     },
   },
-  plugins: [],
+  plugins: [
+    LineClamp,
+  ],
 } satisfies Config

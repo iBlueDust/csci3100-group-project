@@ -21,34 +21,43 @@ const ChatMarketListingMessage: React.FC<ChatMarketListingMessageProps> = ({
   isMe = false,
 }) => {
   return (
-    <ChatMessage isMe={isMe} sentAt={message.sentAt}>
-      <div className='bg-background-light rounded p-2 space-y-1'>
-        <div className='flex justify-between'>
-          <p className='text-sm font-medium text-foreground mr-4'>
-            {message.content.title}
-          </p>
-          <p className='text-sm font-mono font-bold text-foreground'>
-            {formatCurrency(message.content.priceInCents)}
-          </p>
-        </div>
-
-        {message.content.pictures.length > 0 ? (
-          <div className='h-16'>
+    <div className=''>
+      <ChatMessage isMe={isMe} sentAt={message.sentAt}>
+        <div className='flex min-w-72 flex-row flex-nowrap items-start gap-2'>
+          {message.content.pictures.length > 0 ? (
             <Image
-              width={128}
-              height={64}
+              width={96}
+              height={96}
               src={message.content.pictures[0]}
               alt='Market Listing Image'
+              className='inline-block size-24 rounded-l bg-background-dark object-cover'
             />
+          ) : (
+            <div className='size-20 bg-foreground/5 align-middle text-xs text-foreground/30'>
+              Item Image
+            </div>
+          )}
+
+          <div className='h-full flex-1 py-2 pr-4'>
+            <p className='text-sm font-medium text-foreground'>
+              {message.content.title}
+            </p>
+            <p className='truncate text-xs text-foreground'>
+              {message.content.description}
+            </p>
+
+            <p className='mt-2 font-mono text-sm font-bold text-foreground'>
+              {formatCurrency(message.content.priceInCents)}
+            </p>
+            <p className='truncate text-xs text-foreground-light'>
+              by{' '}
+              {message.content.author.username ??
+                message.content.author.id.toString()}
+            </p>
           </div>
-        ) : (
-          <div className='h-16 bg-foreground/5 flex items-center justify-center text-xs text-foreground/30'>
-            Item Image
-          </div>
-        )}
-        <p className='text-xs text-foreground'>{message.content.description}</p>
-      </div>
-    </ChatMessage>
+        </div>
+      </ChatMessage>
+    </div>
   )
 }
 

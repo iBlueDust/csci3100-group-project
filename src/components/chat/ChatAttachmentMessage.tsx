@@ -21,24 +21,25 @@ const ChatAttachmentMessage: React.FC<ChatAttachmentMessageProps> = ({
   const attachment = useAttachment(message, sharedKey)
 
   return (
-    <ChatMessage isMe={isMe} sentAt={message.sentAt}>
+    <ChatMessage className='px-4 py-3' isMe={isMe} sentAt={message.sentAt}>
       {!attachment.url ? (
         <button
           className={classNames(
-            'flex items-center gap-2 hover:bg-foreground/10 p-2 rounded-lg transition-colors',
+            'flex items-center gap-3 hover:bg-foreground/10 rounded-lg transition-colors',
             attachment.isDownloading ? 'cursor-default' : 'cursor-pointer',
           )}
           disabled={attachment.isDownloading}
           onClick={attachment.download}
         >
-          <div className='bg-foreground/5 p-2 rounded-lg'>
+          <div className='rounded-lg bg-foreground/25 p-3'>
             {!attachment.isDownloading ? (
               <FiDownload size={18} />
             ) : (
-              <BasicSpinner className='w-5 h-5 text-foreground' />
+              <BasicSpinner className='size-5 text-foreground' />
             )}
           </div>
-          <div className='overflow-hidden'>
+
+          <div className='mr-2 overflow-hidden text-left'>
             <p className='truncate'>{message.contentFilename}</p>
             <p className='text-xs text-foreground/70'>Download attachment</p>
           </div>
@@ -48,9 +49,9 @@ const ChatAttachmentMessage: React.FC<ChatAttachmentMessageProps> = ({
           href={attachment.url}
           target='_blank'
           rel='noopener noreferrer'
-          className='flex items-center gap-2 hover:bg-foreground/10 p-2 rounded-lg transition-colors'
+          className='flex items-center gap-2 rounded-lg p-2 transition-colors hover:bg-foreground/10'
         >
-          <div className='bg-foreground/5 p-2 rounded-lg'>
+          <div className='rounded-lg bg-foreground/5 p-2'>
             <FiFile size={20} />
           </div>
           <div className='overflow-hidden'>
