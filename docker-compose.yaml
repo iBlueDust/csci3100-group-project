@@ -14,6 +14,11 @@ services:
     env_file:
       - .env
       - .env.local
+    expose:
+      - 3000
+    networks:
+      - default
+      # - public
 
   mongo:
     container_name: mongo
@@ -30,6 +35,10 @@ services:
       - MONGO_INITDB_DATABASE=${MONGO_DB:-db}
       - MONGO_INITDB_USERNAME=$MONGO_USERNAME
       - MONGO_INITDB_PASSWORD=$MONGO_PASSWORD
+    expose:
+      - 27017
+    networks:
+      - default
 
   minio:
     container_name: minio
@@ -43,6 +52,11 @@ services:
       - "${MINIO_DASHBOARD_PORT:-9001}:9001"
     volumes:
       - "./data/obj:/data"
+    expose:
+      - 9000
+      - 9001
+    networks:
+      - default
     command: server /data --console-address ":9001"
 
   minio-setup:
@@ -56,6 +70,8 @@ services:
       - .env.local
     volumes:
       - "./minio-init.sh:/minio-init.sh:ro"
+    networks:
+      - default
     entrypoint: /bin/sh /minio-init.sh
 
   redis:
@@ -66,5 +82,21 @@ services:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - "./data/redis:/data"
+    expose:
+      - 6379
+    networks:
+      - default
     # Disable appendonly mode since this is only for session storage
     command: redis-server --appendonly no --requirepass $REDIS_PASSWORD
+
+
+networks:
+  default:
+    driver: bridge
+  # public:
+  #   enable_ipv6: true
+  #   ipam:
+  #     config:
+  #       - subnet: 2406:da18:99:2902::/64
+  #         ip_range: 2406:da18:99:2902::/64
+  #         gateway: 2406:da18:99:2902::1
