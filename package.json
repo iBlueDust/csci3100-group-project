@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:full": "bash dev.sh",
-    "dev:start": "docker compose -f docker-compose.dev.yaml up --build -d && next dev --turbopack",
+    "dev:start": "docker compose -f docker-compose.dev.yaml --env-file .env --env-file .env.local up --build -d && npm run dev",
     "dev:stop": "docker compose -f docker-compose.dev.yaml down",
     "build": "next build",
     "start": "next start",
