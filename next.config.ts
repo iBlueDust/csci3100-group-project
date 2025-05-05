@@ -12,6 +12,7 @@ const MINIO_PUBLIC_PORT = matches ? matches[2] : DEFAULT_MINIO_PUBLIC_PORT
 const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
+  output: 'standalone',
 
   images: {
     remotePatterns: isDev ? [
