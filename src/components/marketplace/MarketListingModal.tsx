@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { formatCurrency } from '@/utils/format'
 import Image from 'next/image'
+import SubmitButton from '../form/SubmitButton'
 
 export interface MarketListingModalProps {
   listing: MarketListingSearchResult
@@ -114,21 +115,24 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                 </div>
 
                 <div className='space-y-2'>
-                  <button
+                  {/* <button
                     onClick={onBuy}
                     className='button-primary w-full py-2 flex items-center justify-center gap-2 text-sm'
                   >
                     <FiShoppingCart size={16} />
                     Buy Now
-                  </button>
+                  </button> */}
 
-                  <button
+                  <SubmitButton
+                    look='primary'
+                    className='w-full'
                     onClick={onChat}
-                    className='button w-full py-2 flex items-center justify-center gap-2 text-sm'
                   >
-                    <FiMessageCircle size={16} />
-                    Message Seller
-                  </button>
+                    <div className='flex flex-row items-center justify-center gap-2 text-sm'>
+                      <FiMessageCircle size={16} />
+                      <span>Message Seller</span>
+                    </div>
+                  </SubmitButton>
                 </div>
               </div>
 
