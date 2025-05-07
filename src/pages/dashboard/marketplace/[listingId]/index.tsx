@@ -12,11 +12,17 @@ import { useApi } from '@/utils/frontend/api'
 import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { PaginatedResult } from '@/data/types/common'
 import { queryMarketListingById } from '@/data/frontend/queries/queryMarketListingById'
+import { useHoveringChatBox } from '@/hooks/useHoveringChatBox'
+import { useEffect } from 'react'
 
 const MarketplaceListingPage: PageWithLayout = () => {
   const api = useApi()
   const router = useRouter()
   const listingId = router.query.listingId as string
+
+  const hoveringChatBox = useHoveringChatBox({ api })
+
+  useEffect(hoveringChatBox.hide, [])
 
   const queryClient = useQueryClient()
   const { data: listing } = useQuery({
@@ -39,13 +45,16 @@ const MarketplaceListingPage: PageWithLayout = () => {
     },
   })
 
-  return listing ? (
-    <MarketListingModal
-      listing={listing}
-      isMine={listing.author.id.toString() === api.user?.id}
-      onClose={() => router.push('/dashboard/marketplace')}
-    />
-  ) : null
+  return (
+    listing && (
+      <MarketListingModal
+        listing={listing}
+        isMine={listing.author.id.toString() === api.user?.id}
+        onChat={() => hoveringChatBox.show(listing)}
+        onClose={() => router.push('/dashboard/marketplace')}
+      />
+    )
+  )
 }
 
 MarketplaceListingPage.getLayout = (page) => {

@@ -58,7 +58,7 @@ const NewMarketListingModal: React.FC<NewMarketListingModalProps> = ({
   })
 
   return (
-    <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex justify-center items-center z-50 p-4'>
+    <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex justify-center items-center z-10 p-4'>
       <div className='bg-background w-full max-w-screen-sm md:max-w-2xl md:mx-auto rounded-lg shadow-xl overflow-hidden'>
         <div className='flex justify-between items-center p-4 border-b border-foreground/10'>
           <h2 className='text-xl font-bold'>

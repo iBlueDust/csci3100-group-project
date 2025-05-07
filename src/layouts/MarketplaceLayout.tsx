@@ -29,6 +29,10 @@ import { countries } from '@/utils/countries'
 import { queryClient, useApi } from '@/utils/frontend/api'
 import HoveringChatBox from '@/components/HoveringChatBox'
 import { deriveKey, importKey } from '@/utils/frontend/e2e'
+import {
+  HoveringChatBoxProvider,
+  useHoveringChatBox,
+} from '@/hooks/useHoveringChatBox'
 const MarketListingListItem = dynamic(
   () => import('@/components/marketplace/MarketListingListItem'),
 )
@@ -62,6 +66,8 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 }) => {
   const api = useApi()
   const router = useRouter()
+
+  const hoveringChatBox = useHoveringChatBox({ api })
 
   const [searchQuery, setSearchQuery] = useState('')
   const [minPrice, setMinPrice] = useState(0)
@@ -110,32 +116,6 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 
   // Favorites state
   const [favorites, setFavorites] = useState<MarketListingSearchResult[]>([])
-
-  // Chat bubble state
-  const [isChatOpen, setIsChatOpen] = useState(false)
-  const [selectedListing, setSelectedListing] =
-    useState<MarketListingSearchResult | null>(null)
-
-  const [hoverChatSharedKey, setHoverChatSharedKey] =
-    useState<CryptoKey | null>(null)
-
-  // Open chat with a specific listing
-  const openChat = useCallback(
-    async (item: MarketListingSearchResult) => {
-      setSelectedListing(item)
-      setIsChatOpen(true)
-
-      if (!api.uek) {
-        return
-      }
-
-      const myPrivateKey = api.uek.privateKey
-      const theirPublicKey = await importKey(item.author.publicKey, 'jwk', [])
-      const sharedKey = await deriveKey(theirPublicKey, myPrivateKey)
-      setHoverChatSharedKey(sharedKey)
-    },
-    [api.uek],
-  )
 
   const clearFilters = useCallback(() => {
     setSearchQuery('')
@@ -443,7 +423,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                   ),
                 )
               }}
-              onChat={() => openChat(item)}
+              onChat={() => hoveringChatBox.show(item)}
               onEdit={() => {
                 queryClient.setQueryData(
                   [QueryKeys.MARKET_LISTINGS, item.id],
@@ -483,7 +463,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                   ),
                 )
               }}
-              onChat={() => openChat(item)}
+              onChat={() => hoveringChatBox.show(item)}
               onEdit={() =>
                 router.push(`/dashboard/marketplace/${item.id}/edit`)
               }
@@ -529,22 +509,6 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
         />
       </div>
 
-      {/* Floating Chat Bubble */}
-      {isChatOpen && selectedListing && hoverChatSharedKey && (
-        <HoveringChatBox
-          otherParty={{
-            ...selectedListing.author,
-            username:
-              selectedListing.author.username ??
-              selectedListing.author.id.toString(),
-            id: selectedListing.author.id.toString(),
-          }}
-          sharedKey={hoverChatSharedKey}
-          onClose={() => setIsChatOpen(false)}
-          initialPreviewMarketListing={selectedListing}
-        />
-      )}
-
       {children}
     </div>
   )
@@ -552,7 +516,11 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 
 MarketplaceLayout.getLayout = (page) => {
   const GrandfatherLayout = DashboardLayout.getLayout ?? ((page) => page)
-  return GrandfatherLayout(<DashboardLayout>{page}</DashboardLayout>)
+  return GrandfatherLayout(
+    <DashboardLayout>
+      <HoveringChatBoxProvider>{page}</HoveringChatBoxProvider>
+    </DashboardLayout>,
+  )
 }
 
 export default MarketplaceLayout

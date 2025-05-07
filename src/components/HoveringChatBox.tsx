@@ -131,7 +131,7 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
   )
 
   return (
-    <div className='fixed bottom-4 right-4 z-50 flex h-[36rem] w-80 flex-col rounded-lg border-2 border-black bg-background shadow-xl md:w-96 dark:border-[#343434]'>
+    <div className='fixed bottom-4 right-4 flex h-[36rem] w-80 flex-col rounded-lg border-2 border-black z-20 bg-background shadow-xl md:w-96 dark:border-[#343434]'>
       {/* Chat Header */}
       <div className='flex items-center justify-between rounded-t-lg border-x border-b border-foreground/10 bg-background-light pl-3 py-3 pr-2'>
         {/* Added border-l, border-r, and rounded-t-lg */}

@@ -27,7 +27,7 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   return (
-    <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
+    <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-10 p-4'>
       <div className='bg-background rounded-lg max-w-5xl w-full shadow-xl border-2 border-foreground/10 max-h-[90vh] flex flex-col'>
         {/* Modal Header */}
         <div className='flex justify-between items-center p-4 border-b border-foreground/10 shrink-0'>
