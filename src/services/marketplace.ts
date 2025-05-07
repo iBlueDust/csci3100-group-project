@@ -2,36 +2,6 @@
 import { Listing, ListingFormData } from '@/types/marketplace'
 
 /**
- * Create a new listing
- */
-export async function createListing(formData: ListingFormData, images: File[]): Promise<{ id: string }> {
-  // Create a FormData object for the API request
-  const apiFormData = new FormData()
-  apiFormData.append('title', formData.title.trim())
-  apiFormData.append('description', formData.description.trim())
-
-  // Convert price from dollars to cents
-  const priceInCents = formData.priceInCents
-  apiFormData.append('priceInCents', priceInCents.toString())
-
-  formData.countries.forEach(country => apiFormData.append('countries', country))
-  images.forEach(image => apiFormData.append('pictures', image))
-
-  const response = await fetch('/api/market/listings', {
-    method: 'POST',
-    body: apiFormData,
-    // No Content-Type header as browser sets it with boundary for FormData
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.message || 'Error creating listing')
-  }
-
-  return response.json()
-}
-
-/**
  * Update an existing listing
  */
 export async function updateListing(

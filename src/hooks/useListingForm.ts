@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react'
 
 import { ListingFormData } from '@/types/marketplace'
-import { createListing, updateListing } from '@/services/marketplace'
+import { createMarketListing } from '@/data/frontend/mutations/createMarketListing'
 import env from '@/utils/frontend/env'
+import { useApi } from '@/utils/frontend/api'
+import { PostMarketListingPayload } from '@/data/frontend/fetches/postMarketListing'
+import { updateListing } from '@/services/marketplace'
 
 interface UseListingFormProps {
   initialData?: ListingFormData
@@ -11,6 +14,8 @@ interface UseListingFormProps {
 }
 
 export const useListingForm = ({ initialData, listingId, onSuccess }: UseListingFormProps = {}) => {
+  const api = useApi()
+
   // Initialize with default values or provided initialData
   const [formData, setFormData] = useState<ListingFormData>(() => ({
     title: initialData?.title || '',
@@ -58,15 +63,17 @@ export const useListingForm = ({ initialData, listingId, onSuccess }: UseListing
   }, [])
 
   // Submit the form
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
     setIsSubmitting(true)
 
+    const payload: PostMarketListingPayload = { ...formData, pictures: images }
+
     try {
       const result = listingId
-        ? await updateListing(listingId, formData, images)
-        : await createListing(formData, images)
+        ? await updateListing(listingId, payload, images)
+        : await createMarketListing(api, payload)
 
       // Call success callback if provided
       if (onSuccess) {

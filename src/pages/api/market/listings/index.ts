@@ -109,7 +109,7 @@ async function POST(
 					`^\\s*\\S.{0,${env.MARKET_LISTING_DESCRIPTION_MAX_LENGTH - 1}}\\s*$`
 				)
 			)
-			.required(),
+			.optional(),
 		pictures: Joi.array()
 			.items(
 				Joi.object({

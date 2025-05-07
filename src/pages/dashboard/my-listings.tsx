@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import {
   FiEdit,
   FiTrash2,
@@ -10,7 +10,7 @@ import {
   FiPlus,
 } from 'react-icons/fi'
 import Image from 'next/image'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
@@ -28,6 +28,7 @@ export type MyListingsProps = object
 
 const MyListings: PageWithLayout<MyListingsProps> = () => {
   const api = useApi()
+  const queryClient = useQueryClient()
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortOption, setSortOption] = useState('newest')
@@ -64,6 +65,35 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
     setListingToDelete(null)
     // Show success message
     alert('Listing deleted successfully!')
+  }, [])
+
+  const modalInitialData = useMemo(
+    () =>
+      editingListing
+        ? {
+            title: editingListing.title,
+            description: editingListing.description,
+            priceInCents: editingListing.priceInCents,
+            category: 'jade',
+            countries: editingListing.countries,
+          }
+        : { countries: ['hk'] },
+    [editingListing],
+  )
+
+  const onListingSubmitted = useCallback(() => {
+    setIsCreateListingOpen(false)
+    setEditingListing(null)
+
+    // In a real app, you might refresh the listings or navigate to the new listing
+    queryClient.invalidateQueries({
+      queryKey: [QueryKeys.MARKET_LISTINGS, 'my-listings'],
+    })
+  }, [queryClient])
+
+  const closeListingModal = useCallback(() => {
+    setIsCreateListingOpen(false)
+    setEditingListing(null)
   }, [])
 
   return (
@@ -333,31 +363,9 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
       {/* Create/Edit Listing Form Modal */}
       {(isCreateListingOpen || editingListing) && (
         <CreateListingForm
-          onClose={() => {
-            setIsCreateListingOpen(false)
-            setEditingListing(null)
-          }}
-          onSuccess={(listingId) => {
-            setIsCreateListingOpen(false)
-            setEditingListing(null)
-            // In a real app, you might refresh the listings or navigate to the new listing
-            alert(
-              `Listing ${
-                editingListing ? 'updated' : 'created'
-              } successfully! ID: ${listingId}`,
-            )
-          }}
-          initialData={
-            editingListing
-              ? {
-                  title: editingListing.title,
-                  description: editingListing.description,
-                  priceInCents: editingListing.priceInCents,
-                  category: 'jade',
-                  countries: editingListing.countries,
-                }
-              : undefined
-          }
+          initialData={modalInitialData}
+          onClose={closeListingModal}
+          onSuccess={onListingSubmitted}
           listingId={editingListing ? editingListing.id.toString() : undefined}
           isEditing={!!editingListing}
         />

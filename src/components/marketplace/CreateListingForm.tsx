@@ -10,6 +10,7 @@ import { useListingForm } from '@/hooks/useListingForm'
 import { CategoryOption, ListingFormData } from '@/types/marketplace'
 import { countries } from '@/utils/countries'
 import env from '@/utils/frontend/env'
+import { mergeObjects } from '@/utils'
 
 // The same categories from the marketplace component
 const categories: CategoryOption[] = [
@@ -23,7 +24,7 @@ const categories: CategoryOption[] = [
 interface CreateListingFormProps {
   onClose: () => void
   onSuccess?: (listingId: string) => void
-  initialData?: ListingFormData
+  initialData?: Partial<ListingFormData>
   listingId?: string
   isEditing?: boolean
 }
@@ -45,7 +46,17 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
     handleImageChange,
     removeImage,
     handleSubmit,
-  } = useListingForm({ initialData, listingId, onSuccess })
+  } = useListingForm({
+    initialData: {
+      title: initialData?.title || '',
+      description: initialData?.description || '',
+      priceInCents: initialData?.priceInCents || 0,
+      category: initialData?.category || 'jade',
+      countries: initialData?.countries || ['hk'],
+    },
+    listingId,
+    onSuccess,
+  })
 
   return (
     <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex justify-center items-center z-50 p-4'>
@@ -104,8 +115,7 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
             />
 
             <Select
-              id='country'
-              name='country'
+              name='countries'
               label='Country'
               value={formData.countries[0].toUpperCase()}
               onChange={handleChange}
