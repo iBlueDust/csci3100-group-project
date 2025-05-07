@@ -1,3 +1,4 @@
+import { isDev } from "@/env"
 import mongoose from "mongoose"
 
 const MarketListingSchema = new mongoose.Schema({
@@ -60,13 +61,15 @@ MarketListingSchema.index(
 function generateModel() {
 	const MarketListing = mongoose.model('MarketListing', MarketListingSchema)
 
-	MarketListing.on('index', (err) => {
-		if (err) {
-			console.error('MarketListing index error: %s', err)
-		} else {
-			console.info('MarketListing indexing complete')
-		}
-	})
+	if (isDev) {
+		MarketListing.on('index', (err) => {
+			if (err) {
+				console.error('[DB] MarketListing index error: %s', err)
+			} else {
+				console.info('[DB] MarketListing indexing complete')
+			}
+		})
+	}
 
 	return MarketListing
 }
