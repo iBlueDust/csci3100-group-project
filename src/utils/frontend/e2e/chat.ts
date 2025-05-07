@@ -84,7 +84,7 @@ export async function decryptChatMessage(
 		let content: EncodedChatContent
 		try {
 			content = JSON.parse(contentStr)
-		} catch (error) {
+		} catch {
 			return {
 				...message,
 				type: ChatMessageType.Text,
