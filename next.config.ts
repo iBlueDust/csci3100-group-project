@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
   output: 'standalone',
 
   images: {
+    // `domains` field still required despite being reported as deprecated
+    domains: [minioPublicUrl.hostname],
+
     remotePatterns: [
       {
         protocol: isHttps ? 'https' : 'http',
