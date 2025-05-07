@@ -27,10 +27,10 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
 
   return (
     <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-      <div className='bg-background rounded-lg max-w-3xl w-full shadow-xl border-2 border-foreground/10 max-h-[90vh] flex flex-col'>
+      <div className='bg-background rounded-lg max-w-5xl w-full shadow-xl border-2 border-foreground/10 max-h-[90vh] flex flex-col'>
         {/* Modal Header */}
         <div className='flex justify-between items-center p-4 border-b border-foreground/10 shrink-0'>
-          <h2 className='text-xl font-bold truncate'>{listing.title}</h2>
+          <h2 className='text-xl font-bold truncate'>Listing Details</h2>
           <button
             onClick={onClose}
             className='p-1 hover:bg-background-dark rounded-full'
@@ -45,11 +45,11 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
             {/* Image Gallery */}
             <div className='md:col-span-2 space-y-3'>
               {/* Main Image */}
-              <div className='bg-foreground/5 rounded-lg h-72 overflow-'>
+              <div className='bg-foreground/5 rounded-lg w-xl overflow-'>
                 <Image
-                  className='rounded-md object-cover w-full h-full'
-                  width={620}
-                  height={288}
+                  className='rounded-md object-cover w-full aspect-[4/3]'
+                  width={650}
+                  height={480}
                   src={listing.pictures[selectedImageIndex]}
                   alt={`Listing Image #${selectedImageIndex + 1}`}
                 />
@@ -60,13 +60,13 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                 {listing.pictures.map((url, i) => (
                   <label
                     key={i}
-                    className='rounded-md h-12 cursor-pointer hover:border hover:border-foreground/30 overflow-hidden'
+                    className='rounded-md cursor-pointer hover:border hover:border-foreground/30 overflow-hidden'
                     onClick={() => setSelectedImageIndex(i)}
                   >
                     <Image
-                      className='w-full h-full object-cover'
+                      className='w-full aspect-[4/3] object-cover'
                       width={108}
-                      height={48}
+                      height={81}
                       src={url}
                       alt={`Listing Image #${i + 1}`}
                     />
@@ -90,10 +90,13 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
             <div className='md:col-span-1 flex flex-col'>
               {/* Price and Actions */}
               <div className='mb-2'>
+                <h1 className='text-xl mb-2'>{listing.title}</h1>
+
                 <div className='flex justify-between items-center mb-3'>
                   <p className='text-2xl font-mono font-bold mr-4'>
                     {formatCurrency(listing.priceInCents)}
                   </p>
+
                   <div className='flex items-center gap-2'>
                     <button className='text-foreground/50 hover:text-red-500'>
                       <FiHeart size={20} />
@@ -169,16 +172,18 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                   </p>
                 </div>
               </div>
+
+              {/* Description */}
+              <div className='my-4 border-t border-foreground/10 pt-6'>
+                <h3 className='text-lg font-bold mb-3'>Description</h3>
+                <p className='whitespace-pre-line text-foreground/90 text-sm'>
+                  {listing.description}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Description */}
-          <div className='mt-6 border-t border-foreground/10 pt-6'>
-            <h3 className='text-lg font-bold mb-3'>Description</h3>
-            <p className='whitespace-pre-line text-foreground/90 text-sm'>
-              {listing.description}
-            </p>
-          </div>
+          {/* Old description location */}
         </div>
       </div>
     </div>
