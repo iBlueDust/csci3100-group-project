@@ -123,7 +123,7 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
                 <div className='flex-1' />
 
                 <button
-                  className='button py-1.5 px-3 h-auto flex items-center gap-1 flex-1 justify-center'
+                  className='button-primary flex-1 gap-1'
                   onClick={(e) => {
                     e.stopPropagation() // Prevent triggering parent onClick
                     onChat?.()
