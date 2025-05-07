@@ -480,7 +480,6 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                 )
               }}
               onChat={() => openChat(item)}
-              // onBuy={() => openBuyModal(item)}
               onEdit={() =>
                 router.push(`/dashboard/marketplace/${item.id}/edit`)
               }

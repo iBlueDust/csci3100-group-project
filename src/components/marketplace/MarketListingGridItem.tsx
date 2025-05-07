@@ -112,7 +112,7 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
         </p>
 
         {/* Push buttons to the bottom with mt-auto */}
-        <div className='flex flex-col mt-auto pt-4 pb-4'>
+        <div className='flex flex-col mt-auto pt-4'>
           <span className='text-xs text-foreground/50 mb-3'>
             Listed: {dayjs(listing.listedAt).fromNow()}
           </span>
@@ -120,6 +120,8 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
             {/* Only show chat button for listings where user is not the seller */}
             {!isMine ? (
               <>
+                <div className='flex-1' />
+
                 <button
                   className='button py-1.5 px-3 h-auto flex items-center gap-1 flex-1 justify-center'
                   onClick={(e) => {
@@ -131,7 +133,7 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
                   <span>Chat</span>
                 </button>
 
-                <button
+                {/* <button
                   className='button-primary py-1.5 px-3 h-auto flex items-center gap-1 flex-1 justify-center'
                   onClick={(e) => {
                     e.stopPropagation() // Prevent triggering parent onClick
@@ -140,7 +142,7 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
                 >
                   <FiShoppingCart size={14} />
                   <span>Buy</span>
-                </button>
+                </button> */}
               </>
             ) : (
               <>
