@@ -15,18 +15,18 @@ const nextConfig: NextConfig = {
 
   images: {
     // `domains` field still required despite being reported as deprecated
-    domains: [minioPublicUrl.host],
+    domains: [minioPublicUrl.hostname],
 
     remotePatterns: isDev ? [
       {
         protocol: isHttps ? 'https' : 'http',
-        hostname: minioPublicUrl.host,
+        hostname: minioPublicUrl.hostname,
         port: minioPublicUrl.port || defaultPort,
         pathname: `${pathname}/${env.MINIO_BUCKET_CHAT_ATTACHMENTS}/**`,
       },
       {
         protocol: isHttps ? 'https' : 'http',
-        hostname: minioPublicUrl.host,
+        hostname: minioPublicUrl.hostname,
         port: minioPublicUrl.port || defaultPort,
         pathname: `${pathname}/${env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS}/**`,
       },
