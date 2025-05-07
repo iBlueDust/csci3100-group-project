@@ -26,7 +26,7 @@ import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
 import { QueryKeys } from '@/data/types/queries'
 import { countries } from '@/utils/countries'
-import { useApi } from '@/utils/frontend/api'
+import { queryClient, useApi } from '@/utils/frontend/api'
 import HoveringChatBox from '@/components/HoveringChatBox'
 import { deriveKey, importKey } from '@/utils/frontend/e2e'
 const MarketListingListItem = dynamic(
@@ -444,9 +444,13 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                 )
               }}
               onChat={() => openChat(item)}
-              onEdit={() =>
+              onEdit={() => {
+                queryClient.setQueryData(
+                  [QueryKeys.MARKET_LISTINGS, item.id],
+                  () => item,
+                )
                 router.push(`/dashboard/marketplace/${item.id}/edit`)
-              }
+              }}
               onDelete={() => {
                 if (
                   !confirm(`Are you sure you want to delete "${item.title}"?`)

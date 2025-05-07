@@ -4,14 +4,14 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 import MarketplaceLayout from '@/layouts/MarketplaceLayout'
-import CreateListingForm from '@/components/marketplace/CreateListingForm'
+import NewMarketListingModal from '@/components/marketplace/NewMarketListingModal'
 import { PageWithLayout } from '@/data/types/layout'
 
 const MarketplaceCreateListingPage: PageWithLayout = () => {
   const router = useRouter()
 
   return (
-    <CreateListingForm
+    <NewMarketListingModal
       onClose={() => router.push('/dashboard/marketplace')}
       onSuccess={(listingId) =>
         router.push(`/dashboard/marketplace/${listingId}`)

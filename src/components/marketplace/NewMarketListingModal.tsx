@@ -10,7 +10,6 @@ import { useListingForm } from '@/hooks/useListingForm'
 import { CategoryOption, ListingFormData } from '@/types/marketplace'
 import { countries } from '@/utils/countries'
 import env from '@/utils/frontend/env'
-import { mergeObjects } from '@/utils'
 
 // The same categories from the marketplace component
 const categories: CategoryOption[] = [
@@ -21,7 +20,7 @@ const categories: CategoryOption[] = [
   { id: 'gems', name: 'Precious Gems' },
 ]
 
-interface CreateListingFormProps {
+export interface NewMarketListingModalProps {
   onClose: () => void
   onSuccess?: (listingId: string) => void
   initialData?: Partial<ListingFormData>
@@ -29,7 +28,7 @@ interface CreateListingFormProps {
   isEditing?: boolean
 }
 
-const CreateListingForm: React.FC<CreateListingFormProps> = ({
+const NewMarketListingModal: React.FC<NewMarketListingModalProps> = ({
   onClose,
   onSuccess,
   initialData,
@@ -38,7 +37,6 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
 }) => {
   const {
     formData,
-    images,
     isSubmitting,
     error,
     handleChange,
@@ -50,6 +48,7 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
     initialData: {
       title: initialData?.title || '',
       description: initialData?.description || '',
+      pictures: initialData?.pictures || [],
       priceInCents: initialData?.priceInCents || 0,
       category: initialData?.category || 'jade',
       countries: initialData?.countries || ['hk'],
@@ -135,7 +134,7 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
 
           <ImageUploadField
             name='pictures'
-            images={images}
+            images={formData.pictures}
             maxImages={env.NEXT_PUBLIC_MARKET_LISTING_ATTACHMENT_LIMIT}
             onChange={handleImageChange}
             onRemove={removeImage}
@@ -165,4 +164,4 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
   )
 }
 
-export default CreateListingForm
+export default NewMarketListingModal

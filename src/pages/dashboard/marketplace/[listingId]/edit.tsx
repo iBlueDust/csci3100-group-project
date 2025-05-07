@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/router'
 import dayjs from 'dayjs'
@@ -5,7 +6,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 import MarketplaceLayout from '@/layouts/MarketplaceLayout'
-import MarketListingModal from '@/components/marketplace/MarketListingModal'
+import EditMarketListingModal from '@/components/marketplace/EditMarketListingModal'
 import { PageWithLayout } from '@/data/types/layout'
 import { QueryKeys } from '@/data/types/queries'
 import { useApi } from '@/utils/frontend/api'
@@ -19,8 +20,13 @@ const MarketplaceEditListingPage: PageWithLayout = () => {
   const listingId = router.query.listingId as string
 
   const queryClient = useQueryClient()
+
   const { data: listing } = useQuery({
     queryKey: [QueryKeys.MARKET_LISTINGS, listingId],
+    initialData: queryClient.getQueryData<MarketListingSearchResult>([
+      QueryKeys.MARKET_LISTINGS,
+      listingId,
+    ]),
     queryFn: async () => {
       // check cache first
       const cache = queryClient
@@ -39,13 +45,20 @@ const MarketplaceEditListingPage: PageWithLayout = () => {
     },
   })
 
-  return listing ? (
-    <MarketListingModal
-      listing={listing}
-      isMine={listing.author.id.toString() === api.user?.id}
-      onClose={() => router.push('/dashboard/marketplace')}
-    />
-  ) : null
+  const handleSuccess = useCallback(() => {
+    router.back()
+  }, [router])
+
+  return (
+    listing && (
+      <EditMarketListingModal
+        listing={listing}
+        isMine={listing.author.id.toString() === api.user?.id}
+        onSuccess={handleSuccess}
+        onClose={() => router.push('/dashboard/marketplace')}
+      />
+    )
+  )
 }
 
 MarketplaceEditListingPage.getLayout = (page) => {

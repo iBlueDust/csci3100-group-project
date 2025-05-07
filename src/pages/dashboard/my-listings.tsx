@@ -9,6 +9,7 @@ import {
   FiAlertCircle,
   FiPlus,
 } from 'react-icons/fi'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
@@ -21,8 +22,14 @@ import type { PageWithLayout } from '@/data/types/layout'
 import { QueryKeys } from '@/data/types/queries'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency } from '@/utils/format'
-import CreateListingForm from '../../components/marketplace/CreateListingForm'
 import DashboardLayout from '@/layouts/DashboardLayout'
+
+const NewMarketListingModal = dynamic(
+  () => import('@/components/marketplace/NewMarketListingModal'),
+)
+const EditMarketListingModal = dynamic(
+  () => import('@/components/marketplace/EditMarketListingModal'),
+)
 
 export type MyListingsProps = object
 
@@ -73,6 +80,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
         ? {
             title: editingListing.title,
             description: editingListing.description,
+            pictures: editingListing.pictures,
             priceInCents: editingListing.priceInCents,
             category: 'jade',
             countries: editingListing.countries,
@@ -361,14 +369,21 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
       )}
 
       {/* Create/Edit Listing Form Modal */}
-      {(isCreateListingOpen || editingListing) && (
-        <CreateListingForm
+      {isCreateListingOpen ? (
+        <NewMarketListingModal
           initialData={modalInitialData}
           onClose={closeListingModal}
           onSuccess={onListingSubmitted}
-          listingId={editingListing ? editingListing.id.toString() : undefined}
-          isEditing={!!editingListing}
         />
+      ) : (
+        editingListing && (
+          <EditMarketListingModal
+            initialData={modalInitialData}
+            onClose={closeListingModal}
+            onSuccess={onListingSubmitted}
+            listingId={editingListing.id.toString()}
+          />
+        )
       )}
 
       {/* Delete Confirmation Modal */}

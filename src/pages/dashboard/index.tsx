@@ -10,7 +10,7 @@ import { QueryKeys } from '@/data/types/queries'
 import { mockListings } from '@/data/mock/listings'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency, formatNumber } from '@/utils/format'
-import CreateListingForm from '../../components/marketplace/CreateListingForm'
+import NewMarketListingModal from '../../components/marketplace/NewMarketListingModal'
 import { PageWithLayout } from '@/data/types/layout'
 import DashboardLayout from '@/layouts/DashboardLayout'
 import Link from 'next/link'
@@ -281,7 +281,7 @@ const Home: PageWithLayout<HomeProps> = ({
 
       {/* Create Listing Form Modal */}
       {showCreateForm && (
-        <CreateListingForm
+        <NewMarketListingModal
           onClose={() => setShowCreateForm(false)}
           onSuccess={handleCreateSuccess}
         />
