@@ -15,7 +15,7 @@ export async function getMyMarketListings(
 	if (options.skip) params.append('skip', options.skip.toString())
 	if (options.limit) params.append('limit', options.limit.toString())
 	
-	// Add filter for my listings only
+
 	params.append('mine', 'true')
 
 	const response = await api.fetch(`/market/listings?${params.toString()}`)

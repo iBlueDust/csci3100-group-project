@@ -14,7 +14,7 @@ export async function postChat(
 		body: JSON.stringify(payload),
 	})
 	if (!response.ok) {
-		console.error('Failed to create chat')
+
 		throw new Error(`Failed to create chat ${api.user?.username}:${payload.recipient ?? payload.recipientUsername} ${response.statusText}`)
 	}
 

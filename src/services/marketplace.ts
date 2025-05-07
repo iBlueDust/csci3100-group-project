@@ -1,16 +1,16 @@
-// Services for handling marketplace API calls
+
 import { Listing, ListingFormData } from '@/types/marketplace'
 
 /**
  * Create a new listing
  */
 export async function createListing(formData: ListingFormData, images: File[]): Promise<{ id: string }> {
-  // Create a FormData object for the API request
+
   const apiFormData = new FormData()
   apiFormData.append('title', formData.title.trim())
   apiFormData.append('description', formData.description.trim())
 
-  // Convert price from dollars to cents
+
   const priceInCents = formData.priceInCents
   apiFormData.append('priceInCents', priceInCents.toString())
 
@@ -20,7 +20,7 @@ export async function createListing(formData: ListingFormData, images: File[]): 
   const response = await fetch('/api/market/listings', {
     method: 'POST',
     body: apiFormData,
-    // No Content-Type header as browser sets it with boundary for FormData
+
   })
 
   if (!response.ok) {
@@ -42,21 +42,21 @@ export async function updateListing(
 ): Promise<Listing> {
   const apiFormData = new FormData()
 
-  // Add any updated fields
+
   if (formData.title) apiFormData.append('title', formData.title.trim())
   if (formData.description) apiFormData.append('description', formData.description.trim())
 
   apiFormData.append('priceInCents', formData.priceInCents?.toString() ?? '0')
   formData.countries?.forEach(country => apiFormData.append('countries', country))
 
-  // Handle image updates if provided
+
   if (imageIndexesToKeep && imageIndexesToKeep.length > 0) {
     imageIndexesToKeep.forEach(index => {
       apiFormData.append('pictures[]', index.toString())
     })
   }
 
-  // Add new images if provided
+
   if (newImages && newImages.length > 0) {
     newImages.forEach(image => {
       apiFormData.append('newPictures', image)

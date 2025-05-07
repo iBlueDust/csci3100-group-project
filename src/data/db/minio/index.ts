@@ -56,17 +56,17 @@ export const putManyObjects = async (
 	)
 
 	if (results.some(result => result.status === 'rejected')) {
-		// `objectsToCleanup` are the objects that were successfully uploaded
+
 		const objectsToCleanup = zip(results, objects)
 			.filter(([result]) => result.status === 'fulfilled')
 			.map(([, object]) => object.name)
-		// `failedObjects` are the objects that failed to upload
-		// and are `objectsToCleanup`'s complement
+
+
 		const failedObjects = zip(results, objects)
 			.filter(([result]) => result.status === 'rejected')
 			.map(([, object]) => object.name)
 
-		// Delete all successfully uploaded objects in **background**
+
 		const cleanupPromise = objectsToCleanup.map((objectName) =>
 			minioClient.removeObject(bucketName, objectName)
 		)

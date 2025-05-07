@@ -28,11 +28,8 @@ export interface MarketListingListItemProps {
 
 const MarketListingListItem: React.FC<MarketListingListItemProps> = ({
   listing,
-  // isFavorite = false,
   isMine = false,
   onClick,
-  // onFavorite,
-  // onUnfavorite,
   onChat,
   onBuy,
   onEdit,

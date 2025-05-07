@@ -47,8 +47,7 @@ const MarketListingSchema = new mongoose.Schema({
 	},
 })
 
-// Create compound text index for title and description
-// https://www.mongodb.com/docs/v4.4/core/text-search-operators/
+
 MarketListingSchema.index(
 	{ title: 'text', description: 'text' },
 	{
@@ -62,7 +61,7 @@ function generateModel() {
 
 	MarketListing.on('index', (err) => {
 		if (err) {
-			console.error('MarketListing index error: %s', err)
+
 		} else {
 			console.info('MarketListing indexing complete')
 		}

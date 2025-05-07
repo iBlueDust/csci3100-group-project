@@ -9,7 +9,7 @@ export async function getChats(
 		headers: { 'Content-Type': 'application/json' },
 	})
 	if (!response.ok) {
-		console.error('Failed to fetch chats')
+
 		throw new Error(`Failed to fetch chats ${response.statusText}`)
 	}
 

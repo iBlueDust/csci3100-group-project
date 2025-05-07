@@ -52,7 +52,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     mutationFn: async (arg: PostChatMessagePayload) =>
       sendChatMessage(api, chat.id, arg, sharedKey),
     onSuccess: () => {
-      // Reload chat messages
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
       })
@@ -87,7 +86,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             content: await attachment.arrayBuffer(),
             contentFilename: attachment.name,
           }
-      console.log({ payload })
 
       try {
         await mutation.mutateAsync(payload)

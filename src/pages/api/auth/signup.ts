@@ -84,7 +84,7 @@ async function POST(
 				.json({ code: 'USERNAME_TAKEN', message: 'Username is already taken' })
 		}
 
-		console.error('Error creating user:', error)
+
 		return res
 			.status(500)
 			.json({

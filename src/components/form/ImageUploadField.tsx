@@ -26,7 +26,7 @@ const ImageUploadField: React.FC<ImageUploadProps> = ({
     const urls = images.map((image) => URL.createObjectURL(image))
     setImageUrls(urls)
 
-    // Cleanup URLs on unmount
+    // Cleanup object URLs on unmount
     return () => {
       urls.forEach((url) => URL.revokeObjectURL(url))
     }

@@ -8,8 +8,7 @@ const licenseFileContents = fs.readFileSync(
 )
 
 export const isLicenseKey = (key: string): boolean => {
-	// Matches license keys in the format XXXX-XXXX-XXXX-XXXX
-	// Avoid characters that look alike, such as 0, O, 1, and I
+
 	return /^(?:[A-HJ-NP-Z2-9]{4}-){3}[A-HJ-NP-Z2-9]{4}$/.test(key)
 }
 
@@ -18,7 +17,6 @@ const licenseList = licenseFileContents
 	.map((key) => key.trim())
 	.filter(isLicenseKey)
 
-console.log(`${licenseList.length} license keys loaded`)
 const licenseRepo = new Set(licenseList)
 
 export function isValidLicenseKey(key: string) {

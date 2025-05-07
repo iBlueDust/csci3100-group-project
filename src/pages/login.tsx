@@ -90,7 +90,6 @@ const Login: PageWithLayout = () => {
         }
 
         const body = await response.json()
-        console.log('Logged in as user', body.id)
 
         const uek = await generateUserEncryptionKey(
           data.username,
@@ -106,7 +105,7 @@ const Login: PageWithLayout = () => {
 
         router.push('/dashboard')
       } catch (error) {
-        console.error('Login error:', error)
+
         setFormErrors((prev) => ({
           ...prev,
           general: 'Invalid username or password',

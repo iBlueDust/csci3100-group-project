@@ -56,10 +56,10 @@ const MessagesHome: PageWithLayout = () => {
     deleteChatMutation.mutate(chatId, {
       onSuccess: () => {
         router.replace('/dashboard/messages')
-        console.log(`Deleted conversation: ${chatId}`)
+
       },
       onError: (error: any) => {
-        console.error('Failed to delete chat', error)
+
         alert('Failed to delete chat')
       },
       onSettled: () => {

@@ -3,7 +3,7 @@ import type mongoose from 'mongoose'
 import { ChatMessageType, ChatWithPopulatedFields } from '@/data/types/chats'
 
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export const makeChatClientFriendly = (chat: any): ChatWithPopulatedFields => {
 	return {
 		id: chat._id ?? chat.id,
@@ -24,11 +24,11 @@ export const makeChatClientFriendly = (chat: any): ChatWithPopulatedFields => {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export const makeChatMessageClientFriendly = (message: any) => {
 	return {
 		id: message._id.toString() ?? message.id,
-		// chatId: message.chatId, // client already knows
+
 		sender: message.sender.toString(),
 		type: message.type,
 		content: message.type === ChatMessageType.Text

@@ -24,15 +24,14 @@ const ChatMessageSchema = new mongoose.Schema({
 	},
 
 	content: {
-		// string or buffer
+
 		type: mongoose.Schema.Types.Mixed,
 		required: true
 	},
 
-	// for attachments, so that `content` can be a URL and ChatMessage can still
-	// hold the file name for display purposes
+
 	contentFilename: {
-		// string or buffer
+
 		type: mongoose.Schema.Types.Mixed,
 	},
 

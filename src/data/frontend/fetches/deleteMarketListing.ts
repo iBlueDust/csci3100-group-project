@@ -16,14 +16,14 @@ export async function deleteMarketListing(
 		}
 		
 		if (!response.ok) {
-			console.error('Failed to delete market listing')
+
 			throw new Error(`Failed to delete market listing: ${response.statusText}`)
 		}
 
 		const body = await response.json()
 		return body.success
 	} catch (error) {
-		console.error('Error in deleteMarketListing:', error)
+
 		throw error
 	}
 }

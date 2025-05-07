@@ -151,7 +151,6 @@ async function PATCH(
 		priceInCents?: number
 		countries?: string[]
 	}
-	console.log({ body })
 
 	const listing = await MarketListing.findOne({
 		_id: listingId,
@@ -210,7 +209,7 @@ async function PATCH(
 		)
 
 		if (!uploadResults.success) {
-			console.warn(`PATCH /market/listings/${listingId} | Error uploading pictures:`, uploadResults.failedObjects)
+
 
 			res.status(500).json({
 				code: 'SERVER_ERROR',
@@ -224,14 +223,13 @@ async function PATCH(
 			patchPictureArray, numOldPics
 		).filter(index => index >= 0)
 			.map((index) => listing.pictures[index])
-		console.log(`PATCH /market/listings/${listingId} | Deleting unused pictures:`, picturesToDelete)
 		await Promise.all(
 			picturesToDelete.map((objectName) =>
 				minioClient
 					.removeObject(env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS, objectName)
 			)
 		).catch((err) => {
-			console.error('PATCH /market/listings | Error deleting pictures:', err)
+
 		})
 
 		const newPictureArray: string[] = []
@@ -316,13 +314,12 @@ async function DELETE(
 	// Delete associated pictures from MinIO storage
 	if (picturesToDelete.length > 0) {
 		try {
-			console.log(`Deleting ${picturesToDelete.length} pictures for listing ${listingId}`);
 			await minioClient.removeObjects(
 				env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS,
 				picturesToDelete.map(pic => pic.toString())
 			);
 		} catch (error) {
-			console.error('Error deleting listing pictures:', error);
+
 			// We don't want to fail the entire operation if image deletion fails
 			// The MongoDB document is already deleted at this point
 		}

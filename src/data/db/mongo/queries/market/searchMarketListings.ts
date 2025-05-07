@@ -28,7 +28,7 @@ export const searchMarketListings = async (
 
 	const pipeline: PipelineStage[] = []
 
-	// Basic filters
+
 	const filter: Record<string, object | string> = {}
 	
 	if (typeof priceMin === 'number' && !isNaN(priceMin)) {
@@ -45,12 +45,12 @@ export const searchMarketListings = async (
 		filter.countries = { $in: countries }
 	}
 	
-	// Filter by author if provided
+
 	if (authorId) {
 		filter.author = authorId
 	}
 	
-	// Apply filters if any exist
+
 	if (Object.keys(filter).length > 0) {
 		pipeline.push({ $match: filter })
 	}

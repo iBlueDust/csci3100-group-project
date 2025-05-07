@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { FiPaperclip, FiSend, FiTrash2 } from 'react-icons/fi'
 import TextareaAutosize from 'react-textarea-autosize'
 
@@ -27,18 +21,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
   const formRef = useRef<HTMLFormElement>(null)
   const messageInputRef = useRef<HTMLTextAreaElement>(null)
 
-  const handleAttachmentChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!e.target.files || !e.target.files[0]) {
-        return
-      }
-
-      const file = e.target.files[0]
-      setAttachment(file)
-      setShowAttachmentPreview(true)
-    },
-    [],
-  )
+  const handleAttachmentChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return
+    setAttachment(e.target.files[0])
+    setShowAttachmentPreview(true)
+  }, [])
 
   const cancelAttachment = useCallback(() => {
     setAttachment(null)
@@ -47,35 +34,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
 
   const handleSendMessage = useCallback(async () => {
     if (onSend) {
-      console.log({ attachment })
       const sendSuccess = await onSend(messageInput, attachment)
-      if (!sendSuccess) {
-        return
-      }
+      if (!sendSuccess) return
     }
-
-    if (!attachment) {
-      setMessageInput('')
-    }
+    if (!attachment) setMessageInput('')
     setAttachment(null)
     setShowAttachmentPreview(false)
   }, [onSend, messageInput, attachment])
 
-  const handleFormSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault()
-      await handleSendMessage()
-    },
-    [handleSendMessage],
-  )
+  const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault()
+    await handleSendMessage()
+  }, [handleSendMessage])
 
   useEffect(() => {
-    if (!messageInputRef.current) {
-      console.error('messageInputRef is not set')
-      return
-    }
+    if (!messageInputRef.current) return
     const elem = messageInputRef.current
-
     const listener = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
@@ -84,15 +58,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
       }
     }
     elem.addEventListener('keydown', listener)
-
-    return () => {
-      elem.removeEventListener('keydown', listener)
-    }
-  }, [messageInputRef, formRef, handleSendMessage])
+    return () => elem.removeEventListener('keydown', listener)
+  }, [handleSendMessage])
 
   useLayoutEffect(() => {
     messageInputRef.current?.focus()
-  }, [messageInputRef])
+  }, [])
 
   return (
     <div className='p-2 md:p-4 border-t-2 border-foreground/10 bg-background'>

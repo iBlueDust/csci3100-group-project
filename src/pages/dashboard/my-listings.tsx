@@ -42,12 +42,10 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
     useState<MarketListingSearchResult | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // Filter listings to only show the user's own listings
   const { data: listings } = useQuery({
     queryKey: [QueryKeys.MARKET_LISTINGS, 'mine'],
     queryFn: async () => {
       const options = {
-        // Additional options can be added here if needed
       }
       return await queryMyMarketListings(api, options)
     },
@@ -55,11 +53,8 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
     refetchOnWindowFocus: false,
   })
 
-  // Function to handle viewing a listing in the marketplace
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const viewListingInMarketplace = useCallback((_: string) => {}, [])
 
-  // Handle deletion of a listing
   const confirmDelete = useCallback(async () => {
     if (!listingToDelete) return;
     setIsDeleting(true);
@@ -70,7 +65,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
         setListingToDelete(null);
       },
       onError: (error: any) => {
-        console.error('Error deleting listing:', error);
+
         alert(`Error: ${error.message || 'Failed to delete listing. Please try again.'}`);
       },
       onSettled: () => {
@@ -99,7 +94,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
         </button>
       </div>
 
-      {/* Filters and sorting */}
+
       <div className='mb-6'>
         <div className='flex flex-col gap-3'>
           <div className='text-foreground/70 text-center md:text-left'>
@@ -145,7 +140,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
         </div>
       </div>
 
-      {/* Empty state */}
+
       {listings?.data.length === 0 && (
         <div className='flex-1 flex flex-col items-center justify-center text-center p-10 border-2 border-dashed border-foreground/10 rounded-lg'>
           <FiShoppingCart size={48} className='mb-4 text-foreground/30' />
@@ -166,7 +161,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
         </div>
       )}
 
-      {/* Grid View */}
+
       {listings && listings.data.length > 0 && viewMode === 'grid' && (
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
           {listings.data.map((listing) => (
@@ -175,7 +170,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
               className='bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer h-[595px] flex flex-col'
               onClick={() => viewListingInMarketplace(listing.id.toString())}
             >
-              {/* Item image - fixed height */}
+
               <div className='h-48 bg-foreground/5 overflow-hidden flex-shrink-0'>
                 {listing.pictures.length > 0 ? (
                   <Image
@@ -219,7 +214,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
                   Seller: You
                 </p>
 
-                {/* Add description with line clamp */}
+
                 <p
                   className='text-sm mt-2 text-foreground/70 line-clamp-2 flex-grow'
                   title={listing.description}
@@ -227,7 +222,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
                   {listing.description}
                 </p>
 
-                {/* Push buttons to the bottom with mt-auto */}
+
                 <div className='flex flex-col mt-auto pt-4 pb-4'>
                   <span className='text-xs text-foreground/50 mb-3'>
                     Listed: {dayjs(listing.listedAt).fromNow()}
@@ -236,7 +231,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
                     <button
                       className='button py-1.5 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center text-red-500'
                       onClick={(e) => {
-                        e.stopPropagation() // Prevent triggering parent onClick
+                        e.stopPropagation()
                         setListingToDelete(listing)
                         setIsDeleteModalOpen(true)
                       }}
@@ -247,7 +242,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
                     <button
                       className='button-primary py-1.5 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center'
                       onClick={(e) => {
-                        e.stopPropagation() // Prevent triggering parent onClick
+                        e.stopPropagation()
                         setEditingListing(listing)
                       }}
                     >
@@ -262,7 +257,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
         </div>
       )}
 
-      {/* List View */}
+
       {listings && listings.data.length > 0 && viewMode === 'list' && (
         <div className='space-y-4'>
           {listings.data.map((listing) => (
@@ -271,7 +266,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
               className='bg-background-light border-2 border-foreground/10 rounded-lg p-4 flex gap-4 hover:shadow-md transition-shadow cursor-pointer'
               onClick={() => viewListingInMarketplace(listing.id.toString())}
             >
-              {/* Item image */}
+
               <div className='h-24 w-24 bg-foreground/5 shrink-0 overflow-hidden'>
                 {listing.pictures.length > 0 ? (
                   <Image
@@ -318,7 +313,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
                   <button
                     className='button py-1 px-3 h-auto flex items-center gap-1 text-red-500'
                     onClick={(e) => {
-                      e.stopPropagation() // Prevent triggering parent onClick
+                      e.stopPropagation()
                       setListingToDelete(listing)
                       setIsDeleteModalOpen(true)
                     }}
@@ -329,7 +324,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
                   <button
                     className='button-primary py-1 px-3 h-auto flex items-center gap-1'
                     onClick={(e) => {
-                      e.stopPropagation() // Prevent triggering parent onClick
+                      e.stopPropagation()
                       setEditingListing(listing)
                     }}
                   >
@@ -343,7 +338,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
         </div>
       )}
 
-      {/* Create/Edit Listing Form Modal */}
+
       {(isCreateListingOpen || editingListing) && (
         <CreateListingForm
           onClose={() => {
@@ -353,7 +348,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
           onSuccess={(listingId) => {
             setIsCreateListingOpen(false)
             setEditingListing(null)
-            // In a real app, you might refresh the listings or navigate to the new listing
+
             alert(
               `Listing ${
                 editingListing ? 'updated' : 'created'
@@ -376,7 +371,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
+
       {isDeleteModalOpen && listingToDelete && (
         <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
           <div className='bg-background rounded-lg p-6 max-w-md w-full shadow-xl border-2 border-foreground/10'>

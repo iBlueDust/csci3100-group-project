@@ -44,7 +44,7 @@ const MarketListingModal = dynamic(
   () => import('../../../components/marketplace/MarketListingModal'),
 )
 
-// Mock categories
+
 const categories = [
   { id: 'all', name: 'All Items' },
   {
@@ -61,9 +61,7 @@ const categories = [
   { id: 'art', name: 'Artwork' },
   { id: 'gems', name: 'Precious Gems' },
 ]
-// Countries are now imported from @/utils/countries
 
-// Add interface for the Marketplace component props
 export type MarketplaceProps = object
 
 const Marketplace: PageWithLayout<MarketplaceProps> = () => {
@@ -71,7 +69,6 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
   const [minPrice, setMinPrice] = useState(0)
   const [maxPrice, setMaxPrice] = useState(Number.POSITIVE_INFINITY)
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(8)
   const [totalPages, setTotalPages] = useState(1)
@@ -80,7 +77,6 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
   const queryClient = useQueryClient()
   const deleteMarketListingMutation = useDeleteMarketListing(api)
 
-  // Pagination parameters for API queries
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage
 
   const { data: listings, refetch } = useQuery({
@@ -116,27 +112,22 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
   const [sortOption, setSortOption] = useState('newest')
   const [showFilters, setShowFilters] = useState(false)
 
-  // Favorites state
   const [favorites, setFavorites] = useState<MarketListingSearchResult[]>([])
 
-  // Add state for detailed listing modal
   const [detailedListing, setDetailedListing] =
     useState<MarketListingSearchResult | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
-  // Function to open detailed listing modal
   const openDetailModal = (item: MarketListingSearchResult) => {
     setDetailedListing(item)
     setIsDetailModalOpen(true)
   }
 
-  // Function to close detailed listing modal
   const closeDetailModal = () => {
     setIsDetailModalOpen(false)
     setDetailedListing(null)
   }
 
-  // Chat bubble state
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [selectedListing, setSelectedListing] =
     useState<MarketListingSearchResult | null>(null)
@@ -150,12 +141,10 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
     }>
   >([])
 
-  // Open chat with a specific listing
   const openChat = (item: MarketListingSearchResult) => {
     setSelectedListing(item)
     setIsChatOpen(true)
 
-    // Demo: Add the listing as a message in the chat
     setChatMessages([
       ...chatMessages,
       {
@@ -167,7 +156,6 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
     ])
   }
 
-  // Send a message in the chat
   const sendChatMessage = () => {
     if (chatMessage.trim()) {
       setChatMessages([
@@ -180,7 +168,6 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
       ])
       setChatMessage('')
 
-      // Demo: Mock response from the seller
       setTimeout(() => {
         setChatMessages((prev) => [
           ...prev,
@@ -194,7 +181,6 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
     }
   }
 
-  // Simulate sending an attachment
   const sendAttachment = () => {
     setChatMessages([
       ...chatMessages,
@@ -206,12 +192,10 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
     ])
   }
 
-  // Create listing form state
   const [isCreateListingOpen, setIsCreateListingOpen] = useState(false)
   const [editingListing, setEditingListing] =
     useState<MarketListingSearchResult | null>(null)
 
-  // Buy modal state
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false)
   const [buyingListing, setBuyingListing] = useState<MarketListingSearchResult | null>(null)
   const [purchaseStep, setPurchaseStep] = useState<'confirm' | 'payment' | 'complete'>('confirm')
@@ -221,19 +205,16 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
     else setIsBuyModalOpen(false)
   }, [purchaseStep])
 
-  // Delete listing state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [listingToDelete, setListingToDelete] =
     useState<MarketListingSearchResult | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
-  // Helper for opening buy modal
   const openBuyModal = (item: MarketListingSearchResult) => {
     setBuyingListing(item)
     setPurchaseStep('confirm')
     setIsBuyModalOpen(true)
   }
 
-  // Handle deletion of a listing
   const confirmDelete = useCallback(async () => {
     if (!listingToDelete) return;
     if (listingToDelete.author.id.toString() !== api.user?.id) {
@@ -248,7 +229,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
         setListingToDelete(null);
       },
       onError: (error: any) => {
-        console.error('Error deleting listing:', error);
+
         alert(`Error: ${error.message || 'Failed to delete listing. Please try again.'}`);
       },
       onSettled: () => {
@@ -268,9 +249,9 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
     setMaxPrice(Number.POSITIVE_INFINITY)
   }, [clearFilters])
 
-  // Pagination calculations
 
-  // Update total pages when filtered listings change
+
+
   useEffect(() => {
     if (!listings) return
     const numListings = listings.meta.total
@@ -281,37 +262,37 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
     }
   }, [listings, itemsPerPage, currentPage])
 
-  // Local storage for favorites persistence
+
   useEffect(() => {
-    // Load favorites from localStorage on component mount
+
     const storedFavorites = localStorage.getItem('marketplace-favorites')
     if (storedFavorites) {
       try {
         setFavorites(JSON.parse(storedFavorites))
       } catch (e) {
-        console.error('Failed to parse favorites from localStorage', e)
+
       }
     }
   }, [])
 
-  // Save favorites to localStorage whenever they change
+
   useEffect(() => {
     localStorage.setItem('marketplace-favorites', JSON.stringify(favorites))
   }, [favorites])
 
-  // Change page
+
   const paginate = (pageNumber: number) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber)
     }
   }
 
-  // Handle search button click
+
   const handleSearch = () => {
-    // Reset to first page when performing a new search
+
     setCurrentPage(1)
-    // Additional search logic could be added here if needed
-    // For example, API calls or analytics tracking
+
+
   }
 
   return (
@@ -332,7 +313,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
         </button>
       </div>
 
-      {/* Search and filter bar */}
+
       <div className='mb-6'>
         <div className='flex flex-col gap-4'>
           <div className='flex flex-row flex-nowrap items-stretch flex-grow'>
@@ -410,7 +391,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
           </div>
         </div>
 
-        {/* Filter options */}
+
         {showFilters && (
           <div className='mt-4 p-4 border border-foreground/10 rounded-md'>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
@@ -453,7 +434,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
                   </div>
                 </div>
 
-                {/* Featured regions section for quick selection */}
+
                 <div className='mt-4'>
                   <h5 className='text-sm text-foreground/70 mb-2'>
                     Featured Regions
@@ -516,7 +497,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
         )}
       </div>
 
-      {/* Category pills */}
+
       <div className='flex flex-wrap gap-2 mb-6'>
         {categories.map((category) => (
           <button
@@ -533,13 +514,13 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
         ))}
       </div>
 
-      {/* Results count */}
+
       <p className='mb-4 text-foreground/70'>
         Showing {listings?.data.length}{' '}
         {listings?.data.length === 1 ? 'result' : 'results'}
       </p>
 
-      {/* Item grid/list */}
+
       {viewMode === 'grid' ? (
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
           {listings?.data.map((item) => (
@@ -604,7 +585,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
         </div>
       )}
 
-      {/* Empty state */}
+
       {(!listings || listings.meta.total === 0) && (
         <div className='text-center py-12'>
           <p className='text-foreground/50 text-lg'>
@@ -632,7 +613,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
         />
       </div>
 
-      {/* Buy Modal */}
+
       {isBuyModalOpen && buyingListing && (
         <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto'>
           <div className='bg-background rounded-lg w-full max-w-screen-sm md:max-w-2xl mx-4 md:mx-auto shadow-xl overflow-hidden'>
@@ -658,7 +639,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
             {purchaseStep === 'confirm' && (
               <div className='space-y-4'>
                 <div className='flex gap-4 items-start'>
-                  {/* Image placeholder */}{' '}
+
                   <div className='h-24 w-24 bg-foreground/5 shrink-0 overflow-hidden'>
                     {buyingListing.pictures.length > 0 ? (
                       <Image
@@ -839,15 +820,15 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
         </div>
       )}
 
-      {/* Floating Chat Bubble */}
+
       {isChatOpen && selectedListing && (
-        // <HoveringChatBox key={selectedListing.id} onClose={() => setIsChatOpen(false)} />
+
 
         <div className='fixed bottom-4 right-4 w-80 md:w-96 h-96 bg-background border-2 border-black dark:border-[#343434] rounded-lg shadow-xl flex flex-col z-50'>
-          {/* Chat Header */}
+
           <div className='flex justify-between items-center p-3 border-b border-l border-r border-foreground/10 bg-background-light rounded-t-lg'>
             {' '}
-            {/* Added border-l, border-r, and rounded-t-lg */}
+
             <div className='flex items-center gap-2'>
               <div className='w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-foreground'>
                 {(
@@ -875,7 +856,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
             </button>
           </div>
 
-          {/* Chat Messages */}
+
           <div className='flex-1 overflow-y-auto p-3 space-y-3'>
             {chatMessages.map((msg, i) => (
               <div
@@ -923,7 +904,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
             ))}
           </div>
 
-          {/* Chat Input */}
+
           <div className='p-3 border-t border-foreground/10 flex gap-2'>
             <button
               onClick={sendAttachment}
@@ -949,7 +930,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
         </div>
       )}
 
-      {/* Detailed Listing Modal */}
+
       {isDetailModalOpen && detailedListing && (
         <MarketListingModal
           listing={detailedListing}
@@ -975,7 +956,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
         />
       )}
 
-      {/* Create Listing Form Modal */}
+
       {(isCreateListingOpen || editingListing) && (
         <CreateListingForm
           onClose={() => {
@@ -985,7 +966,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
           onSuccess={(listingId) => {
             setIsCreateListingOpen(false)
             setEditingListing(null)
-            // In a real app, you might refresh the listings or navigate to the new listing
+
             alert(
               `Listing ${
                 editingListing ? 'updated' : 'created'
@@ -998,7 +979,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
                   title: editingListing.title,
                   description: editingListing.description,
                   priceInCents: editingListing.priceInCents / 100,
-                  category: 'jade', // editingListing.category,
+                  category: 'jade',
                   countries: editingListing.countries,
                 }
               : undefined
@@ -1008,7 +989,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
+
       {isDeleteModalOpen && listingToDelete && (
         <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
           <div className='bg-background rounded-lg p-6 max-w-md w-full shadow-xl border-2 border-foreground/10'>
