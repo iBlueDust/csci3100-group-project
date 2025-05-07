@@ -1,11 +1,19 @@
 import React, { useState } from 'react'
-import { FiHeart, FiMessageCircle, FiShoppingCart, FiX } from 'react-icons/fi'
+import {
+  FiEdit,
+  FiHeart,
+  FiMessageCircle,
+  FiShoppingCart,
+  FiX,
+} from 'react-icons/fi'
 import dayjs from 'dayjs'
 
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { formatCurrency } from '@/utils/format'
 import Image from 'next/image'
 import SubmitButton from '../form/SubmitButton'
+import { useApi } from '@/utils/frontend/api'
+import Link from 'next/link'
 
 export interface MarketListingModalProps {
   listing: MarketListingSearchResult
@@ -24,6 +32,7 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
   onEditListing,
   onClose,
 }) => {
+  const api = useApi()
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   return (
@@ -114,7 +123,7 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                   </div>
                 </div>
 
-                <div className='space-y-2'>
+                <div className='space-y-2 mb-2'>
                   {/* <button
                     onClick={onBuy}
                     className='button-primary w-full py-2 flex items-center justify-center gap-2 text-sm'
@@ -123,16 +132,28 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                     Buy Now
                   </button> */}
 
-                  <SubmitButton
-                    look='primary'
-                    className='w-full'
-                    onClick={onChat}
-                  >
-                    <div className='flex flex-row items-center justify-center gap-2 text-sm'>
-                      <FiMessageCircle size={16} />
-                      <span>Message Seller</span>
-                    </div>
-                  </SubmitButton>
+                  {api.user?.id.toString() !== listing.author.id.toString() ? (
+                    <SubmitButton
+                      look='primary'
+                      className='w-full'
+                      onClick={onChat}
+                    >
+                      <div className='flex flex-row items-center justify-center gap-2 text-sm'>
+                        <FiMessageCircle size={16} />
+                        <span>Message Seller</span>
+                      </div>
+                    </SubmitButton>
+                  ) : (
+                    <Link
+                      className='w-full button-shape bg-amber-400 hover:bg-amber-500 text-black'
+                      href={`/dashboard/marketplace/${listing.id}/edit`}
+                    >
+                      <div className='flex flex-row items-center justify-center gap-2 text-sm'>
+                        <FiEdit size={16} />
+                        <span>Edit</span>
+                      </div>
+                    </Link>
+                  )}
                 </div>
               </div>
 

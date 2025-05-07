@@ -52,8 +52,8 @@ const MarketplaceEditListingPage: PageWithLayout = () => {
   return (
     listing && (
       <EditMarketListingModal
-        listing={listing}
-        isMine={listing.author.id.toString() === api.user?.id}
+        listingId={listing.id.toString()}
+        initialData={listing}
         onSuccess={handleSuccess}
         onClose={() => router.push('/dashboard/marketplace')}
       />
