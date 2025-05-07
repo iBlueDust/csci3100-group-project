@@ -7,11 +7,20 @@ import {
 } from "@/data/types/chats"
 import {
 	EncryptedPostChatMessagePayload,
+	PostChatAttachmentMessagePayload,
+	PostChatMarketListingMessagePayload,
 	PostChatMessagePayload,
+	PostChatTextMessagePayload,
 } from "@/data/frontend/fetches/postChatMessage"
-import { str2ab } from "@/utils"
+import { ab2base64, str2ab } from "@/utils"
 import { decryptMessage, deriveKey, encryptMessage, importKey } from "."
 
+
+export interface EncodedChatContent {
+	type: 'text' | 'market-listing'
+	nonce: string
+	data: string
+}
 
 export async function decryptChat(
 	chat: EncryptedClientChat,
@@ -58,7 +67,7 @@ export async function decryptChats(
 }
 
 export async function decryptChatMessage(
-	message: EncryptedClientChatMessage,
+	message: EncryptedClientChatMessage<string>,
 	sharedKey: CryptoKey,
 ): Promise<ClientChatMessage> {
 	if (!message.e2e) {
@@ -69,12 +78,29 @@ export async function decryptChatMessage(
 
 	if (message.type === ChatMessageType.Text) {
 		const cipher = str2ab(atob(message.content as string))
-		const content = await decryptMessage(cipher, iv, sharedKey)
-		const newMessage: ClientChatMessage = {
-			...message,
-			content: new TextDecoder().decode(content),
+		const decryptedCipher = await decryptMessage(cipher, iv, sharedKey)
+		const contentStr = new TextDecoder().decode(decryptedCipher)
+
+		let content: EncodedChatContent
+		try {
+			content = JSON.parse(contentStr)
+		} catch (error) {
+			return {
+				...message,
+				type: ChatMessageType.Text,
+				content: contentStr,
+			}
 		}
-		return newMessage
+
+		const decoded = {
+			...message,
+			content: content.data,
+		} as ClientChatMessage
+		if (content.type === 'market-listing') {
+			decoded.type = ChatMessageType.MarketListing
+		}
+		return decoded
+
 	} else {
 		let decryptedFilename: string | undefined = undefined
 		if (message.contentFilename) {
@@ -85,13 +111,14 @@ export async function decryptChatMessage(
 
 		return {
 			...message,
+			content: message.content,
 			contentFilename: decryptedFilename,
 		}
 	}
 }
 
 export async function decryptChatMessages(
-	messages: EncryptedClientChatMessage[],
+	messages: EncryptedClientChatMessage<string>[],
 	sharedKey: CryptoKey,
 ): Promise<ClientChatMessage[]> {
 	const result = new Array(messages.length).fill(null)
@@ -109,35 +136,87 @@ export async function encryptChatMessage(
 	message: PostChatMessagePayload,
 	sharedKey: CryptoKey,
 ): Promise<EncryptedPostChatMessagePayload> {
-	const contentBytes: Uint8Array<ArrayBufferLike> =
-		typeof message.content === "string"
-			? new TextEncoder().encode(message.content)
-			: new Uint8Array(message.content)
-	const encryptedContent = await encryptMessage(contentBytes, sharedKey)
-	const iv = encryptedContent.iv
-
 	if (message.type === ChatMessageType.Text) {
-		return {
-			...message,
-			content: encryptedContent.ciphertext,
-			e2e: { iv: iv.buffer },
-		}
+		return await encryptTextMessage(message, sharedKey)
+	} else if (message.type === ChatMessageType.MarketListing) {
+		return await encryptMarketListingMessage(message, sharedKey)
 	} else {
-		let encryptedFilename: {
-			iv: Uint8Array<ArrayBufferLike>
-			ciphertext: ArrayBuffer
-		} | undefined = undefined
-
-		if (message.contentFilename) {
-			const filenameBytes = new TextEncoder().encode(message.contentFilename)
-			encryptedFilename = await encryptMessage(filenameBytes, sharedKey, iv)
-		}
-
-		return {
-			...message,
-			content: encryptedContent.ciphertext,
-			contentFilename: encryptedFilename?.ciphertext,
-			e2e: { iv: iv.buffer },
-		}
+		return await encryptAttachmentMessage(message, sharedKey)
 	}
+}
+
+async function encryptTextMessage(
+	message: PostChatTextMessagePayload,
+	sharedKey: CryptoKey,
+): Promise<EncryptedPostChatMessagePayload> {
+	const content = JSON.stringify({
+		type: 'text',
+		nonce: generateNonce(),
+		data: message.content,
+	} as EncodedChatContent)
+	const encryptedContent = await encryptChatContent(content, sharedKey)
+
+	return {
+		...message,
+		type: ChatMessageType.Text,
+		content: encryptedContent.ciphertext,
+		e2e: { iv: encryptedContent.iv.buffer },
+	}
+}
+
+async function encryptMarketListingMessage(
+	message: PostChatMarketListingMessagePayload,
+	sharedKey: CryptoKey,
+): Promise<EncryptedPostChatMessagePayload> {
+	const content = JSON.stringify({
+		type: 'market-listing',
+		nonce: generateNonce(),
+		data: message.content,
+	} as EncodedChatContent)
+	const encryptedContent = await encryptChatContent(content, sharedKey)
+
+	return {
+		...message,
+		type: ChatMessageType.Text, // force to text type for now
+		content: encryptedContent.ciphertext,
+		e2e: { iv: encryptedContent.iv.buffer },
+	}
+}
+
+async function encryptAttachmentMessage(
+	message: PostChatAttachmentMessagePayload,
+	sharedKey: CryptoKey,
+): Promise<EncryptedPostChatMessagePayload> {
+	const { ciphertext, iv } = await encryptChatContent(message.content, sharedKey)
+
+	const encryptedFilename = message.contentFilename
+		? (
+			await encryptMessage(
+				new TextEncoder().encode(message.contentFilename),
+				sharedKey,
+				iv
+			)
+		)
+		: null
+
+	return {
+		...message,
+		content: ciphertext,
+		contentFilename: encryptedFilename?.ciphertext,
+		e2e: { iv: iv.buffer },
+	}
+}
+
+async function encryptChatContent(content: string | ArrayBuffer, sharedKey: CryptoKey) {
+	const contentBytes: Uint8Array<ArrayBufferLike> =
+		typeof content === "string"
+			? new TextEncoder().encode(content)
+			: new Uint8Array(content)
+	const encryptedContent = await encryptMessage(contentBytes, sharedKey)
+	return encryptedContent
+}
+
+function generateNonce(): string {
+	const { buffer } = window.crypto.getRandomValues(new Uint8Array(12))
+	return ab2base64(buffer)
 }

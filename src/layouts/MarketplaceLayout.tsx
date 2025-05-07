@@ -7,9 +7,6 @@ import {
   FiList,
   FiChevronDown,
   FiHeart,
-  FiMessageCircle,
-  FiX,
-  FiPaperclip,
   FiMapPin,
   FiPlus,
 } from 'react-icons/fi'
@@ -24,13 +21,14 @@ dayjs.extend(relativeTime)
 import DashboardLayout from '@/layouts/DashboardLayout'
 import PaginationControls from '@/components/PaginationControls'
 import MarketListingGridItem from '@/components/marketplace/MarketListingGridItem'
-import ChatMarketListingMessage from '@/components/chat/ChatMarketListingMessage'
 import { PageWithLayout } from '@/data/types/layout'
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
 import { QueryKeys } from '@/data/types/queries'
 import { countries } from '@/utils/countries'
 import { useApi } from '@/utils/frontend/api'
+import HoveringChatBox from '@/components/HoveringChatBox'
+import { deriveKey, importKey } from '@/utils/frontend/e2e'
 const MarketListingListItem = dynamic(
   () => import('@/components/marketplace/MarketListingListItem'),
 )
@@ -117,71 +115,27 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [selectedListing, setSelectedListing] =
     useState<MarketListingSearchResult | null>(null)
-  const [chatMessage, setChatMessage] = useState('')
-  const [chatMessages, setChatMessages] = useState<
-    Array<{
-      type: 'text' | 'attachment' | 'listing'
-      content: string
-      sender: 'user' | 'other'
-      listing?: MarketListingSearchResult
-    }>
-  >([])
+
+  const [hoverChatSharedKey, setHoverChatSharedKey] =
+    useState<CryptoKey | null>(null)
 
   // Open chat with a specific listing
-  const openChat = (item: MarketListingSearchResult) => {
-    setSelectedListing(item)
-    setIsChatOpen(true)
+  const openChat = useCallback(
+    async (item: MarketListingSearchResult) => {
+      setSelectedListing(item)
+      setIsChatOpen(true)
 
-    // Demo: Add the listing as a message in the chat
-    setChatMessages([
-      ...chatMessages,
-      {
-        type: 'listing',
-        content: `I'm interested in ${item.title}`,
-        sender: 'user',
-        listing: item,
-      },
-    ])
-  }
+      if (!api.uek) {
+        return
+      }
 
-  // Send a message in the chat
-  const sendChatMessage = () => {
-    if (chatMessage.trim()) {
-      setChatMessages([
-        ...chatMessages,
-        {
-          type: 'text',
-          content: chatMessage,
-          sender: 'user',
-        },
-      ])
-      setChatMessage('')
-
-      // Demo: Mock response from the seller
-      setTimeout(() => {
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            type: 'text',
-            content: `Thanks for your interest in my item! Would you like more information?`,
-            sender: 'other',
-          },
-        ])
-      }, 1000)
-    }
-  }
-
-  // Simulate sending an attachment
-  const sendAttachment = () => {
-    setChatMessages([
-      ...chatMessages,
-      {
-        type: 'attachment',
-        content: 'image_attachment.jpg',
-        sender: 'user',
-      },
-    ])
-  }
+      const myPrivateKey = api.uek.privateKey
+      const theirPublicKey = await importKey(item.author.publicKey, 'jwk', [])
+      const sharedKey = await deriveKey(theirPublicKey, myPrivateKey)
+      setHoverChatSharedKey(sharedKey)
+    },
+    [api.uek],
+  )
 
   const clearFilters = useCallback(() => {
     setSearchQuery('')
@@ -226,11 +180,14 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   }, [favorites])
 
   // Change page
-  const paginate = (pageNumber: number) => {
-    if (pageNumber > 0 && pageNumber <= totalPages) {
-      setCurrentPage(pageNumber)
-    }
-  }
+  const paginate = useCallback(
+    (pageNumber: number) => {
+      if (pageNumber > 0 && pageNumber <= totalPages) {
+        setCurrentPage(pageNumber)
+      }
+    },
+    [totalPages],
+  )
 
   // Handle search button click
   const handleSearch = () => {
@@ -241,16 +198,16 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   }
 
   return (
-    <div className='h-full flex flex-col pb-16'>
-      <div className='mb-6 flex flex-col md:flex-row md:justify-between md:items-center'>
+    <div className='flex h-full flex-col pb-16'>
+      <div className='mb-6 flex flex-col md:flex-row md:items-center md:justify-between'>
         <div>
-          <h1 className='text-3xl font-bold mb-2'>Marketplace</h1>
+          <h1 className='mb-2 text-3xl font-bold'>Marketplace</h1>
           <p className='text-foreground/70'>
             Browse, buy, and trade with trusted sellers on The Jade Trail
           </p>
         </div>
         <Link
-          className='button-primary h-auto py-2 px-5 mt-3 md:mt-0'
+          className='button-primary mt-3 h-auto px-5 py-2 md:mt-0'
           href='/dashboard/marketplace/create'
         >
           <FiPlus />
@@ -261,29 +218,29 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
       {/* Search and filter bar */}
       <div className='mb-6'>
         <div className='flex flex-col gap-4'>
-          <div className='flex flex-row flex-nowrap items-stretch flex-grow'>
+          <div className='flex grow flex-row flex-nowrap items-stretch'>
             <input
               type='text'
               placeholder='Search for items...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className='flex-1 bg-background-light px-4 py-2 border-y border-l border-foreground-light/75 rounded-l-md text-foreground'
+              className='flex-1 rounded-l-md border-y border-l border-foreground-light/75 bg-background-light px-4 py-2 text-foreground'
             />
             <button
               onClick={handleSearch}
-              className='px-4 border border-foreground-light/75 rounded-r-md bg-background text-foreground flex items-center justify-center hover:bg-background-dark transition-colors'
+              className='flex items-center justify-center rounded-r-md border border-foreground-light/75 bg-background px-4 text-foreground transition-colors hover:bg-background-dark'
               aria-label='Search'
             >
               <FiSearch />
             </button>
           </div>
 
-          <div className='flex flex-wrap gap-2 justify-between'>
+          <div className='flex flex-wrap justify-between gap-2'>
             <div className='flex items-center gap-2'>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-1 p-2 rounded-md ${
+                className={`flex items-center gap-1 rounded-md p-2 ${
                   showFilters ? 'bg-foreground/10' : ''
                 }`}
               >
@@ -297,14 +254,14 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className='px-4 py-2 border border-foreground-light/50 rounded-md appearance-none pr-8 bg-background'
+                  className='appearance-none rounded-md border border-foreground-light/50 bg-background px-4 py-2 pr-8'
                 >
                   <option value='newest'>Newest</option>
                   <option value='price_low'>Price: Low to High</option>
                   <option value='price_high'>Price: High to Low</option>
                   <option value='rating'>Highest Rated</option>
                 </select>
-                <FiChevronDown className='absolute right-3 top-3 pointer-events-none text-foreground/50' />
+                <FiChevronDown className='pointer-events-none absolute right-3 top-3 text-foreground/50' />
               </div>
 
               <div className='hidden md:flex'>
@@ -338,10 +295,10 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 
         {/* Filter options */}
         {showFilters && (
-          <div className='mt-4 p-4 border border-foreground/10 rounded-md'>
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+          <div className='mt-4 rounded-md border border-foreground/10 p-4'>
+            <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
               <div>
-                <h4 className='font-medium mb-2'>Categories</h4>
+                <h4 className='mb-2 font-medium'>Categories</h4>
                 <div className='space-y-2'>
                   {categories.map((category) => (
                     <div key={category.id} className='flex items-center'>
@@ -360,14 +317,14 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               </div>
 
               <div>
-                <h4 className='font-medium mb-2'>Location</h4>
+                <h4 className='mb-2 font-medium'>Location</h4>
                 <div className='relative'>
                   <div className='flex items-center'>
                     <FiMapPin className='absolute left-3 top-2.5 text-foreground/50' />
                     <select
                       value={selectedCountry}
                       onChange={(e) => setSelectedCountry(e.target.value)}
-                      className='w-full p-2 pl-10 border-2 border-foreground/10 rounded-md appearance-none bg-background pr-10'
+                      className='w-full appearance-none rounded-md border-2 border-foreground/10 bg-background p-2 px-10'
                     >
                       {countries.map((country) => (
                         <option key={country.id} value={country.id}>
@@ -375,13 +332,13 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                         </option>
                       ))}
                     </select>
-                    <FiChevronDown className='absolute right-3 top-3 pointer-events-none text-foreground/50' />
+                    <FiChevronDown className='pointer-events-none absolute right-3 top-3 text-foreground/50' />
                   </div>
                 </div>
 
                 {/* Featured regions section for quick selection */}
                 <div className='mt-4'>
-                  <h5 className='text-sm text-foreground/70 mb-2'>
+                  <h5 className='mb-2 text-sm text-foreground/70'>
                     Featured Regions
                   </h5>
                   <div className='flex flex-wrap gap-2'>
@@ -391,10 +348,10 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                         <button
                           key={code}
                           onClick={() => setSelectedCountry(code)}
-                          className={`px-2 py-1 text-xs rounded-full ${
+                          className={`rounded-full px-2 py-1 text-xs ${
                             selectedCountry === code
                               ? 'bg-foreground text-background'
-                              : 'bg-background-light border-2 border-foreground/10'
+                              : 'border-2 border-foreground/10 bg-background-light'
                           }`}
                         >
                           {country.name}
@@ -406,7 +363,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               </div>
 
               <div>
-                <h4 className='font-medium mb-2'>Price Range</h4>
+                <h4 className='mb-2 font-medium'>Price Range</h4>
                 <div className='flex items-center gap-2'>
                   <input
                     type='number'
@@ -415,7 +372,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                     onChange={(e) =>
                       setMinPrice(100 * parseInt(e.target.value))
                     }
-                    className='w-full p-2 border-2 border-foreground/10 rounded-md'
+                    className='w-full rounded-md border-2 border-foreground/10 p-2'
                   />
                   <span>to</span>
                   <input
@@ -425,7 +382,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                     onChange={(e) =>
                       setMaxPrice(100 * parseInt(e.target.value))
                     }
-                    className='w-full p-2 border-2 border-foreground/10 rounded-md'
+                    className='w-full rounded-md border-2 border-foreground/10 p-2'
                   />
                 </div>
               </div>
@@ -441,15 +398,15 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
       </div>
 
       {/* Category pills */}
-      <div className='flex flex-wrap gap-2 mb-6'>
+      <div className='mb-6 flex flex-wrap gap-2'>
         {categories.map((category) => (
           <button
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
-            className={`px-4 py-1 rounded-full text-sm ${
+            className={`rounded-full px-4 py-1 text-sm ${
               selectedCategory === category.id
                 ? 'bg-foreground text-background'
-                : 'bg-background-light border border-foreground-light/50'
+                : 'border border-foreground-light/50 bg-background-light'
             }`}
           >
             {category.name}
@@ -465,7 +422,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 
       {/* Item grid/list */}
       {viewMode === 'grid' ? (
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+        <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
           {listings?.data.map((item) => (
             /* Cannot use Link because buttons are nested inside */
             <MarketListingGridItem
@@ -543,8 +500,8 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 
       {/* Empty state */}
       {(!listings || listings.meta.total === 0) && (
-        <div className='text-center py-12'>
-          <p className='text-foreground/50 text-lg'>
+        <div className='py-12 text-center'>
+          <p className='text-lg text-foreground/50'>
             No items found matching your criteria
           </p>
           <button onClick={clearQueryAndFilters} className='button mt-4'>
@@ -553,7 +510,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
         </div>
       )}
 
-      <div className='mt-8 mx-auto'>
+      <div className='mx-auto mt-8'>
         <PaginationControls
           indexOfFirstItem={indexOfFirstItem}
           indexOfLastItem={indexOfLastItem}
@@ -570,109 +527,19 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
       </div>
 
       {/* Floating Chat Bubble */}
-      {isChatOpen && selectedListing && (
-        // <HoveringChatBox key={selectedListing.id} onClose={() => setIsChatOpen(false)} />
-
-        <div className='fixed bottom-4 right-4 w-80 md:w-96 h-96 bg-background border-2 border-black dark:border-[#343434] rounded-lg shadow-xl flex flex-col z-50'>
-          {/* Chat Header */}
-          <div className='flex justify-between items-center p-3 border-b border-l border-r border-foreground/10 bg-background-light rounded-t-lg'>
-            {' '}
-            {/* Added border-l, border-r, and rounded-t-lg */}
-            <div className='flex items-center gap-2'>
-              <div className='w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-foreground'>
-                {(
-                  selectedListing.author.username ??
-                  selectedListing.author.id.toString()
-                )
-                  .charAt(0)
-                  .toUpperCase()}
-              </div>
-              <div>
-                <p className='font-medium text-sm'>
-                  {selectedListing.author.username ??
-                    selectedListing.author.id.toString()}
-                </p>
-                <p className='text-xs text-foreground/70 truncate'>
-                  {selectedListing.title}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsChatOpen(false)}
-              className='text-foreground/70 hover:text-foreground'
-            >
-              <FiX size={20} />
-            </button>
-          </div>
-
-          {/* Chat Messages */}
-          <div className='flex-1 overflow-y-auto p-3 space-y-3'>
-            {chatMessages.map((msg, i) =>
-              msg.type === 'listing' && msg.listing ? (
-                <ChatMarketListingMessage
-                  key={i}
-                  message={{
-                    type: 'market-listing',
-                    content: msg.listing,
-                    sentAt: new Date().toISOString(),
-                    sender: '00000000',
-                    id: '00000001',
-                  }}
-                />
-              ) : (
-                <div
-                  key={i}
-                  className={`flex ${
-                    msg.sender === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-xl px-3 py-2 ${
-                      msg.sender === 'user'
-                        ? 'bg-black text-white border-2 border-foreground/20'
-                        : 'bg-white text-black border-2 border-foreground/20'
-                    }`}
-                  >
-                    {msg.type === 'text' && (
-                      <p className='text-sm'>{msg.content}</p>
-                    )}
-
-                    {msg.type === 'attachment' && (
-                      <div className='flex items-center gap-2 bg-background-light rounded p-2'>
-                        <FiPaperclip size={14} />
-                        <span className='text-sm'>{msg.content}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ),
-            )}
-          </div>
-
-          {/* Chat Input */}
-          <div className='p-3 border-t border-foreground/10 flex gap-2'>
-            <button
-              onClick={sendAttachment}
-              className='p-2 text-foreground/70 hover:text-foreground'
-            >
-              <FiPaperclip size={20} />
-            </button>
-            <input
-              type='text'
-              value={chatMessage}
-              onChange={(e) => setChatMessage(e.target.value)}
-              placeholder='Type a message...'
-              className='flex-1 py-2 px-3 border-2 border-foreground/20 rounded-full bg-background'
-            />
-            <button
-              onClick={sendChatMessage}
-              className='h-8 w-8 rounded-full bg-black text-white flex items-center justify-center disabled:opacity-50'
-              disabled={!chatMessage.trim()}
-            >
-              <FiMessageCircle size={16} />
-            </button>
-          </div>
-        </div>
+      {isChatOpen && selectedListing && hoverChatSharedKey && (
+        <HoveringChatBox
+          otherParty={{
+            ...selectedListing.author,
+            username:
+              selectedListing.author.username ??
+              selectedListing.author.id.toString(),
+            id: selectedListing.author.id.toString(),
+          }}
+          sharedKey={hoverChatSharedKey}
+          onClose={() => setIsChatOpen(false)}
+          initialPreviewMarketListing={selectedListing}
+        />
       )}
 
       {children}

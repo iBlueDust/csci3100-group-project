@@ -1,25 +1,26 @@
 import React, { useCallback, useMemo } from 'react'
 import { FiChevronLeft, FiTrash2 } from 'react-icons/fi'
 import classNames from 'classnames'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 import {
   ChatMessageType,
-  ClientChatMessage,
   ClientChat,
+  ClientChatMessage,
 } from '@/data/types/chats'
+import BasicSpinner from '@/components/BasicSpinner'
+import ChatThread from '@/components/chat/ChatThread'
+import { useApi } from '@/utils/frontend/api'
+import { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
+import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { QueryKeys } from '@/data/types/queries'
 import { sendChatMessage } from '@/data/frontend/mutations/sendChatMessage'
-import type { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
-import { queryChatMessages } from '@/data/frontend/queries/queryChatMessages'
-import type { PaginatedResult } from '@/data/types/common'
-import { useApi } from '@/utils/frontend/api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { isDev } from '@/utils/frontend/env'
-import ChatThread from './ChatThread'
-import BasicSpinner from '../BasicSpinner'
+import { queryChatMessages } from '@/data/frontend/queries/queryChatMessages'
+import { PaginatedResult } from '@/data/types/common'
 
 export interface ChatBoxProps {
   className?: string
@@ -57,16 +58,18 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
       })
     },
+    onError: (error) => {
+      console.error('Error sending message:', error)
+    },
   })
 
-  const otherParty = useMemo(
-    () =>
-      chat.participants.find((participant) => participant.id !== api.user?.id),
-    [chat, api],
-  )
-
-  const handleSendMessage = useCallback(
-    async (message: string, attachment: File | null) => {
+  const handleSend = useCallback(
+    async (
+      message: string,
+      attachment?:
+        | { type: 'general'; value: File }
+        | { type: 'market-listing'; value: MarketListingSearchResult },
+    ) => {
       if (!message.trim() && !attachment) {
         console.warn('Message input is empty')
         return false
@@ -77,17 +80,26 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         return false
       }
 
-      const payload: PostChatMessagePayload = !attachment
-        ? {
-            type: ChatMessageType.Text,
-            content: message,
-          }
-        : {
-            type: ChatMessageType.Attachment,
-            content: await attachment.arrayBuffer(),
-            contentFilename: attachment.name,
-          }
-      console.log({ payload })
+      let payload: PostChatMessagePayload
+      if (!attachment) {
+        payload = {
+          type: ChatMessageType.Text,
+          content: message,
+        }
+      } else if (attachment.type === 'market-listing') {
+        payload = {
+          type: ChatMessageType.MarketListing,
+          content: attachment.value.id.toString(),
+        }
+      } else if (attachment.type === 'general') {
+        payload = {
+          type: ChatMessageType.Attachment,
+          content: await attachment.value.arrayBuffer(),
+          contentFilename: attachment.value.name,
+        }
+      } else {
+        throw new Error('Invalid attachment type')
+      }
 
       try {
         await mutation.mutateAsync(payload)
@@ -101,41 +113,47 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     [api, mutation],
   )
 
+  const otherParty = useMemo(
+    () =>
+      chat.participants.find((participant) => participant.id !== api.user?.id),
+    [chat, api],
+  )
+
   return (
     <section className={classNames('flex flex-col flex-nowrap', className)}>
       {/* Chat Header */}
-      <div className='min-h-16 h-16 flex items-center justify-between px-4 border-b border-foreground/10'>
+      <div className='flex h-16 min-h-16 items-center justify-between border-b border-foreground/10 px-4'>
         <div className='flex items-center gap-3'>
           <button
-            className='md:hidden text-foreground/70'
+            className='text-foreground/70 md:hidden'
             onClick={onMobileCloseClick}
           >
             <FiChevronLeft size={20} />
           </button>
-          <div className='w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-foreground'>
+          <div className='flex size-8 items-center justify-center rounded-full bg-foreground/10 text-foreground'>
             {otherParty?.username.charAt(0).toUpperCase()}
           </div>
           <h3 className='font-medium'>{otherParty?.username}</h3>
         </div>
 
         <button
-          className='h-10 w-10 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20 hover:text-red-500 transition-colors'
+          className='flex size-10 items-center justify-center rounded-full bg-foreground/10 transition-colors hover:bg-foreground/20 hover:text-red-500'
           onClick={onDeleteChat}
           disabled={isDeleting}
         >
           {!isDeleting ? (
             <FiTrash2 size={16} />
           ) : (
-            <BasicSpinner className='w-4 h-4' />
+            <BasicSpinner className='size-4' />
           )}
         </button>
       </div>
 
       <ChatThread
-        chat={chat}
-        messages={messages?.data}
+        messages={messages?.data ?? []}
         sharedKey={sharedKey}
-        onSend={handleSendMessage}
+        wasRequestedToDelete={chat.wasRequestedToDelete}
+        onSend={handleSend}
         onDeleteChat={onDeleteChat}
       />
       {/* </div> */}

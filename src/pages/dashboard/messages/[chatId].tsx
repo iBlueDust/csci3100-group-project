@@ -68,6 +68,7 @@ const MessagesHome: PageWithLayout = () => {
 
     router.replace('/dashboard/messages')
     queryClient.invalidateQueries({ queryKey: [QueryKeys.CHATS] })
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.CHATS, chatId] })
     console.log(`Deleted conversation: ${chatId}`)
   }, [api, chatId, router, queryClient])
 

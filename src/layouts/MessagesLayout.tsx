@@ -10,7 +10,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 import type { PageWithLayout } from '@/data/types/layout'
-import type { ClientChat } from '@/data/types/chats'
+import { ChatMessageType, type ClientChat } from '@/data/types/chats'
 import { QueryKeys } from '@/data/types/queries'
 import { queryChats } from '@/data/frontend/queries/queryChats'
 import { useApi } from '@/utils/frontend/api'
@@ -87,10 +87,10 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
   }, [closeNewChatModal, queryClient])
 
   return (
-    <div className='h-screen md:h-[calc(100vh-7rem)] flex flex-col overflow-hidden'>
-      <h1 className='text-3xl font-bold mb-4 md:block hidden'>Messages</h1>
+    <div className='flex h-screen flex-col overflow-hidden md:h-[calc(100vh-7rem)]'>
+      <h1 className='mb-4 hidden text-3xl font-bold md:block'>Messages</h1>
 
-      <div className='flex flex-1 md:border-2 border-0 md:border-foreground/10 rounded-lg overflow-hidden md:mt-0 mt-[-16px]'>
+      <div className='mt-[-16px] flex flex-1 overflow-hidden rounded-lg border-0 md:mt-0 md:border-2 md:border-foreground/10'>
         {/* Conversation List */}
         <div
           className={classNames(
@@ -99,13 +99,13 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
           )}
         >
           {/* Header + search container */}
-          <div className='sticky top-0 bg-background-light z-10'>
+          <div className='sticky top-0 z-10 bg-background-light'>
             {/* Header with height matching chat header in desktop view */}
-            <div className='h-12 md:h-16 flex items-center md:px-4 px-2 border-b border-foreground/25 justify-between'>
+            <div className='flex h-12 items-center justify-between border-b border-foreground/25 px-2 md:h-16 md:px-4'>
               <h3 className='text-lg font-bold'>Conversations</h3>
               <button
                 onClick={openNewChatModal}
-                className='px-4 py-2 rounded-md bg-background border border-foreground-light/25 text-foreground items-center gap-2 text-sm font-medium hover:bg-background-dark transition-colors shadow-sm md:flex hidden'
+                className='hidden items-center gap-2 rounded-md border border-foreground-light/25 bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-background-dark md:flex'
               >
                 <FiPlus />
                 <span>New</span>
@@ -145,7 +145,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
           </div>
 
           {/* Conversation items list - Make sure this is scrollable in all views */}
-          <div className='flex-1 overflow-y-auto pointer-events-auto'>
+          <div className='pointer-events-auto flex-1 overflow-y-auto'>
             {chats?.data.map((chat) => (
               <Link
                 key={chat.id}
@@ -157,12 +157,12 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
                 )}
               >
                 <div className='flex items-center gap-3'>
-                  <div className='w-10 h-10 flex-shrink-0 rounded-full bg-foreground/10 flex items-center justify-center text-foreground'>
+                  <div className='flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground/10 text-foreground'>
                     {otherParty(chat)?.username.charAt(0).toUpperCase() ?? '–'}
                   </div>
-                  <div className='flex-1 min-w-0'>
-                    <div className='flex justify-between items-baseline'>
-                      <h4 className='font-medium truncate'>
+                  <div className='min-w-0 flex-1'>
+                    <div className='flex items-baseline justify-between'>
+                      <h4 className='truncate font-medium'>
                         {otherParty(chat)?.username}
                       </h4>
                       <span className='text-xs text-foreground/70'>
@@ -172,14 +172,27 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
                       </span>
                     </div>
                     {chat.lastMessage && (
-                      <p className='text-sm text-foreground/70 truncate'>
-                        {!chat.lastMessage.contentFilename ? (
-                          chat.lastMessage.content.toString()
-                        ) : (
+                      <p className='truncate text-sm text-foreground/70'>
+                        {chat.lastMessage.type === ChatMessageType.Text &&
+                          chat.lastMessage.content.toString()}
+
+                        {chat.lastMessage.type ===
+                          ChatMessageType.MarketListing && (
                           <>
-                            <FiFile className='inline-block mr-1' size={14} />
+                            <FiFile className='mr-1 inline-block' size={14} />
                             <span className='h-full align-middle'>
-                              {chat.lastMessage.contentFilename}
+                              {'sent a market listing'}
+                            </span>
+                          </>
+                        )}
+
+                        {chat.lastMessage.type ===
+                          ChatMessageType.Attachment && (
+                          <>
+                            <FiFile className='mr-1 inline-block' size={14} />
+                            <span className='h-full align-middle'>
+                              {chat.lastMessage.contentFilename ??
+                                'sent an attachment'}
                             </span>
                           </>
                         )}
@@ -192,7 +205,7 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
           </div>
 
           {/* Pagination controls */}
-          <div className='h-12 min-h-12 flex items-center justify-center border-t border-foreground/25 sticky bottom-0 bg-background-light z-10'>
+          <div className='sticky bottom-0 z-10 flex h-12 min-h-12 items-center justify-center border-t border-foreground/25 bg-background-light'>
             <MiniPaginationControls
               indexOfFirstItem={indexOfFirstConversation}
               indexOfLastItem={indexOfLastConversation}

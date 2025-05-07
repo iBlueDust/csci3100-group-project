@@ -5,10 +5,19 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { FiPaperclip, FiSend, FiTrash2 } from 'react-icons/fi'
-import Image from 'next/image'
+import { FiPaperclip, FiSend } from 'react-icons/fi'
+import dynamic from 'next/dynamic'
 import TextareaAutosize from 'react-textarea-autosize'
-import { formatCurrency } from '@/utils/format'
+
+import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
+const AttachmentSendPreview = dynamic(
+  () => import('@/components/chat/AttachmentSendPreview'),
+  { ssr: false },
+)
+const MarketListingSendPreview = dynamic(
+  () => import('@/components/chat/MarketListingSendPreview'),
+  { ssr: false },
+)
 
 export interface ChatInputProps {
   /**
@@ -18,13 +27,31 @@ export interface ChatInputProps {
    * @returns Whether the message was sent successfully or not. If successful,
    * the input will be cleared. If not, the input will NOT be cleared.
    */
-  onSend?: (message: string, attachment: File | null) => Promise<boolean>
+  onSend?: (
+    message: string,
+    attachment?:
+      | { type: 'general'; value: File }
+      | { type: 'market-listing'; value: MarketListingSearchResult },
+  ) => Promise<boolean>
+  initialPreviewMarketListing?: MarketListingSearchResult
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
+const ChatInput: React.FC<ChatInputProps> = ({
+  onSend,
+  initialPreviewMarketListing,
+}) => {
   const [messageInput, setMessageInput] = useState('')
-  const [attachment, setAttachment] = useState<File | null>(null)
-  const [showAttachmentPreview, setShowAttachmentPreview] = useState(false)
+  const [attachment, setAttachment] = useState<
+    | { type: 'general'; value: File }
+    | { type: 'market-listing'; value: MarketListingSearchResult }
+    | undefined
+  >(() => {
+    if (initialPreviewMarketListing) {
+      return { type: 'market-listing', value: initialPreviewMarketListing }
+    }
+
+    return undefined
+  })
 
   const formRef = useRef<HTMLFormElement>(null)
   const messageInputRef = useRef<HTMLTextAreaElement>(null)
@@ -36,31 +63,40 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
       }
 
       const file = e.target.files[0]
-      setAttachment(file)
-      setShowAttachmentPreview(true)
+      setAttachment({ type: 'general', value: file })
     },
     [],
   )
 
   const cancelAttachment = useCallback(() => {
-    setAttachment(null)
-    setShowAttachmentPreview(false)
+    setAttachment(undefined)
   }, [])
 
   const handleSendMessage = useCallback(async () => {
-    if (onSend) {
-      console.log({ attachment })
-      const sendSuccess = await onSend(messageInput, attachment)
+    if (!onSend) {
+      if (attachment) {
+        setAttachment(undefined)
+      } else {
+        setMessageInput('')
+      }
+      return
+    }
+
+    if (attachment) {
+      const sendSuccess = await onSend('', attachment)
+
       if (!sendSuccess) {
         return
       }
-    }
+      setAttachment(undefined)
+    } else {
+      const sendSuccess = await onSend(messageInput)
 
-    if (!attachment) {
+      if (!sendSuccess) {
+        return
+      }
       setMessageInput('')
     }
-    setAttachment(null)
-    setShowAttachmentPreview(false)
   }, [onSend, messageInput, attachment])
 
   const handleFormSubmit = useCallback(
@@ -99,67 +135,20 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend }) => {
   return (
     <div className='border-t-2 border-foreground/10 bg-background p-2 md:p-4'>
       {/* Attachment preview */}
-      {showAttachmentPreview && attachment && (
-        <div className='mb-2 flex items-center justify-between rounded-lg border-2 border-foreground/10 bg-background-dark/10 p-2'>
-          <div className='flex items-center gap-2'>
-            <div className='rounded-lg bg-foreground/5 p-2'>
-              <FiPaperclip size={18} />
-            </div>
-            <div>
-              <p className='truncate text-sm'>{attachment.name}</p>
-              <p className='text-xs text-foreground/70'>
-                {(attachment.size / 1024).toFixed(1)} KB
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={cancelAttachment}
-            className='text-foreground/70 transition-colors hover:text-red-500'
-          >
-            <FiTrash2 size={16} />
-          </button>
-        </div>
+      {attachment?.type === 'general' && (
+        <AttachmentSendPreview
+          name={attachment.value.name}
+          size={attachment.value.size}
+          onCancel={cancelAttachment}
+        />
       )}
 
-      <div className='group mb-2 flex items-stretch gap-4 rounded-lg border-2 border-foreground/10 bg-background-dark/10'>
-        <Image
-          src='http://ec2-13-229-119-2.ap-southeast-1.compute.amazonaws.com:9000/market-listing-attachments/aa3fe78b-6a4a-4f2f-99e5-a72e51354366.jpg'
-          alt='Attachment preview: market listing picture'
-          width={80}
-          height={80}
-          className='size-20 rounded-l-md bg-background-dark object-cover'
+      {attachment?.type === 'market-listing' && (
+        <MarketListingSendPreview
+          listing={attachment.value}
+          onCancel={cancelAttachment}
         />
-
-        <div className='flex flex-1 flex-col flex-nowrap justify-between gap-2 py-2'>
-          <div className='flex justify-between gap-2'>
-            <div className='inline-block'>
-              <p className='mb-1 truncate'>{'title goes here'}</p>
-              <p className='line-clamp-2 text-xs text-foreground/70'>
-                {
-                  'Adipisicing nulla dolor ipsum proident pariatur ipsum in labore magna culpa. Commodo est cillum ex anim proident et exercitation do consectetur aute. In ut elit velit ut occaecat labore consequat fugiat enim sit tempor.'
-                }
-              </p>
-            </div>
-            <p className='text-right md:font-bold'>{formatCurrency(1000)}</p>
-          </div>
-
-          <div className='group:md:block hidden space-x-4 text-xs text-foreground-light'>
-            <span>by {'seller'}</span>
-            <span className='group:md:inline-block hidden text-xs'>
-              ★ {0} ({0} reviews)
-            </span>
-            <span className='group:md:inline-block hidden'>{'Canada'}</span>
-            <span>{'a day ago'}</span>
-          </div>
-        </div>
-
-        <button
-          onClick={cancelAttachment}
-          className='mr-2 self-center text-foreground/70 transition-colors hover:text-red-500'
-        >
-          <FiTrash2 size={16} />
-        </button>
-      </div>
+      )}
 
       <div className='flex items-center gap-2'>
         <form
