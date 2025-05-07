@@ -4,18 +4,12 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json .
+COPY package.json package-lock.json ./
 
-RUN npm i
+RUN npm ci
 
 # all *config.mjs *config.js *config.ts *config.json
-COPY *config.mjs *config.js *config.ts *config.json .env* ./
-
-COPY .licenses .
-
-COPY public ./public
-COPY src ./src
-
+COPY *config.mjs *config.js *config.ts *config.json .licenses public src ./
 
 CMD ["npm", "run", "dev"]
 
