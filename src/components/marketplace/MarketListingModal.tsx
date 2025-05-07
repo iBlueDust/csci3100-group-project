@@ -136,27 +136,6 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                 </div>
               </div>
 
-              {/* Seller Info */}
-              <div className='mb-4 p-3 border-2 border-foreground/10 rounded-lg'>
-                <div className='flex items-center gap-2 mb-1'>
-                  <div className='w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-sm'>
-                    {(listing.author.username ?? listing.author.id.toString())
-                      ?.charAt(0)
-                      .toUpperCase()}
-                  </div>
-                  <div>
-                    <p className='font-medium text-sm'>
-                      {listing.author.username ?? listing.author.id.toString()}
-                    </p>
-                    <div className='flex items-center text-xs text-foreground/70'>
-                      <span className='flex items-center'>★ {0}</span>
-                      <span className='mx-1'>•</span>
-                      <span>{0} reviews</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Item Details */}
               <div className='space-y-2 text-sm'>
                 <div>
@@ -177,9 +156,30 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                 </div>
               </div>
 
+              {/* Seller Info */}
+              <div className='mt-4 p-3 border border-foreground-light/50 rounded-lg'>
+                <div className='flex items-center gap-2 mb-1'>
+                  <div className='w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-sm'>
+                    {(listing.author.username ?? listing.author.id.toString())
+                      ?.charAt(0)
+                      .toUpperCase()}
+                  </div>
+                  <div>
+                    <p className='font-medium text-sm'>
+                      {listing.author.username ?? listing.author.id.toString()}
+                    </p>
+                    <div className='flex items-center text-xs text-foreground/70'>
+                      <span className='flex items-center'>★ {0}</span>
+                      <span className='mx-1'>•</span>
+                      <span>{0} reviews</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Description */}
-              <div className='my-4 border-t border-foreground/10 pt-6'>
-                <h3 className='text-lg font-bold mb-3'>Description</h3>
+              <div className='mb-4 mt-6'>
+                <h3 className='text-lg font-bold mb-2'>Description</h3>
                 <p className='whitespace-pre-line text-foreground/90 text-sm'>
                   {listing.description}
                 </p>
