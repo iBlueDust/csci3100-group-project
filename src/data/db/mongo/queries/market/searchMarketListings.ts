@@ -67,7 +67,7 @@ export const searchMarketListings = async (
 						foreignField: '_id',
 						as: 'authorLookup',
 						pipeline: [
-							{ $project: { username: 1, _id: 1 } }
+							{ $project: { username: 1, publicKey: 1, _id: 1 } }
 						]
 					}
 				},

@@ -8,6 +8,7 @@ export interface MarketListingSearchResult {
 	author: {
 		id: mongoose.Types.ObjectId,
 		username?: string,
+		publicKey: JsonWebKey,
 	},
 	listedAt: string,
 	editedAt?: string,
@@ -26,6 +27,7 @@ export const makeMarketListingClientFriendly = (listing: any) => {
 			? {
 				id: listing.author.id || listing.author._id,
 				username: listing.author.username,
+				publicKey: listing.author.publicKey,
 			}
 			: { id: listing.author },
 		priceInCents: listing.priceInCents,
