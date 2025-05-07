@@ -1,7 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import {
-  FiEdit,
-  FiTrash2,
   FiShoppingCart,
   FiList,
   FiGrid,
@@ -9,7 +7,7 @@ import {
   FiPlus,
 } from 'react-icons/fi'
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
+import { useRouter } from 'next/router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -20,9 +18,13 @@ import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import type { PageWithLayout } from '@/data/types/layout'
 import { QueryKeys } from '@/data/types/queries'
 import { useApi } from '@/utils/frontend/api'
-import { formatCurrency } from '@/utils/format'
 import DashboardLayout from '@/layouts/DashboardLayout'
+import MarketListingGridItem from '@/components/marketplace/MarketListingGridItem'
+import { useHoveringChatBox } from '@/hooks/useHoveringChatBox'
 
+const MarketListingListItem = dynamic(
+  () => import('@/components/marketplace/MarketListingListItem'),
+)
 const WarningConfirmModal = dynamic(
   () => import('@/components/WarningConfirmModal'),
 )
@@ -37,7 +39,10 @@ export type MyListingsProps = object
 
 const MyListings: PageWithLayout<MyListingsProps> = () => {
   const api = useApi()
+  const router = useRouter()
   const queryClient = useQueryClient()
+
+  const hoveringChatBox = useHoveringChatBox({ api })
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortOption, setSortOption] = useState('newest')
@@ -196,95 +201,29 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
       {/* Grid View */}
       {listings && listings.data.length > 0 && viewMode === 'grid' && (
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-          {listings.data.map((listing) => (
-            <div
-              key={listing.id.toString()}
-              className='bg-background-light border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer h-[595px] flex flex-col'
-              onClick={() => viewListingInMarketplace(listing.id.toString())}
-            >
-              {/* Item image - fixed height */}
-              <div className='h-48 bg-foreground/5 overflow-hidden flex-shrink-0'>
-                {listing.pictures.length > 0 ? (
-                  <Image
-                    width={100}
-                    height={100}
-                    src={listing.pictures[0]}
-                    alt='Item Image'
-                    className='w-full h-full object-cover'
-                  />
-                ) : (
-                  <div className='h-full flex items-center justify-center'>
-                    <span className='text-foreground/30'>Item Image</span>
-                  </div>
-                )}
-              </div>
-
-              <div className='p-4 flex flex-col flex-grow'>
-                <div className='flex justify-between items-start'>
-                  <h3
-                    className='font-medium truncate max-w-[85%]'
-                    title={listing.title}
-                  >
-                    {listing.title}
-                  </h3>
-                </div>
-
-                <p className='text-lg font-mono font-bold mt-1'>
-                  {formatCurrency(listing.priceInCents)}
-                </p>
-
-                <div className='flex items-center text-sm mt-1 text-foreground/70'>
-                  <span className='flex items-center'>★ {0}</span>
-                  <span className='mx-1'>•</span>
-                  <span>{0} reviews</span>
-                </div>
-
-                <p
-                  className='text-sm mt-1 text-foreground/70 line-clamp-1'
-                  title='Seller: You'
-                >
-                  Seller: You
-                </p>
-
-                {/* Add description with line clamp */}
-                <p
-                  className='text-sm mt-2 text-foreground/70 line-clamp-2 flex-grow'
-                  title={listing.description}
-                >
-                  {listing.description}
-                </p>
-
-                {/* Push buttons to the bottom with mt-auto */}
-                <div className='flex flex-col mt-auto pt-4 pb-4'>
-                  <span className='text-xs text-foreground/50 mb-3'>
-                    Listed: {dayjs(listing.listedAt).fromNow()}
-                  </span>
-                  <div className='flex justify-between'>
-                    <button
-                      className='button py-1.5 px-3 h-auto flex items-center gap-1 flex-1 mr-1 justify-center text-red-500'
-                      onClick={(e) => {
-                        e.stopPropagation() // Prevent triggering parent onClick
-                        setListingToDelete(listing)
-                        setIsDeleteModalOpen(true)
-                      }}
-                    >
-                      <FiTrash2 size={14} />
-                      <span>Delete</span>
-                    </button>
-                    <button
-                      className='button-primary py-1.5 px-3 h-auto flex items-center gap-1 flex-1 ml-1 justify-center'
-                      onClick={(e) => {
-                        e.stopPropagation() // Prevent triggering parent onClick
-                        setEditingListing(listing)
-                      }}
-                    >
-                      <FiEdit size={14} />
-                      <span>Edit</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {listings.data.map((item) => (
+            <MarketListingGridItem
+              key={item.id.toString()}
+              listing={item}
+              isMine={item.author.id.toString() === api.user?.id}
+              onClick={() => router.push(`/dashboard/marketplace/${item.id}`)}
+              onChat={() => hoveringChatBox.show(item)}
+              onEdit={() => {
+                queryClient.setQueryData(
+                  [QueryKeys.MARKET_LISTINGS, item.id],
+                  () => item,
+                )
+                router.push(`/dashboard/marketplace/${item.id}/edit`)
+              }}
+              onDelete={() => {
+                if (
+                  !confirm(`Are you sure you want to delete "${item.title}"?`)
+                ) {
+                  return
+                }
+                // TODO: Delete listing API call
+              }}
+            />
           ))}
         </div>
       )}
@@ -292,80 +231,26 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
       {/* List View */}
       {listings && listings.data.length > 0 && viewMode === 'list' && (
         <div className='space-y-4'>
-          {listings.data.map((listing) => (
-            <div
-              key={listing.id.toString()}
-              className='bg-background-light border-2 border-foreground/10 rounded-lg p-4 flex gap-4 hover:shadow-md transition-shadow cursor-pointer'
-              onClick={() => viewListingInMarketplace(listing.id.toString())}
-            >
-              {/* Item image */}
-              <div className='h-24 w-24 bg-foreground/5 shrink-0 overflow-hidden'>
-                {listing.pictures.length > 0 ? (
-                  <Image
-                    width={100}
-                    height={100}
-                    src={listing.pictures[0]}
-                    alt='Item Image'
-                    className='w-full h-full object-cover'
-                  />
-                ) : (
-                  <div className='h-full w-full flex items-center justify-center'>
-                    <span className='text-foreground/30'>Image</span>
-                  </div>
-                )}
-              </div>
+          {listings.data.map((item) => (
+            <MarketListingListItem
+              key={item.id.toString()}
+              listing={item}
+              isMine={item.author.id.toString() === api.user?.id}
+              onClick={() => router.push(`/dashboard/marketplace/${item.id}`)}
+              onChat={() => hoveringChatBox.show(item)}
+              onEdit={() =>
+                router.push(`/dashboard/marketplace/${item.id}/edit`)
+              }
+              onDelete={() => {
+                if (
+                  !confirm(`Are you sure you want to delete "${item.title}"?`)
+                ) {
+                  return
+                }
 
-              <div className='flex-1 min-w-0'>
-                <div className='flex justify-between items-start'>
-                  <h3 className='font-medium'>{listing.title}</h3>
-                  <p className='text-lg font-mono font-bold'>
-                    {formatCurrency(listing.priceInCents)}
-                  </p>
-                </div>
-
-                <p className='text-sm mt-1 line-clamp-2 text-foreground/70'>
-                  {listing.description}
-                </p>
-
-                <div className='flex flex-wrap items-center gap-x-4 gap-y-1 mt-2'>
-                  <span className='text-sm flex items-center text-foreground/70'>
-                    ★ {0} ({0} reviews)
-                  </span>
-
-                  <span className='text-sm text-foreground/70'>
-                    Location: {listing.countries.join(', ')}
-                  </span>
-
-                  <span className='text-sm text-foreground/70'>
-                    Listed: {dayjs(listing.listedAt).fromNow()}
-                  </span>
-                </div>
-
-                <div className='flex mt-3 gap-2'>
-                  <button
-                    className='button py-1 px-3 h-auto flex items-center gap-1 text-red-500'
-                    onClick={(e) => {
-                      e.stopPropagation() // Prevent triggering parent onClick
-                      setListingToDelete(listing)
-                      setIsDeleteModalOpen(true)
-                    }}
-                  >
-                    <FiTrash2 size={14} />
-                    <span>Delete</span>
-                  </button>
-                  <button
-                    className='button-primary py-1 px-3 h-auto flex items-center gap-1'
-                    onClick={(e) => {
-                      e.stopPropagation() // Prevent triggering parent onClick
-                      setEditingListing(listing)
-                    }}
-                  >
-                    <FiEdit size={14} />
-                    <span>Edit</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+                // TODO: Delete listing API call
+              }}
+            />
           ))}
         </div>
       )}
