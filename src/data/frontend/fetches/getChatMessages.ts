@@ -1,4 +1,4 @@
-import { ClientChatMessage } from "@/data/types/chats"
+import { EncryptedClientChatMessage } from "@/data/types/chats"
 import { PaginatedResult, PaginationOptions } from "@/data/types/common"
 import { Api } from "@/utils/frontend/api"
 
@@ -6,7 +6,7 @@ export async function getChatMessages(
 	api: Api,
 	chatId: string,
 	options: Partial<PaginationOptions> = {},
-): Promise<PaginatedResult<ClientChatMessage>> {
+): Promise<PaginatedResult<EncryptedClientChatMessage<string>>> {
 	const params = new URLSearchParams()
 	if (options.skip) params.set('page', options.skip.toString())
 	if (options.limit) params.set('limit', options.limit.toString())

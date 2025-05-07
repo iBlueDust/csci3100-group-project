@@ -6,7 +6,7 @@ import { useDragDrop } from '@/hooks/useDragDrop'
 
 export interface ImageUploadProps {
   name: string
-  images: File[]
+  images: (File | string)[]
   maxImages: number
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onRemove: (index: number) => void
@@ -23,12 +23,23 @@ const ImageUploadField: React.FC<ImageUploadProps> = ({
 
   const [imageUrls, setImageUrls] = useState<string[]>([])
   useEffect(() => {
-    const urls = images.map((image) => URL.createObjectURL(image))
+    const urls: string[] = []
+    const objectUrls: string[] = []
+    for (const image of images) {
+      if (typeof image === 'string') {
+        urls.push(image)
+        continue
+      }
+
+      const url = URL.createObjectURL(image)
+      urls.push(url)
+      objectUrls.push(url)
+    }
     setImageUrls(urls)
 
     // Cleanup URLs on unmount
     return () => {
-      urls.forEach((url) => URL.revokeObjectURL(url))
+      objectUrls.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [images])
 
@@ -78,14 +89,14 @@ const ImageUploadField: React.FC<ImageUploadProps> = ({
             <div
               key={index}
               className='relative group overflow-hidden rounded'
-              title={image.name}
+              title={typeof image !== 'string' ? image.name : ''}
             >
               <div className='aspect-square bg-background-dark border border-foreground/10'>
                 <Image
                   width={100}
                   height={100}
                   src={imageUrls[index]}
-                  alt={image.name}
+                  alt={typeof image !== 'string' ? image.name : 'Listing image'}
                   className='object-cover rounded h-full w-full'
                 />
               </div>

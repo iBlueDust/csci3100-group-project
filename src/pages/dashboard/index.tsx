@@ -10,9 +10,10 @@ import { QueryKeys } from '@/data/types/queries'
 import { mockListings } from '@/data/mock/listings'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency, formatNumber } from '@/utils/format'
-import CreateListingForm from '../../components/marketplace/CreateListingForm'
+import NewMarketListingModal from '../../components/marketplace/NewMarketListingModal'
 import { PageWithLayout } from '@/data/types/layout'
 import DashboardLayout from '@/layouts/DashboardLayout'
+import Link from 'next/link'
 
 // Get recent listings (first 4)
 // const recentListings = getRecentListings(4)
@@ -227,12 +228,12 @@ const Home: PageWithLayout<HomeProps> = ({
               <span className='font-mono font-bold'>5</span>
             </div>
           </div>
-          <button
-            onClick={() => setShowCreateForm(true)}
+          <Link
             className='mt-4 button-primary w-full flex items-center justify-center gap-2'
+            href='/dashboard/marketplace/create'
           >
             <FiPlus /> Create New Listing
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -280,7 +281,7 @@ const Home: PageWithLayout<HomeProps> = ({
 
       {/* Create Listing Form Modal */}
       {showCreateForm && (
-        <CreateListingForm
+        <NewMarketListingModal
           onClose={() => setShowCreateForm(false)}
           onSuccess={handleCreateSuccess}
         />
@@ -294,14 +295,9 @@ const Home: PageWithLayout<HomeProps> = ({
   )
 }
 
-Home.PageLayout = function HomeLayout({ children }) {
-  const GrandfatherLayout =
-    DashboardLayout.PageLayout ?? (({ children }) => children)
-  return (
-    <GrandfatherLayout>
-      <DashboardLayout>{children}</DashboardLayout>
-    </GrandfatherLayout>
-  )
+Home.getLayout = (page) => {
+  const GrandfatherLayout = DashboardLayout.getLayout ?? ((page) => page)
+  return GrandfatherLayout(<DashboardLayout>{page}</DashboardLayout>)
 }
 
 export default Home

@@ -15,6 +15,7 @@ export interface SearchMarketListingsOptions {
 	countries?: string[]
 	priceMin?: number
 	priceMax?: number
+	author?: string
 	skip?: number
 	limit?: number
 }
@@ -22,13 +23,18 @@ export interface SearchMarketListingsOptions {
 export const searchMarketListings = async (
 	options: SearchMarketListingsOptions,
 ): Promise<PaginatedResult<MarketListingSearchResult>> => {
-	const { query, countries, priceMin, priceMax, skip = 0, limit = 10 } = options
+	const { query, countries, priceMin, priceMax, author, skip = 0, limit = 10 } = options
 
 	const pipeline: PipelineStage[] = []
 
 
-	if (countries || priceMin || priceMax) {
-		const filter: Record<string, object> = {}
+	if (countries || priceMin || priceMax || author) {
+		const filter: {
+			priceInCents?: { $gte?: number; $lte?: number }
+			countries?: { $in: string[] }
+			author?: string
+		} = {}
+
 		if (priceMin) {
 			filter.priceInCents = { $gte: priceMin * 100 }
 		}
@@ -37,6 +43,9 @@ export const searchMarketListings = async (
 		}
 		if (countries && countries.length > 0) {
 			filter.countries = { $in: countries }
+		}
+		if (author) {
+			filter.author = author
 		}
 		pipeline.push({ $match: filter })
 	}
@@ -67,7 +76,7 @@ export const searchMarketListings = async (
 						foreignField: '_id',
 						as: 'authorLookup',
 						pipeline: [
-							{ $project: { username: 1, _id: 1 } }
+							{ $project: { username: 1, publicKey: 1, _id: 1 } }
 						]
 					}
 				},

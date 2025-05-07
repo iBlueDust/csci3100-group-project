@@ -5,10 +5,6 @@ import '@/styles/globals.css'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const App: React.FC<ExtendedAppProps<any>> = ({ Component, pageProps }) => {
-  const PageLayout =
-    Component.PageLayout ??
-    (({ children }: React.PropsWithChildren) => children)
-
   return (
     <>
       <Head>
@@ -18,9 +14,11 @@ const App: React.FC<ExtendedAppProps<any>> = ({ Component, pageProps }) => {
         />
       </Head>
 
-      <PageLayout>
+      {Component.getLayout ? (
+        Component.getLayout(<Component {...pageProps} />)
+      ) : (
         <Component {...pageProps} />
-      </PageLayout>
+      )}
     </>
   )
 }

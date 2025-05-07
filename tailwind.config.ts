@@ -24,5 +24,4 @@ export default {
       borderOpacity: ({ theme }) => theme("opacity"),
     },
   },
-  plugins: [],
 } satisfies Config

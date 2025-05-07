@@ -68,6 +68,7 @@ const MessagesHome: PageWithLayout = () => {
 
     router.replace('/dashboard/messages')
     queryClient.invalidateQueries({ queryKey: [QueryKeys.CHATS] })
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.CHATS, chatId] })
     console.log(`Deleted conversation: ${chatId}`)
   }, [api, chatId, router, queryClient])
 
@@ -91,14 +92,9 @@ const MessagesHome: PageWithLayout = () => {
   )
 }
 
-MessagesHome.PageLayout = function MessagesHomeLayout({ children }) {
-  const GrandfatherLayout =
-    MessagesLayout.PageLayout ?? (({ children }) => children)
-  return (
-    <GrandfatherLayout>
-      <MessagesLayout>{children}</MessagesLayout>
-    </GrandfatherLayout>
-  )
+MessagesHome.getLayout = (page) => {
+  const GrandfatherLayout = MessagesLayout.getLayout ?? ((page) => page)
+  return GrandfatherLayout(<MessagesLayout>{page}</MessagesLayout>)
 }
 
 export default MessagesHome

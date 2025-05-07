@@ -61,16 +61,9 @@ const SettingsPrivacyPage: PageWithLayout = () => {
   )
 }
 
-SettingsPrivacyPage.PageLayout = function SettingsPrivacyPageLayout({
-  children,
-}) {
-  const GrandfatherLayout =
-    SettingsLayout.PageLayout ?? (({ children }) => children)
-  return (
-    <GrandfatherLayout>
-      <SettingsLayout>{children}</SettingsLayout>
-    </GrandfatherLayout>
-  )
+SettingsPrivacyPage.getLayout = (page) => {
+  const GrandfatherLayout = SettingsLayout.getLayout ?? ((page) => page)
+  return GrandfatherLayout(<SettingsLayout>{page}</SettingsLayout>)
 }
 
 export default SettingsPrivacyPage

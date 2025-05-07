@@ -12,8 +12,9 @@ import { sessionStore } from '@/data/session'
 import { ChatWithPopulatedFields } from '@/data/types/chats'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { assertIsObjectId } from '@/utils/api'
+import { getChatByRecipient } from '@/data/db/mongo/queries/chats/getChatByRecipient'
 
-type GetData = PaginatedResult<ChatWithPopulatedFields>
+type GetData = PaginatedResult<ChatWithPopulatedFields> | ChatWithPopulatedFields
 type PostData = { id: string }
 
 async function GET(
@@ -23,9 +24,13 @@ async function GET(
 ) {
   const schema = Joi.object({
     query: Joi.string().optional(),
-    skip: Joi.number().min(0).default(0),
-    limit: Joi.number().min(1).max(100).default(10),
+    skip: Joi.number().min(0).optional(),
+    limit: Joi.number().min(1).max(100).optional(),
+    recipient: Joi.custom(assertIsObjectId).optional(),
   })
+    .nand('query', 'recipient')
+    .nand('skip', 'recipient')
+    .nand('limit', 'recipient')
 
   const { value: options, error } = schema.validate(req.query)
 
@@ -34,7 +39,22 @@ async function GET(
     return
   }
 
-  await dbConnect()
+  if (options.recipient) {
+    const recipientId = options.recipient as mongoose.Types.ObjectId
+    if (recipientId.equals(auth.data.userId)) {
+      return res.status(400).json({ code: 'INVALID_REQUEST', message: 'Cannot get chat with self' })
+    }
+
+    const payload = await getChatByRecipient(auth.data.userId, recipientId)
+    if (!payload) {
+      return res.status(404).json({ code: 'NOT_FOUND', message: 'Chat not found' })
+    }
+
+    return res.status(200).json(payload)
+  }
+
+  options.skip = options.skip || 0
+  options.limit = options.limit || 10
   const payload = await getRecentChats(auth.data.userId, options)
 
   res.status(200).json(payload)
@@ -42,7 +62,7 @@ async function GET(
 
 async function POST(
   req: NextApiRequest,
-  res: NextApiResponse<PostData | Error>,
+  res: NextApiResponse<PostData | Error<{ id: string }>>,
   auth: AuthData,
 ) {
   const schema = Joi.object({
@@ -72,7 +92,10 @@ async function POST(
 
     if (userDoc._id.equals(auth.data.userId)) {
       return res.status(400)
-        .json({ code: 'INVALID_REQUEST', message: 'Cannot create chat with self' })
+        .json({
+          code: 'INVALID_REQUEST',
+          message: 'Cannot create chat with self',
+        })
     }
 
     recipientId = userDoc._id
@@ -86,8 +109,13 @@ async function POST(
     participants: { $all: [auth.data.userId, recipientId], $size: 2 }
   })
   if (chatExists) {
-    return res.status(400)
-      .json({ code: 'CHAT_ALREADY_EXISTS', message: 'Chat already exists' })
+    return res.status(409).json({
+      code: 'CHAT_ALREADY_EXISTS',
+      message: 'Chat already exists',
+      extraInfo: {
+        id: chatExists._id.toString(),
+      },
+    } as Error<{ id: string }>)
   }
 
   const recipientExists = await User.exists({ _id: recipientId })
@@ -105,7 +133,7 @@ async function POST(
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<GetData | PostData | Error>,
+  res: NextApiResponse<GetData | PostData | Error<{ id: string }>>,
 ) {
   switch (req.method) {
     case 'GET':

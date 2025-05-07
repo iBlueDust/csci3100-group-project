@@ -1,5 +1,8 @@
 import mongoose from "mongoose"
 
+import { isDev } from "@/env"
+
+
 const ChatSchema = new mongoose.Schema({
 	participants: [{
 		type: mongoose.Types.ObjectId,
@@ -13,11 +16,24 @@ const ChatSchema = new mongoose.Schema({
 	deleteRequesters: [{
 		type: mongoose.Types.ObjectId,
 		ref: 'User',
+		index: true,
 	}],
 })
 
 function generateModel() {
-	return mongoose.model('Chat', ChatSchema)
+	const Chat = mongoose.model('Chat', ChatSchema)
+
+	if (isDev) {
+		Chat.on('index', (err) => {
+			if (err) {
+				console.error('[DB] Chat index error: %s', err)
+			} else {
+				console.info('[DB] Chat indexing complete')
+			}
+		})
+	}
+
+	return Chat
 }
 
 const existingModel = mongoose.models.Chat as ReturnType<typeof generateModel>

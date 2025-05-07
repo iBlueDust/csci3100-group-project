@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import classNames from 'classnames'
@@ -74,10 +74,14 @@ const DashboardLayout: PageWithLayout<DashboardLayoutProps> = ({
   const router = useRouter()
   const api = useApi()
 
-  const pathMatches = /^(\/dashboard\/[a-zA-Z0-9_-]+)\/?/.exec(router.pathname)
-  const activePage = pathMatches?.[1]
-    ? navItems.find((item) => item.path === pathMatches[1])?.key ?? undefined
-    : Page.HOME
+  const activePage = useMemo(() => {
+    const pathMatches = /^(\/dashboard\/[a-zA-Z0-9_-]+)\/?/.exec(
+      router.pathname,
+    )
+    return pathMatches?.[1]
+      ? navItems.find((item) => item.path === pathMatches[1])?.key ?? undefined
+      : Page.HOME
+  }, [router.pathname])
 
   useEffect(() => {
     if (activePage == null) {
@@ -140,7 +144,11 @@ const DashboardLayout: PageWithLayout<DashboardLayoutProps> = ({
         {/* Fixed Sidebar (hidden on mobile) */}
         <div className='hidden sm:block fixed left-0 top-16 bottom-0'>
           {/* Sidebar */}
-          <Sidebar navItems={navItems} value={activePage ?? ''} />
+          <Sidebar
+            key={activePage}
+            navItems={navItems}
+            value={activePage ?? ''}
+          />
         </div>
         {/* Main content */}
         <main className='flex-1 p-6 pb-16 sm:pb-0 sm:ml-64'>{children}</main>
@@ -166,10 +174,8 @@ const DashboardLayout: PageWithLayout<DashboardLayoutProps> = ({
   )
 }
 
-DashboardLayout.PageLayout = function DashboardLayoutPageLayout({
-  children,
-}: DashboardLayoutProps) {
-  return <ApiProvider>{children}</ApiProvider>
+DashboardLayout.getLayout = (page) => {
+  return <ApiProvider>{page}</ApiProvider>
 }
 
 export default DashboardLayout
