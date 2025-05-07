@@ -1,12 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
-import {
-  FiEdit,
-  FiHeart,
-  FiMessageCircle,
-  FiShoppingCart,
-  FiTrash2,
-} from 'react-icons/fi'
+import { FiEdit, FiHeart, FiMessageCircle, FiTrash2 } from 'react-icons/fi'
 import classNames from 'classnames'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -36,7 +30,6 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
   onFavorite,
   onUnfavorite,
   onChat,
-  onBuy,
   onEdit,
   onDelete,
 }) => {
