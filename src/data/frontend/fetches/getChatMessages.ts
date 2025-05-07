@@ -1,4 +1,4 @@
-import { ClientChatMessage, EncryptedClientChatMessage } from "@/data/types/chats"
+import { EncryptedClientChatMessage } from "@/data/types/chats"
 import { PaginatedResult, PaginationOptions } from "@/data/types/common"
 import { Api } from "@/utils/frontend/api"
 
