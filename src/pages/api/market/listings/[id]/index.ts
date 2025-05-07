@@ -289,14 +289,43 @@ async function DELETE(
 
 	await dbConnect()
 
-	const result = await MarketListing.deleteOne({
-		_id: listingId,
-		author: auth.data.userId,
-	})
-	if (result.deletedCount === 0) {
+	// First check if the listing exists at all
+	const listing = await MarketListing.findById(listingId);
+	if (!listing) {
 		return res
 			.status(404)
-			.json({ code: 'NOT_FOUND', message: 'Market listing not found' })
+			.json({ code: 'NOT_FOUND', message: 'Market listing not found' });
+	}
+	
+	// Then check if the user is the author
+	if (listing.author.toString() !== auth.data.userId.toString()) {
+		return res
+			.status(403)
+			.json({ code: 'FORBIDDEN', message: 'You do not have permission to delete this listing' });
+	}
+	
+	// If we get here, the user is the author, so delete the listing
+	// First, get the pictures that need to be deleted
+	const picturesToDelete = listing.pictures || [];
+	
+	// Delete the listing document
+	const result = await MarketListing.deleteOne({
+		_id: listingId,
+	});
+
+	// Delete associated pictures from MinIO storage
+	if (picturesToDelete.length > 0) {
+		try {
+			console.log(`Deleting ${picturesToDelete.length} pictures for listing ${listingId}`);
+			await minioClient.removeObjects(
+				env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS,
+				picturesToDelete.map(pic => pic.toString())
+			);
+		} catch (error) {
+			console.error('Error deleting listing pictures:', error);
+			// We don't want to fail the entire operation if image deletion fails
+			// The MongoDB document is already deleted at this point
+		}
 	}
 
 	return res.status(200).json({ success: result.deletedCount > 0 })

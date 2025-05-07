@@ -1,4 +1,5 @@
 import type { PipelineStage } from 'mongoose'
+import mongoose from 'mongoose'
 
 import MarketListing from '@/data/db/mongo/models/market-listing'
 import User from '@/data/db/mongo/models/user'
@@ -15,6 +16,7 @@ export interface SearchMarketListingsOptions {
 	countries?: string[]
 	priceMin?: number
 	priceMax?: number
+	authorId?: string | mongoose.Types.ObjectId // Add author ID option
 	skip?: number
 	limit?: number
 }
@@ -22,22 +24,34 @@ export interface SearchMarketListingsOptions {
 export const searchMarketListings = async (
 	options: SearchMarketListingsOptions,
 ): Promise<PaginatedResult<MarketListingSearchResult>> => {
-	const { query, countries, priceMin, priceMax, skip = 0, limit = 10 } = options
+	const { query, countries, priceMin, priceMax, authorId, skip = 0, limit = 10 } = options
 
 	const pipeline: PipelineStage[] = []
 
-
-	if (countries || priceMin || priceMax) {
-		const filter: Record<string, object> = {}
-		if (priceMin) {
-			filter.priceInCents = { $gte: priceMin * 100 }
+	// Basic filters
+	const filter: Record<string, object | string> = {}
+	
+	if (typeof priceMin === 'number' && !isNaN(priceMin)) {
+		filter.priceInCents = { $gte: priceMin };
+	}
+	if (typeof priceMax === 'number' && isFinite(priceMax)) {
+		if (filter.priceInCents && typeof filter.priceInCents === 'object') {
+			filter.priceInCents = { ...filter.priceInCents, $lte: priceMax };
+		} else {
+			filter.priceInCents = { $lte: priceMax };
 		}
-		if (priceMax) {
-			filter.priceInCents = { ...filter.priceInCents, $lte: priceMax * 100 }
-		}
-		if (countries && countries.length > 0) {
-			filter.countries = { $in: countries }
-		}
+	}
+	if (countries && countries.length > 0) {
+		filter.countries = { $in: countries }
+	}
+	
+	// Filter by author if provided
+	if (authorId) {
+		filter.author = authorId
+	}
+	
+	// Apply filters if any exist
+	if (Object.keys(filter).length > 0) {
 		pipeline.push({ $match: filter })
 	}
 

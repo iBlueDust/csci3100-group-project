@@ -10,12 +10,13 @@ import {
   FiPlus,
 } from 'react-icons/fi'
 import Image from 'next/image'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
+import { queryMyMarketListings } from '@/data/frontend/queries/queryMyMarketListings'
+import { useDeleteMarketListing } from '@/data/frontend/mutations/useDeleteMarketListing'
 import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import type { PageWithLayout } from '@/data/types/layout'
 import { QueryKeys } from '@/data/types/queries'
@@ -28,6 +29,8 @@ export type MyListingsProps = object
 
 const MyListings: PageWithLayout<MyListingsProps> = () => {
   const api = useApi()
+  const queryClient = useQueryClient()
+  const deleteMarketListingMutation = useDeleteMarketListing(api)
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortOption, setSortOption] = useState('newest')
@@ -37,20 +40,16 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [listingToDelete, setListingToDelete] =
     useState<MarketListingSearchResult | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  // Filter listings to only show the user's own listings (mock implementation)
-  // In a real app, you would fetch these from an API
+  // Filter listings to only show the user's own listings
   const { data: listings } = useQuery({
-    queryKey: [QueryKeys.MARKET_LISTINGS],
+    queryKey: [QueryKeys.MARKET_LISTINGS, 'mine'],
     queryFn: async () => {
       const options = {
-        // query: searchQuery,
-        // minPrice,
-        // maxPrice,
-        // skip: indexOfFirstItem,
-        // limit: itemsPerPage,
+        // Additional options can be added here if needed
       }
-      return await queryMarketListings(api, options)
+      return await queryMyMarketListings(api, options)
     },
     enabled: !!api.user,
     refetchOnWindowFocus: false,
@@ -61,14 +60,24 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
   const viewListingInMarketplace = useCallback((_: string) => {}, [])
 
   // Handle deletion of a listing
-  const confirmDelete = useCallback(() => {
-    // In a real app, you would call an API to delete the listing
-    // For now, we'll just close the modal
-    setIsDeleteModalOpen(false)
-    setListingToDelete(null)
-    // Show success message
-    alert('Listing deleted successfully!')
-  }, [])
+  const confirmDelete = useCallback(async () => {
+    if (!listingToDelete) return;
+    setIsDeleting(true);
+    deleteMarketListingMutation.mutate(listingToDelete.id.toString(), {
+      onSuccess: () => {
+        alert('Listing deleted successfully!');
+        setIsDeleteModalOpen(false);
+        setListingToDelete(null);
+      },
+      onError: (error: any) => {
+        console.error('Error deleting listing:', error);
+        alert(`Error: ${error.message || 'Failed to delete listing. Please try again.'}`);
+      },
+      onSettled: () => {
+        setIsDeleting(false);
+      },
+    });
+  }, [listingToDelete, deleteMarketListingMutation]);
 
   return (
     <div className='h-full flex flex-col pb-16'>
@@ -386,14 +395,16 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
                 className='button px-4'
+                disabled={isDeleting}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
                 className='button bg-red-500 text-white px-4 hover:bg-red-600'
+                disabled={isDeleting}
               >
-                Delete Listing
+                {isDeleting ? 'Deleting...' : 'Delete Listing'}
               </button>
             </div>
           </div>

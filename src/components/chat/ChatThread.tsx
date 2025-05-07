@@ -23,6 +23,7 @@ export interface ChatThreadProps {
   sharedKey: CryptoKey
   onSend: (message: string, attachment: File | null) => Promise<boolean>
   onDeleteChat?: () => void
+  isDeleting?: boolean
 }
 
 const ChatThread: React.FC<ChatThreadProps> = ({
@@ -31,6 +32,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   sharedKey,
   onSend,
   onDeleteChat,
+  isDeleting,
 }) => {
   const api = useApi()
 
@@ -51,7 +53,10 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         {/* Deletion banner */}
         {chat.wasRequestedToDelete && (
           <div className='sticky top-0 z-10'>
-            <ChatRecipientLeftBanner onDelete={onDeleteChat} />
+            <ChatRecipientLeftBanner 
+              onDelete={onDeleteChat} 
+              isDeleting={isDeleting} 
+            />
           </div>
         )}
 

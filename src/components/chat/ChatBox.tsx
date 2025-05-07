@@ -137,6 +137,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         sharedKey={sharedKey}
         onSend={handleSendMessage}
         onDeleteChat={onDeleteChat}
+        isDeleting={isDeleting}
       />
       {/* </div> */}
     </section>

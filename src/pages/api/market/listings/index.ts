@@ -18,6 +18,7 @@ type GetData = PaginatedResult<MarketListingSearchResult>
 async function GET(
 	req: NextApiRequest,
 	res: NextApiResponse<GetData | ApiError>,
+	auth?: AuthData,
 ) {
 	const schema = Joi.object({
 		query: Joi.string().optional(),
@@ -31,6 +32,7 @@ async function GET(
 				otherwise: Joi.allow(null),
 			}
 		).optional(),
+		mine: Joi.boolean().optional(),
 		skip: Joi.number().min(0).default(0),
 		limit: Joi.number().min(1).max(100).default(30),
 	})
@@ -42,12 +44,28 @@ async function GET(
 	}
 
 	await dbConnect()
-	const listings = await searchMarketListings({
+	
+	// Filter by author if 'mine' is true
+	const searchOptions = {
 		...options,
 		countries: options.countries?.toLowerCase()
 			.split(',')
 			.map((country: string) => country.trim()),
-	})
+	};
+	
+	if (options.mine === true || options.mine === 'true') {
+		if (!auth?.data?.userId) {
+			return res.status(401).json({ 
+				code: 'UNAUTHORIZED', 
+				message: 'Authentication required to view your listings' 
+			});
+		}
+		
+		// Add author filter
+		searchOptions.authorId = auth.data.userId;
+	}
+
+	const listings = await searchMarketListings(searchOptions)
 
 	for (const listing of listings.data) {
 		listing.pictures = listing.pictures.map(
@@ -199,6 +217,10 @@ export default async function handler(
 ) {
 	switch (req.method) {
 		case 'GET':
+			// If 'mine' parameter is provided, use protectedRoute to ensure authentication
+			if (req.query.mine === 'true') {
+				return await protectedRoute(GET, sessionStore)(req, res)
+			}
 			return await GET(req, res)
 		case 'POST':
 			return await protectedRoute(POST, sessionStore)(req, res)

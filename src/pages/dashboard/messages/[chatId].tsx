@@ -13,7 +13,7 @@ import type { PageWithLayout } from '@/data/types/layout'
 import { PaginatedResult } from '@/data/types/common'
 import { ClientChat } from '@/data/types/chats'
 import { useApi } from '@/utils/frontend/api'
-import { deleteChat } from '@/data/frontend/mutations/deleteChat'
+import { useDeleteChat } from '@/data/frontend/mutations/useDeleteChat'
 
 const MessagesHome: PageWithLayout = () => {
   const api = useApi()
@@ -21,6 +21,7 @@ const MessagesHome: PageWithLayout = () => {
   const chatId = router.query.chatId as string
 
   const queryClient = useQueryClient()
+  const deleteChatMutation = useDeleteChat(api)
   const { data: chat, isLoading } = useQuery({
     queryKey: [QueryKeys.CHATS, chatId],
     queryFn: async () => {
@@ -42,7 +43,7 @@ const MessagesHome: PageWithLayout = () => {
 
   // Handle delete chat
   const [isDeleting, setIsDeleting] = useState(false)
-  const handleDeleteChat = useCallback(async () => {
+  const handleDeleteChat = useCallback(() => {
     if (!chatId) return
     if (
       !window.confirm(
@@ -52,24 +53,20 @@ const MessagesHome: PageWithLayout = () => {
       return
 
     setIsDeleting(true)
-
-    try {
-      const success = await deleteChat(api, chatId)
-      if (!success) {
-        throw new Error('Failed to delete chat')
-      }
-    } catch (error) {
-      console.error('Failed to delete chat', error)
-      alert('Failed to delete chat')
-      return
-    } finally {
-      setIsDeleting(false)
-    }
-
-    router.replace('/dashboard/messages')
-    queryClient.invalidateQueries({ queryKey: [QueryKeys.CHATS] })
-    console.log(`Deleted conversation: ${chatId}`)
-  }, [api, chatId, router, queryClient])
+    deleteChatMutation.mutate(chatId, {
+      onSuccess: () => {
+        router.replace('/dashboard/messages')
+        console.log(`Deleted conversation: ${chatId}`)
+      },
+      onError: (error: any) => {
+        console.error('Failed to delete chat', error)
+        alert('Failed to delete chat')
+      },
+      onSettled: () => {
+        setIsDeleting(false)
+      },
+    })
+  }, [chatId, deleteChatMutation, router])
 
   return isLoading || !chat ? (
     <div className='flex-1 flex items-center justify-center text-foreground/50'>

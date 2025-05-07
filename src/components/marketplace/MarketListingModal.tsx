@@ -12,6 +12,7 @@ export interface MarketListingModalProps {
   onBuy?: () => void
   onChat?: () => void
   onEditListing?: () => void
+  onDeleteListing?: () => void
   onClose?: () => void
 }
 
@@ -21,6 +22,7 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
   onBuy,
   onChat,
   onEditListing,
+  onDeleteListing,
   onClose,
 }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
@@ -100,12 +102,20 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                     </button>
                     {/* Mock check to simulate if user is the owner */}
                     {isMine && (
-                      <button
-                        onClick={onEditListing}
-                        className='text-foreground/50 hover:text-blue-500'
-                      >
-                        <span className='text-sm'>Edit</span>
-                      </button>
+                      <>
+                        <button
+                          onClick={onEditListing}
+                          className='text-foreground/50 hover:text-blue-500'
+                        >
+                          <span className='text-sm'>Edit</span>
+                        </button>
+                        <button
+                          onClick={onDeleteListing}
+                          className='text-foreground/50 hover:text-red-500'
+                        >
+                          <span className='text-sm ml-2'>Delete</span>
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
