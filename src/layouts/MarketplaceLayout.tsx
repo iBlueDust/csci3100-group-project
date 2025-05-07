@@ -27,8 +27,6 @@ import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings
 import { QueryKeys } from '@/data/types/queries'
 import { countries } from '@/utils/countries'
 import { queryClient, useApi } from '@/utils/frontend/api'
-import HoveringChatBox from '@/components/HoveringChatBox'
-import { deriveKey, importKey } from '@/utils/frontend/e2e'
 import {
   HoveringChatBoxProvider,
   useHoveringChatBox,

@@ -39,7 +39,7 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
   const api = useApi()
   const queryClient = useQueryClient()
 
-  const { data: chat, isFetched: chatIsFetched } = useQuery<ClientChat>({
+  const { data: chat } = useQuery<ClientChat>({
     queryKey: [QueryKeys.CHAT_WITH_RECIPIENT, otherParty.id],
     queryFn: () => queryChatByRecipient(api, otherParty.id),
     enabled: !!api.user,

@@ -1,11 +1,5 @@
 import React, { useState } from 'react'
-import {
-  FiEdit,
-  FiHeart,
-  FiMessageCircle,
-  FiShoppingCart,
-  FiX,
-} from 'react-icons/fi'
+import { FiEdit, FiHeart, FiMessageCircle, FiX } from 'react-icons/fi'
 import dayjs from 'dayjs'
 
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
@@ -27,7 +21,6 @@ export interface MarketListingModalProps {
 const MarketListingModal: React.FC<MarketListingModalProps> = ({
   listing,
   isMine = false,
-  onBuy,
   onChat,
   onEditListing,
   onClose,
