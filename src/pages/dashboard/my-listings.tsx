@@ -41,14 +41,10 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
   // Filter listings to only show the user's own listings (mock implementation)
   // In a real app, you would fetch these from an API
   const { data: listings } = useQuery({
-    queryKey: [QueryKeys.MARKET_LISTINGS],
+    queryKey: [QueryKeys.MARKET_LISTINGS, 'my-listings'],
     queryFn: async () => {
       const options = {
-        // query: searchQuery,
-        // minPrice,
-        // maxPrice,
-        // skip: indexOfFirstItem,
-        // limit: itemsPerPage,
+        author: api.user?.id,
       }
       return await queryMarketListings(api, options)
     },

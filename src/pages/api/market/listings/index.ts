@@ -9,7 +9,7 @@ import { searchMarketListings } from '@/data/db/mongo/queries/market/searchMarke
 import { sessionStore } from '@/data/session'
 import minioClient, { putManyObjects } from '@/data/db/minio'
 import { isSupportedImageMimeType } from '@/utils'
-import { parseFormDataBody, File, generateMinioObjectName } from '@/utils/api'
+import { parseFormDataBody, File, generateMinioObjectName, assertIsObjectId } from '@/utils/api'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import env from '@/env'
 
@@ -31,6 +31,7 @@ async function GET(
 				otherwise: Joi.allow(null),
 			}
 		).optional(),
+		author: Joi.string().custom(assertIsObjectId).optional(),
 		skip: Joi.number().min(0).default(0),
 		limit: Joi.number().min(1).max(100).default(30),
 	})
