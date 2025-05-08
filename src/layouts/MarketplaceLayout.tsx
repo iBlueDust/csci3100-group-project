@@ -32,6 +32,7 @@ import {
   HoveringChatBoxProvider,
   useHoveringChatBox,
 } from '@/hooks/useHoveringChatBox'
+import Input from '@/components/form/Input'
 const MarketListingListItem = dynamic(
   () => import('@/components/marketplace/MarketListingListItem'),
 )
@@ -350,24 +351,24 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               <div>
                 <h4 className='mb-2 font-medium'>Price Range</h4>
                 <div className='flex items-center gap-2'>
-                  <input
+                  <Input
                     type='number'
                     placeholder='Min'
                     value={Math.round(minPrice) / 100}
                     onChange={(e) =>
                       setMinPrice(100 * parseInt(e.target.value))
                     }
-                    className='w-full rounded-md border-2 border-foreground/10 p-2'
+                    hideError
                   />
                   <span>to</span>
-                  <input
+                  <Input
                     type='number'
                     placeholder='Max'
                     value={Math.round(maxPrice) / 100}
                     onChange={(e) =>
                       setMaxPrice(100 * parseInt(e.target.value))
                     }
-                    className='w-full rounded-md border-2 border-foreground/10 p-2'
+                    hideError
                   />
                 </div>
               </div>
