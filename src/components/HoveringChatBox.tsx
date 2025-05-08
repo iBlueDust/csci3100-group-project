@@ -5,13 +5,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import { queryChatMessages } from '@/data/frontend/queries/queryChatMessages'
-import {
-  ClientChatMessage,
-  ClientChat,
-  ChatMessageType,
-} from '@/data/types/chats'
-import { PaginatedResult } from '@/data/types/common'
+import { ClientChat } from '@/data/types/chats'
 import { QueryKeys } from '@/data/types/queries'
 import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { queryChatByRecipient } from '@/data/frontend/queries/queryChatByRecipient'
@@ -20,7 +14,6 @@ import { sendChatMessage } from '@/data/frontend/mutations/sendChatMessage'
 import { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
 import { createNewChatByUserId } from '@/data/frontend/mutations/createNewChatByUserId'
 import { useApi } from '@/utils/frontend/api'
-import { isDev } from '@/utils/frontend/env'
 import Link from 'next/link'
 import { useChatMessages } from '@/hooks/useChatMessages'
 
