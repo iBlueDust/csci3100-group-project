@@ -21,6 +21,7 @@ dayjs.extend(relativeTime)
 
 import { PageWithLayout } from '@/data/types/layout'
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
+import type { SearchMarketListingsOptions } from '@/data/db/mongo/queries/market/searchMarketListings'
 import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
 import { QueryKeys } from '@/data/types/queries'
 import { countries, getFeaturedCountries } from '@/utils/countries'
@@ -36,6 +37,7 @@ import PaginationControls from '@/components/PaginationControls'
 import MarketListingGridItem from '@/components/marketplace/MarketListingGridItem'
 import Input from '@/components/form/Input'
 import Select from '@/components/form/Select'
+import SubmitButton from '@/components/form/SubmitButton'
 const MarketListingListItem = dynamic(
   () => import('@/components/marketplace/MarketListingListItem'),
 )
@@ -99,7 +101,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   } = useQuery({
     queryKey: [QueryKeys.MARKET_LISTINGS],
     queryFn: async () => {
-      const options = {
+      const options: SearchMarketListingsOptions = {
         query: searchQuery,
         priceMin,
         priceMax,
@@ -108,7 +110,9 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
           typeof selectedCountry === 'string' && selectedCountry !== 'all'
             ? [selectedCountry]
             : undefined,
-        // category: selectedCategory,
+        categories: !specialCategories.some((c) => c.id === selectedCategory)
+          ? [selectedCategory]
+          : undefined,
         sort: sortOption,
         skip: indexOfFirstItem,
         limit: itemsPerPage,
@@ -549,9 +553,9 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
           <p className='text-lg text-foreground/50'>
             No items found matching your criteria
           </p>
-          <button onClick={clearQueryAndFilters} className='button mt-4'>
+          <SubmitButton onClick={clearQueryAndFilters} className='mx-auto mt-4'>
             Clear filters
-          </button>
+          </SubmitButton>
         </div>
       )}
 

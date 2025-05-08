@@ -10,6 +10,9 @@ export async function getMarketListings(
 	const params = new URLSearchParams()
 	if (options.query) params.append('query', options.query)
 	if (options.countries) params.append('countries', options.countries.join(','))
+	if (options.categories) {
+		params.append('categories', options.categories.join(','))
+	}
 	if (options.priceMin) params.append('priceMin', options.priceMin.toString())
 	if (options.priceMax && Number.isFinite(options.priceMax)) {
 		params.append('priceMax', options.priceMax.toString())

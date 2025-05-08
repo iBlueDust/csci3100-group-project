@@ -40,7 +40,7 @@ export const searchMarketListings = async (
 	const pipeline: PipelineStage[] = []
 
 
-	if (countries || priceMin || priceMax || author) {
+	if (priceMin || priceMax || countries || categories || author) {
 		const filter: {
 			priceInCents?: { $gte?: number; $lte?: number }
 			countries?: { $in: string[] }
@@ -61,7 +61,7 @@ export const searchMarketListings = async (
 		}
 		if (categories && categories.length > 0) {
 			filter.categories = {
-				$in: categories.map((country: string) => country.toLowerCase())
+				$in: categories.map((c: string) => c.trim())
 			}
 		}
 		if (author) {

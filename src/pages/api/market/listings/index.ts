@@ -21,7 +21,6 @@ async function GET(
 ) {
 	const schema = Joi.object({
 		query: Joi.string().optional(),
-		countries: Joi.string().optional(),
 		priceMin: Joi.number().min(0).optional(),
 		priceMax: Joi.when(
 			Joi.ref('priceMin'),
@@ -31,6 +30,8 @@ async function GET(
 				otherwise: Joi.allow(null),
 			}
 		).optional(),
+		countries: Joi.array().items(Joi.string().required()).optional(),
+		categories: Joi.string().pattern(/^[a-zA-Z0-9]+(,[a-zA-Z0-9]+)*$/).optional(),
 		author: Joi.string().custom(assertIsObjectId).optional(),
 		sort: Joi.string().allow('listedAt-desc', 'price-desc', 'price-asc').default('listedAt-desc'),
 		skip: Joi.number().min(0).default(0),
@@ -48,6 +49,8 @@ async function GET(
 		...options,
 		countries: options.countries?.toLowerCase()
 			.split(',')
+			.map((country: string) => country.trim()),
+		categories: options.categories?.split(',')
 			.map((country: string) => country.trim()),
 	})
 
