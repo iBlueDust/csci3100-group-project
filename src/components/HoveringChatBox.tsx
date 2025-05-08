@@ -82,7 +82,7 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
 
       return true
     },
-    [api, mutation],
+    [mutation],
   )
 
   return (
