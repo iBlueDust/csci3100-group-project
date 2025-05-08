@@ -83,7 +83,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedCountry, setSelectedCountry] = useState('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [sortOption, setSortOption] = useState('newest')
+  const [sortOption, setSortOption] = useState('listedAt-desc')
   const [showFilters, setShowFilters] = useState(false)
   const activeFilterCount = useMemo(() => {
     let count = 0
