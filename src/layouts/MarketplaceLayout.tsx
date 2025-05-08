@@ -26,7 +26,7 @@ import { PageWithLayout } from '@/data/types/layout'
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
 import { QueryKeys } from '@/data/types/queries'
-import { countries } from '@/utils/countries'
+import { countries, getFeaturedCountries } from '@/utils/countries'
 import { queryClient, useApi } from '@/utils/frontend/api'
 import {
   HoveringChatBoxProvider,
@@ -71,8 +71,8 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   const hoveringChatBox = useHoveringChatBox({ api })
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [minPrice, setMinPrice] = useState(0)
-  const [maxPrice, setMaxPrice] = useState(Number.POSITIVE_INFINITY)
+  const [priceMin, setPriceMin] = useState(0)
+  const [priceMax, setPriceMax] = useState(Number.POSITIVE_INFINITY)
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -81,6 +81,12 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 
   // Pagination parameters for API queries
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage
+
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedCountry, setSelectedCountry] = useState('all')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [sortOption, setSortOption] = useState('newest')
+  const [showFilters, setShowFilters] = useState(false)
 
   const {
     data: listings,
@@ -91,8 +97,14 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
     queryFn: async () => {
       const options = {
         query: searchQuery,
-        minPrice,
-        maxPrice,
+        priceMin,
+        priceMax,
+        countries:
+          typeof selectedCountry === 'string' && selectedCountry !== 'all'
+            ? [selectedCountry]
+            : undefined,
+        // category: selectedCategory,
+        // sort: sortOption,
         skip: indexOfFirstItem,
         limit: itemsPerPage,
       }
@@ -109,28 +121,18 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
     [indexOfFirstItem, itemsPerPage, listings],
   )
 
-  useEffect(() => {
-    refetch()
-  }, [itemsPerPage, currentPage, refetch])
-
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedCountry, setSelectedCountry] = useState('all')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [sortOption, setSortOption] = useState('newest')
-  const [showFilters, setShowFilters] = useState(false)
-
   // Favorites state
   const [favorites, setFavorites] = useState<MarketListingSearchResult[]>([])
 
   const clearFilters = useCallback(() => {
     setSearchQuery('')
     setSelectedCategory('all')
-    setMinPrice(0)
+    setPriceMin(0)
   }, [])
 
   const clearQueryAndFilters = useCallback(() => {
     clearFilters()
-    setMaxPrice(Number.POSITIVE_INFINITY)
+    setPriceMax(Number.POSITIVE_INFINITY)
   }, [clearFilters])
 
   // Pagination calculations
@@ -180,13 +182,34 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
     refetch()
   }, [refetch])
 
-  const handleSearchDebounced = useMemo(() => {
-    const debouncedSearch = debounce(handleSearch, 500)
-    return (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchQuery(e.target.value)
-      debouncedSearch()
-    }
-  }, [handleSearch])
+  const handleSearchDebounced = useMemo(
+    () => debounce(handleSearch, 500),
+    [handleSearch],
+  )
+
+  useEffect(() => {
+    handleSearch()
+  }, [
+    handleSearch,
+    itemsPerPage,
+    currentPage,
+    selectedCountry,
+    selectedCategory,
+    sortOption,
+  ])
+
+  useEffect(() => {
+    handleSearchDebounced()
+  }, [handleSearchDebounced, searchQuery, priceMin, priceMax])
+
+  const handleTextInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (e.key === 'Enter') {
+        handleSearch()
+      }
+    },
+    [handleSearch],
+  )
 
   return (
     <div className='flex h-full flex-col pb-16'>
@@ -214,8 +237,8 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               type='text'
               placeholder='Search for items...'
               value={searchQuery}
-              onChange={handleSearchDebounced}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleTextInputKeyDown}
               className='flex-1 rounded-l-md border-y border-l border-foreground-light/75 bg-background-light px-4 py-2 text-foreground'
             />
             <button
@@ -312,7 +335,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                   <div className='flex flex-row items-center'>
                     <FiMapPin className='absolute left-3 top-2.5 text-foreground-light' />
                     <Select
-                      value={selectedCountry}
+                      value={selectedCountry.toUpperCase()}
                       onChange={(e) => setSelectedCountry(e.target.value)}
                       className='pl-8'
                       options={countries.map((country) => ({
@@ -329,17 +352,18 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                     Featured Regions
                   </h5>
                   <div className='flex flex-wrap gap-2'>
-                    {['HK', 'CN', 'TW', 'SG', 'US', 'GB'].map((code) => {
+                    {getFeaturedCountries().map((code) => {
                       const country = countries.find((c) => c.id === code)
                       return country ? (
                         <button
                           key={code}
                           onClick={() => setSelectedCountry(code)}
-                          className={`rounded-full px-3 py-1 text-xs ${
+                          className={classNames(
+                            'rounded-full px-3 py-1 text-xs',
                             selectedCountry === code
                               ? 'bg-foreground text-background'
-                              : 'border border-foreground-light/75 bg-background-light'
-                          }`}
+                              : 'border border-foreground-light/75 bg-background-light',
+                          )}
                         >
                           {country.name}
                         </button>
@@ -355,20 +379,22 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                   <Input
                     type='number'
                     placeholder='Min'
-                    value={Math.round(minPrice) / 100}
+                    value={Math.round(priceMin) / 100}
                     onChange={(e) =>
-                      setMinPrice(100 * parseInt(e.target.value))
+                      setPriceMin(100 * parseInt(e.target.value))
                     }
+                    onKeyDown={handleTextInputKeyDown}
                     hideError
                   />
                   <span>to</span>
                   <Input
                     type='number'
                     placeholder='Max'
-                    value={Math.round(maxPrice) / 100}
+                    value={Math.round(priceMax) / 100}
                     onChange={(e) =>
-                      setMaxPrice(100 * parseInt(e.target.value))
+                      setPriceMax(100 * parseInt(e.target.value))
                     }
+                    onKeyDown={handleTextInputKeyDown}
                     hideError
                   />
                 </div>

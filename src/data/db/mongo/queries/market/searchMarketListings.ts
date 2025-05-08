@@ -42,7 +42,9 @@ export const searchMarketListings = async (
 			filter.priceInCents = { ...filter.priceInCents, $lte: priceMax * 100 }
 		}
 		if (countries && countries.length > 0) {
-			filter.countries = { $in: countries }
+			filter.countries = {
+				$in: countries.map((country: string) => country.toLowerCase())
+			}
 		}
 		if (author) {
 			filter.author = author

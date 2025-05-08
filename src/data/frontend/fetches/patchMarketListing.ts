@@ -35,7 +35,7 @@ export async function patchMarketListing(
 		formData.append('priceInCents', payload.priceInCents.toString())
 	}
 	if (payload.countries) {
-		formData.append('countries', payload.countries.join(','))
+		formData.append('countries', payload.countries.join(',').toLowerCase())
 	}
 
 	const response = await api.fetch(`/market/listings/${listingId}`, {

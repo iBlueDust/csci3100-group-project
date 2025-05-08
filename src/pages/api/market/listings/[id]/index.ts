@@ -127,7 +127,7 @@ async function PATCH(
 			).optional(),
 		priceInCents: Joi.number().min(0).integer().optional(),
 		countries: Joi.array()
-			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/))
+			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/).lowercase())
 			.optional(),
 	})
 
@@ -151,7 +151,6 @@ async function PATCH(
 		priceInCents?: number
 		countries?: string[]
 	}
-	console.log({ body })
 
 	const listing = await MarketListing.findOne({
 		_id: listingId,

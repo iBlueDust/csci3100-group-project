@@ -128,7 +128,7 @@ async function POST(
 			.default([]),
 		priceInCents: Joi.number().min(0).integer().required(),
 		countries: Joi.array()
-			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/))
+			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/).lowercase())
 			.default([]),
 	})
 

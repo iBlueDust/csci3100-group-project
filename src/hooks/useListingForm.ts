@@ -52,6 +52,15 @@ export const useListingForm = ({
   }
 
   // Handle form field changes
+  const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value.split(',').map(c => c.trim().toLowerCase())
+    }))
+  }
+
+  // Handle form field changes
   const handlePriceInCentsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { value } = e.target
     setFormData(prev => ({
@@ -150,13 +159,14 @@ export const useListingForm = ({
     }
 
     return result
-  }, [formData, listingId, onSuccess])
+  }, [api, initialData, formData, listingId, onSuccess])
 
   return {
     formData,
     isSubmitting,
     error,
     handleChange,
+    handleCountryChange,
     handlePriceInCentsChange,
     handleImageChange,
     removeImage,

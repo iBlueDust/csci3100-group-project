@@ -23,8 +23,12 @@ export async function postMarketListing(
 			formData.append('pictures', picture)
 		}
 	}
-	if (payload.priceInCents) formData.append('priceInCents', payload.priceInCents.toString())
-	if (payload.countries) formData.append('countries', payload.countries.join(','))
+	if (payload.priceInCents) {
+		formData.append('priceInCents', payload.priceInCents.toString())
+	}
+	if (payload.countries) {
+		formData.append('countries', payload.countries.join(',').toLowerCase())
+	}
 
 	const response = await api.fetch('/market/listings', {
 		method: 'POST',
