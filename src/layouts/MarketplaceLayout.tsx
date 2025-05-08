@@ -29,16 +29,29 @@ import {
   HoveringChatBoxProvider,
   useHoveringChatBox,
 } from '@/hooks/useHoveringChatBox'
+import { categories } from '@/utils/categories'
 
 import DashboardLayout from '@/layouts/DashboardLayout'
 import PaginationControls from '@/components/PaginationControls'
 import MarketListingGridItem from '@/components/marketplace/MarketListingGridItem'
 import Input from '@/components/form/Input'
 import Select from '@/components/form/Select'
-import { categories } from '@/utils/categories'
 const MarketListingListItem = dynamic(
   () => import('@/components/marketplace/MarketListingListItem'),
 )
+
+const specialCategories = [
+  { id: 'all', name: 'All Items' },
+  {
+    id: 'my-listings',
+    name: (
+      <div className='flex flex-row items-center gap-2'>
+        <FiUser /> <span>My Listings</span>
+      </div>
+    ),
+  },
+]
+const displayedCategories = [...specialCategories, ...categories]
 
 // Add interface for the Marketplace component props
 export interface MarketplaceLayoutProps {
@@ -322,18 +335,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               <div>
                 <h4 className='mb-2 font-medium'>Categories</h4>
                 <div className='space-y-2'>
-                  {[
-                    { id: 'all', name: 'All Items' },
-                    {
-                      id: 'my-listings',
-                      name: (
-                        <div className='flex flex-row items-center gap-2'>
-                          <FiUser /> <span>My Listings</span>
-                        </div>
-                      ),
-                    },
-                    ...categories,
-                  ].map((category) => (
+                  {displayedCategories.map((category) => (
                     <div key={category.id} className='flex items-center'>
                       <input
                         type='radio'
@@ -432,7 +434,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 
       {/* Category pills */}
       <div className='mb-6 flex flex-wrap gap-2'>
-        {categories.map((category) => (
+        {displayedCategories.map((category) => (
           <button
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
