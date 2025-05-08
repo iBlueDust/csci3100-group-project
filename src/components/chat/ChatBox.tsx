@@ -1,26 +1,15 @@
-import React, { useCallback, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { FiChevronLeft, FiTrash2 } from 'react-icons/fi'
 import classNames from 'classnames'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import {
-  ChatMessageType,
-  ClientChat,
-  ClientChatMessage,
-} from '@/data/types/chats'
+import { ClientChat } from '@/data/types/chats'
 import BasicSpinner from '@/components/BasicSpinner'
 import ChatThread from '@/components/chat/ChatThread'
 import { useApi } from '@/utils/frontend/api'
-import { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
-import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
-import { QueryKeys } from '@/data/types/queries'
-import { sendChatMessage } from '@/data/frontend/mutations/sendChatMessage'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { isDev } from '@/utils/frontend/env'
-import { queryChatMessages } from '@/data/frontend/queries/queryChatMessages'
-import { PaginatedResult } from '@/data/types/common'
+import { useChatMessages } from '@/hooks/useChatMessages'
 
 export interface ChatBoxProps {
   className?: string
@@ -40,78 +29,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   onDeleteChat,
 }) => {
   const api = useApi()
-  const queryClient = useQueryClient()
-
-  const { data: messages } = useQuery<PaginatedResult<ClientChatMessage>>({
-    queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
-    queryFn: async () => queryChatMessages(api, chat.id, sharedKey),
-    throwOnError: isDev,
-    enabled: !!api.user && !!sharedKey,
-  })
-
-  const mutation = useMutation({
-    mutationFn: async (arg: PostChatMessagePayload) =>
-      sendChatMessage(api, chat.id, arg, sharedKey),
-    onSuccess: () => {
-      // Reload chat messages
-      queryClient.invalidateQueries({
-        queryKey: [QueryKeys.CHAT_MESSAGES, chat.id],
-      })
-    },
-    onError: (error) => {
-      console.error('Error sending message:', error)
-    },
-  })
-
-  const handleSend = useCallback(
-    async (
-      message: string,
-      attachment?:
-        | { type: 'general'; value: File }
-        | { type: 'market-listing'; value: MarketListingSearchResult },
-    ) => {
-      if (!message.trim() && !attachment) {
-        console.warn('Message input is empty')
-        return false
-      }
-
-      if (!api.user) {
-        console.warn('User is not yet authenticated')
-        return false
-      }
-
-      let payload: PostChatMessagePayload
-      if (!attachment) {
-        payload = {
-          type: ChatMessageType.Text,
-          content: message,
-        }
-      } else if (attachment.type === 'market-listing') {
-        payload = {
-          type: ChatMessageType.MarketListing,
-          content: attachment.value.id.toString(),
-        }
-      } else if (attachment.type === 'general') {
-        payload = {
-          type: ChatMessageType.Attachment,
-          content: await attachment.value.arrayBuffer(),
-          contentFilename: attachment.value.name,
-        }
-      } else {
-        throw new Error('Invalid attachment type')
-      }
-
-      try {
-        await mutation.mutateAsync(payload)
-      } catch (error) {
-        console.error('Error sending message:', error)
-        return false
-      }
-
-      return true
-    },
-    [api, mutation],
-  )
+  const { messages, sendMessage } = useChatMessages(api, chat.id, sharedKey)
 
   const otherParty = useMemo(
     () =>
@@ -150,10 +68,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       </div>
 
       <ChatThread
-        messages={messages?.data ?? []}
+        messages={messages.data ?? []}
         sharedKey={sharedKey}
         wasRequestedToDelete={chat.wasRequestedToDelete}
-        onSend={handleSend}
+        onSend={sendMessage}
         onDeleteChat={onDeleteChat}
       />
       {/* </div> */}
