@@ -2,13 +2,7 @@ import { useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import classNames from 'classnames'
-import {
-  FiHome,
-  FiPackage,
-  FiMessageSquare,
-  FiSettings,
-  FiList,
-} from 'react-icons/fi'
+import { FiHome, FiPackage, FiMessageSquare, FiSettings } from 'react-icons/fi'
 import { useQueryClient } from '@tanstack/react-query'
 
 import Sidebar from '@/components/Sidebar'
@@ -22,7 +16,6 @@ import { ApiProvider, useApi } from '@/utils/frontend/api'
 enum Page {
   HOME = 'home',
   MARKETPLACE = 'marketplace',
-  MY_LISTINGS = 'my-listings',
   MESSAGES = 'messages',
   SETTINGS = 'settings',
 }
@@ -39,12 +32,6 @@ const navItems = [
     path: '/dashboard/marketplace',
     icon: <FiPackage className='size-5 min-w-5' />,
     label: 'Marketplace',
-  },
-  {
-    key: Page.MY_LISTINGS,
-    path: '/dashboard/my-listings',
-    icon: <FiList className='size-5 min-w-5' />,
-    label: 'My Listings',
   },
   {
     key: Page.MESSAGES,
