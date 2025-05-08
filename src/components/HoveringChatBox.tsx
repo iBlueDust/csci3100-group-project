@@ -44,6 +44,8 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
     queryKey: [QueryKeys.CHAT_WITH_RECIPIENT, otherParty.id],
     queryFn: () => queryChatByRecipient(api, otherParty.id),
     enabled: !!api.user,
+    staleTime: 5 * 1000,
+    refetchInterval: 60 * 1000,
   })
 
   const { messages } = useChatMessages(api, chat?.id ?? '', sharedKey)

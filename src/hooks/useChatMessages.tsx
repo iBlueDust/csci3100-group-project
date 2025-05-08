@@ -23,6 +23,8 @@ export const useChatMessages = (
     throwOnError: isDev,
     enabled: !!api.user && !!sharedKey,
     staleTime: 1000,
+    refetchInterval: 5 * 1000,
+    refetchOnWindowFocus: true,
   })
 
   const mutation = useMutation({
