@@ -117,7 +117,7 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
           importKey(uekPublicKey, 'jwk', []).then(
             (key) => (uek.publicKey = key),
           ),
-          importKey(uekPrivateKey, 'jwk', ['deriveKey']).then(
+          importKey(uekPrivateKey, 'jwk', ['deriveKey', 'deriveBits']).then(
             (key) => (uek.privateKey = key),
           ),
         ])

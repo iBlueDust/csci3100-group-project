@@ -36,11 +36,9 @@ const MarketListingSendPreview: React.FC<MarketListingSendPreviewProps> = ({
       <div className='flex flex-1 flex-col flex-nowrap justify-between gap-2 py-2'>
         <div className='flex justify-between gap-2'>
           <div className='inline-block'>
-            <p className='mb-1 truncate'>{'title goes here'}</p>
+            <p className='mb-1 truncate'>{listing.title}</p>
             <p className='line-clamp-2 text-xs text-foreground/70'>
-              {
-                'Adipisicing nulla dolor ipsum proident pariatur ipsum in labore magna culpa. Commodo est cillum ex anim proident et exercitation do consectetur aute. In ut elit velit ut occaecat labore consequat fugiat enim sit tempor.'
-              }
+              {listing.description}
             </p>
           </div>
           <p className='text-right md:font-bold'>{formatCurrency(1000)}</p>
