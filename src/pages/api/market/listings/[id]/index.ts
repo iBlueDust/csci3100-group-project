@@ -127,7 +127,10 @@ async function PATCH(
 			).optional(),
 		priceInCents: Joi.number().min(0).integer().optional(),
 		countries: Joi.array()
-			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/))
+			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/).lowercase())
+			.optional(),
+		categories: Joi.array()
+			.items(Joi.string().required())
 			.optional(),
 	})
 
@@ -137,6 +140,7 @@ async function PATCH(
 		pictures: fields?.pictures,
 		priceInCents: fields?.priceInCents?.[0],
 		countries: fields?.countries,
+		categories: fields?.categories,
 	})
 	if (validation.error) {
 		res.status(400)
@@ -150,8 +154,8 @@ async function PATCH(
 		pictures?: (number | File)[]
 		priceInCents?: number
 		countries?: string[]
+		categories?: string[]
 	}
-	console.log({ body })
 
 	const listing = await MarketListing.findOne({
 		_id: listingId,
@@ -252,6 +256,7 @@ async function PATCH(
 	if (body.description) listing.description = body.description.trim()
 	if (body.priceInCents) listing.priceInCents = body.priceInCents
 	if (body.countries) listing.countries = body.countries
+	if (body.categories) listing.categories = body.categories
 	listing.editedAt = new Date()
 
 	await listing.save()

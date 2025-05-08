@@ -46,6 +46,12 @@ const MarketListingSchema = new mongoose.Schema({
 		required: true,
 		index: true,
 	},
+
+	categories: {
+		type: [String],
+		default: [],
+		index: true,
+	}
 })
 
 // Create compound text index for title and description

@@ -6,6 +6,7 @@ export interface PatchMarketListingPayload {
 	pictures?: (File | number)[],
 	priceInCents?: number,
 	countries?: string[],
+	categories?: string[],
 }
 
 
@@ -23,20 +24,21 @@ export async function patchMarketListing(
 	if (payload.description) {
 		formData.append('description', payload.description)
 	}
-	if (payload.pictures) {
-		for (const picture of payload.pictures) {
-			formData.append(
-				'pictures',
-				typeof picture === 'number' ? picture.toString() : picture,
-			)
-		}
-	}
+	payload.pictures?.forEach(picture => {
+		formData.append(
+			'pictures',
+			typeof picture === 'number' ? picture.toString() : picture,
+		)
+	})
 	if (payload.priceInCents) {
 		formData.append('priceInCents', payload.priceInCents.toString())
 	}
-	if (payload.countries) {
-		formData.append('countries', payload.countries.join(','))
-	}
+	payload.countries?.forEach(country => {
+		formData.append('countries', country.toLowerCase())
+	})
+	payload.categories?.forEach(category => {
+		formData.append('categories', category.toLowerCase())
+	})
 
 	const response = await api.fetch(`/market/listings/${listingId}`, {
 		method: 'PATCH',

@@ -199,15 +199,16 @@ export const countries = [
   { id: 'YE', name: 'Yemen' },
   { id: 'ZM', name: 'Zambia' },
   { id: 'ZW', name: 'Zimbabwe' },
-];
+]
 
 // Helper function to get country name from ID
 export const getCountryNameById = (id: string): string => {
-  const country = countries.find(c => c.id === id);
-  return country ? country.name : '';
-};
+  id = id.toUpperCase()
+  const country = countries.find(c => c.id === id)
+  return country ? country.name : ''
+}
 
 // Helper function to get featured countries
 export const getFeaturedCountries = (): string[] => {
-  return ['HK', 'CN', 'TW', 'SG', 'US', 'GB'];
-};
+  return ['all', 'HK', 'CN', 'TW', 'SG', 'US', 'GB']
+}

@@ -21,7 +21,7 @@ const MarketplaceCreateListingPage: PageWithLayout = () => {
         queryKey: [QueryKeys.MARKET_LISTINGS],
       })
     },
-    [queryClient],
+    [queryClient, router],
   )
 
   const handleClose = useCallback(() => {

@@ -19,6 +19,7 @@
     "dayjs": "^1.11.13",
     "elliptic": "^6.6.1",
     "joi": "^17.13.3",
+    "lodash": "^4.17.21",
     "minio": "^8.0.5",
     "mongoose": "^8.10.1",
     "next": "^15.2.4",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/elliptic": "^6.4.18",
+    "@types/lodash": "^4.17.16",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

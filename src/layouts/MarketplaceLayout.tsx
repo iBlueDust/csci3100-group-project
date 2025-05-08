@@ -6,53 +6,54 @@ import {
   FiGrid,
   FiList,
   FiChevronDown,
-  FiHeart,
   FiMapPin,
   FiPlus,
+  FiUser,
 } from 'react-icons/fi'
 import { useRouter } from 'next/router'
 import dynamic from 'next/dynamic'
 import classNames from 'classnames'
 import Link from 'next/link'
+import debounce from 'lodash/debounce'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import DashboardLayout from '@/layouts/DashboardLayout'
-import PaginationControls from '@/components/PaginationControls'
-import MarketListingGridItem from '@/components/marketplace/MarketListingGridItem'
 import { PageWithLayout } from '@/data/types/layout'
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
+import type { SearchMarketListingsOptions } from '@/data/db/mongo/queries/market/searchMarketListings'
 import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
 import { QueryKeys } from '@/data/types/queries'
-import { countries } from '@/utils/countries'
+import { countries, getFeaturedCountries } from '@/utils/countries'
 import { queryClient, useApi } from '@/utils/frontend/api'
 import {
   HoveringChatBoxProvider,
   useHoveringChatBox,
 } from '@/hooks/useHoveringChatBox'
+import { categories } from '@/utils/categories'
+
+import DashboardLayout from '@/layouts/DashboardLayout'
+import PaginationControls from '@/components/PaginationControls'
+import MarketListingGridItem from '@/components/marketplace/MarketListingGridItem'
+import Input from '@/components/form/Input'
+import Select from '@/components/form/Select'
+import SubmitButton from '@/components/form/SubmitButton'
 const MarketListingListItem = dynamic(
   () => import('@/components/marketplace/MarketListingListItem'),
 )
 
-// Mock categories
-const categories = [
+const specialCategories = [
   { id: 'all', name: 'All Items' },
   {
-    id: 'favorite',
+    id: 'my-listings',
     name: (
       <div className='flex flex-row items-center gap-2'>
-        <FiHeart /> <span>Favorites</span>
+        <FiUser /> <span>My Listings</span>
       </div>
     ),
   },
-  { id: 'jade', name: 'Jade Items' },
-  { id: 'antiques', name: 'Antiques' },
-  { id: 'collectibles', name: 'Collectibles' },
-  { id: 'art', name: 'Artwork' },
-  { id: 'gems', name: 'Precious Gems' },
 ]
-// Countries are now imported from @/utils/countries
+const displayedCategories = [...specialCategories, ...categories]
 
 // Add interface for the Marketplace component props
 export interface MarketplaceLayoutProps {
@@ -68,24 +69,51 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   const hoveringChatBox = useHoveringChatBox({ api })
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [minPrice, setMinPrice] = useState(0)
-  const [maxPrice, setMaxPrice] = useState(Number.POSITIVE_INFINITY)
+  const [priceMin, setPriceMin] = useState(0)
+  const [priceMax, setPriceMax] = useState(Number.POSITIVE_INFINITY)
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(8)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
   const [totalPages, setTotalPages] = useState(1)
 
   // Pagination parameters for API queries
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage
 
-  const { data: listings, refetch } = useQuery({
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedCountry, setSelectedCountry] = useState('all')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [sortOption, setSortOption] = useState('listedAt-desc')
+  const [showFilters, setShowFilters] = useState(false)
+  const activeFilterCount = useMemo(() => {
+    let count = 0
+    if (searchQuery) count++
+    if (priceMin > 0 || priceMax < Number.POSITIVE_INFINITY) count++
+    if (selectedCategory !== 'all') count++
+    if (selectedCountry !== 'all') count++
+    return count
+  }, [searchQuery, priceMin, priceMax, selectedCategory, selectedCountry])
+
+  const {
+    data: listings,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: [QueryKeys.MARKET_LISTINGS],
     queryFn: async () => {
-      const options = {
+      const options: SearchMarketListingsOptions = {
         query: searchQuery,
-        minPrice,
-        maxPrice,
+        priceMin,
+        priceMax,
+        author: selectedCategory === 'my-listings' ? api.user?.id : undefined,
+        countries:
+          typeof selectedCountry === 'string' && selectedCountry !== 'all'
+            ? [selectedCountry]
+            : undefined,
+        categories: !specialCategories.some((c) => c.id === selectedCategory)
+          ? [selectedCategory]
+          : undefined,
+        sort: sortOption,
         skip: indexOfFirstItem,
         limit: itemsPerPage,
       }
@@ -102,28 +130,19 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
     [indexOfFirstItem, itemsPerPage, listings],
   )
 
-  useEffect(() => {
-    refetch()
-  }, [itemsPerPage, currentPage, refetch])
-
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedCountry, setSelectedCountry] = useState('all')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [sortOption, setSortOption] = useState('newest')
-  const [showFilters, setShowFilters] = useState(false)
-
   // Favorites state
   const [favorites, setFavorites] = useState<MarketListingSearchResult[]>([])
 
   const clearFilters = useCallback(() => {
-    setSearchQuery('')
     setSelectedCategory('all')
-    setMinPrice(0)
+    setSelectedCountry('all')
+    setPriceMin(0)
+    setPriceMax(Number.POSITIVE_INFINITY)
   }, [])
 
   const clearQueryAndFilters = useCallback(() => {
     clearFilters()
-    setMaxPrice(Number.POSITIVE_INFINITY)
+    setSearchQuery('')
   }, [clearFilters])
 
   // Pagination calculations
@@ -168,12 +187,39 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   )
 
   // Handle search button click
-  const handleSearch = () => {
-    // Reset to first page when performing a new search
+  const handleSearch = useCallback(() => {
     setCurrentPage(1)
-    // Additional search logic could be added here if needed
-    // For example, API calls or analytics tracking
-  }
+    refetch()
+  }, [refetch])
+
+  const handleSearchDebounced = useMemo(
+    () => debounce(handleSearch, 500),
+    [handleSearch],
+  )
+
+  useEffect(() => {
+    handleSearch()
+  }, [
+    handleSearch,
+    itemsPerPage,
+    currentPage,
+    selectedCountry,
+    selectedCategory,
+    sortOption,
+  ])
+
+  useEffect(() => {
+    handleSearchDebounced()
+  }, [handleSearchDebounced, searchQuery, priceMin, priceMax])
+
+  const handleTextInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (e.key === 'Enter') {
+        handleSearch()
+      }
+    },
+    [handleSearch],
+  )
 
   return (
     <div className='flex h-full flex-col pb-16'>
@@ -202,7 +248,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               placeholder='Search for items...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={handleTextInputKeyDown}
               className='flex-1 rounded-l-md border-y border-l border-foreground-light/75 bg-background-light px-4 py-2 text-foreground'
             />
             <button
@@ -214,18 +260,33 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
             </button>
           </div>
 
-          <div className='flex flex-wrap justify-between gap-2'>
-            <div className='flex items-center gap-2'>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-1 rounded-md p-2 ${
-                  showFilters ? 'bg-foreground/10' : ''
-                }`}
-              >
-                <FiFilter />
-                <span>Filters</span>
-              </button>
-            </div>
+          <div className='flex flex-wrap items-center justify-between'>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={classNames(
+                'flex items-center gap-1 rounded-md px-3 py-2 transition-colors hover:bg-foreground/10',
+                showFilters && 'bg-foreground/10',
+              )}
+              title={
+                !activeFilterCount
+                  ? 'Filters'
+                  : `${activeFilterCount} active ${
+                      activeFilterCount > 1 ? 'filters' : 'filter'
+                    }`
+              }
+            >
+              <FiFilter />
+
+              <span>Filters</span>
+
+              {activeFilterCount > 0 && (
+                <div className='ml-2 size-5 rounded-xl bg-foreground text-center align-middle text-sm text-background'>
+                  <span className='mx-auto inline-block'>
+                    {activeFilterCount}
+                  </span>
+                </div>
+              )}
+            </button>
 
             <div className='flex items-center gap-2'>
               <div className='relative'>
@@ -234,10 +295,10 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                   onChange={(e) => setSortOption(e.target.value)}
                   className='appearance-none rounded-md border border-foreground-light/50 bg-background px-4 py-2 pr-8'
                 >
-                  <option value='newest'>Newest</option>
-                  <option value='price_low'>Price: Low to High</option>
-                  <option value='price_high'>Price: High to Low</option>
-                  <option value='rating'>Highest Rated</option>
+                  <option value='listedAt-desc'>Newest</option>
+                  <option value='price-asc'>Price: Low to High</option>
+                  <option value='price-desc'>Price: High to Low</option>
+                  {/* <option value='rating'>Highest Rated</option> */}
                 </select>
                 <FiChevronDown className='pointer-events-none absolute right-3 top-3 text-foreground/50' />
               </div>
@@ -273,12 +334,12 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 
         {/* Filter options */}
         {showFilters && (
-          <div className='mt-4 rounded-md border border-foreground/10 p-4'>
+          <div className='mt-4 rounded-md border border-foreground-light/25 p-4'>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
               <div>
                 <h4 className='mb-2 font-medium'>Categories</h4>
                 <div className='space-y-2'>
-                  {categories.map((category) => (
+                  {displayedCategories.map((category) => (
                     <div key={category.id} className='flex items-center'>
                       <input
                         type='radio'
@@ -295,22 +356,19 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               </div>
 
               <div>
-                <h4 className='mb-2 font-medium'>Location</h4>
+                <h4 className='mb-3 font-medium'>Location</h4>
                 <div className='relative'>
-                  <div className='flex items-center'>
-                    <FiMapPin className='absolute left-3 top-2.5 text-foreground/50' />
-                    <select
-                      value={selectedCountry}
+                  <div className='flex flex-row items-center'>
+                    <FiMapPin className='absolute left-3 top-2.5 text-foreground-light' />
+                    <Select
+                      value={selectedCountry.toUpperCase()}
                       onChange={(e) => setSelectedCountry(e.target.value)}
-                      className='w-full appearance-none rounded-md border-2 border-foreground/10 bg-background p-2 px-10'
-                    >
-                      {countries.map((country) => (
-                        <option key={country.id} value={country.id}>
-                          {country.name}
-                        </option>
-                      ))}
-                    </select>
-                    <FiChevronDown className='pointer-events-none absolute right-3 top-3 text-foreground/50' />
+                      className='pl-8'
+                      options={countries.map((country) => ({
+                        id: country.id,
+                        name: country.name,
+                      }))}
+                    />
                   </div>
                 </div>
 
@@ -320,17 +378,18 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                     Featured Regions
                   </h5>
                   <div className='flex flex-wrap gap-2'>
-                    {['HK', 'CN', 'TW', 'SG', 'US', 'GB'].map((code) => {
+                    {getFeaturedCountries().map((code) => {
                       const country = countries.find((c) => c.id === code)
                       return country ? (
                         <button
                           key={code}
                           onClick={() => setSelectedCountry(code)}
-                          className={`rounded-full px-2 py-1 text-xs ${
+                          className={classNames(
+                            'rounded-full px-3 py-1 text-xs',
                             selectedCountry === code
                               ? 'bg-foreground text-background'
-                              : 'border-2 border-foreground/10 bg-background-light'
-                          }`}
+                              : 'border border-foreground-light/75 bg-background-light',
+                          )}
                         >
                           {country.name}
                         </button>
@@ -343,24 +402,26 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               <div>
                 <h4 className='mb-2 font-medium'>Price Range</h4>
                 <div className='flex items-center gap-2'>
-                  <input
+                  <Input
                     type='number'
                     placeholder='Min'
-                    value={Math.round(minPrice) / 100}
+                    value={Math.round(priceMin) / 100}
                     onChange={(e) =>
-                      setMinPrice(100 * parseInt(e.target.value))
+                      setPriceMin(100 * parseInt(e.target.value))
                     }
-                    className='w-full rounded-md border-2 border-foreground/10 p-2'
+                    onKeyDown={handleTextInputKeyDown}
+                    hideError
                   />
                   <span>to</span>
-                  <input
+                  <Input
                     type='number'
                     placeholder='Max'
-                    value={Math.round(maxPrice) / 100}
+                    value={Math.round(priceMax) / 100}
                     onChange={(e) =>
-                      setMaxPrice(100 * parseInt(e.target.value))
+                      setPriceMax(100 * parseInt(e.target.value))
                     }
-                    className='w-full rounded-md border-2 border-foreground/10 p-2'
+                    onKeyDown={handleTextInputKeyDown}
+                    hideError
                   />
                 </div>
               </div>
@@ -377,7 +438,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 
       {/* Category pills */}
       <div className='mb-6 flex flex-wrap gap-2'>
-        {categories.map((category) => (
+        {displayedCategories.map((category) => (
           <button
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
@@ -479,15 +540,22 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
         </div>
       )}
 
+      {/* Loading state */}
+      {isLoading && !listings && (
+        <div className='h-full py-12 text-center align-middle text-5xl font-bold text-foreground-light/50'>
+          Loading...
+        </div>
+      )}
+
       {/* Empty state */}
-      {(!listings || listings.meta.total === 0) && (
+      {!isLoading && (!listings || listings.meta.total === 0) && (
         <div className='py-12 text-center'>
           <p className='text-lg text-foreground/50'>
             No items found matching your criteria
           </p>
-          <button onClick={clearQueryAndFilters} className='button mt-4'>
+          <SubmitButton onClick={clearQueryAndFilters} className='mx-auto mt-4'>
             Clear filters
-          </button>
+          </SubmitButton>
         </div>
       )}
 

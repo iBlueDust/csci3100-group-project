@@ -52,6 +52,15 @@ export const useListingForm = ({
   }
 
   // Handle form field changes
+  const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value.split(',').map(c => c.trim().toLowerCase())
+    }))
+  }
+
+  // Handle form field changes
   const handlePriceInCentsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { value } = e.target
     setFormData(prev => ({
@@ -115,6 +124,8 @@ export const useListingForm = ({
       if (!initialData || !setEqual(formData.countries, initialData.countries))
         payload.countries = formData.countries
 
+      payload.categories = formData.category ? [formData.category] : []
+
       try {
         result = await updateMarketListing(api, listingId, payload)
       } catch (err) {
@@ -127,13 +138,12 @@ export const useListingForm = ({
     } else {
       const payload: PostMarketListingPayload = {
         ...formData,
-        pictures: formData as unknown as File[],
+        categories: formData.category ? [formData.category] : [],
+        pictures: formData.pictures as unknown as File[],
       }
 
       try {
-        result = listingId
-          ? await updateMarketListing(api, listingId, payload)
-          : await createMarketListing(api, payload)
+        result = await createMarketListing(api, payload)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred while processing the listing')
         console.error('Error processing listing:', err)
@@ -150,13 +160,14 @@ export const useListingForm = ({
     }
 
     return result
-  }, [formData, listingId, onSuccess])
+  }, [api, initialData, formData, listingId, onSuccess])
 
   return {
     formData,
     isSubmitting,
     error,
     handleChange,
+    handleCountryChange,
     handlePriceInCentsChange,
     handleImageChange,
     removeImage,

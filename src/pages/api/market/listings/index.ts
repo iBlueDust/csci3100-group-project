@@ -21,7 +21,6 @@ async function GET(
 ) {
 	const schema = Joi.object({
 		query: Joi.string().optional(),
-		countries: Joi.string().optional(),
 		priceMin: Joi.number().min(0).optional(),
 		priceMax: Joi.when(
 			Joi.ref('priceMin'),
@@ -31,7 +30,10 @@ async function GET(
 				otherwise: Joi.allow(null),
 			}
 		).optional(),
+		countries: Joi.array().items(Joi.string().required()).optional(),
+		categories: Joi.string().pattern(/^[a-zA-Z0-9]+(,[a-zA-Z0-9]+)*$/).optional(),
 		author: Joi.string().custom(assertIsObjectId).optional(),
+		sort: Joi.string().allow('listedAt-desc', 'price-desc', 'price-asc').default('listedAt-desc'),
 		skip: Joi.number().min(0).default(0),
 		limit: Joi.number().min(1).max(100).default(30),
 	})
@@ -47,6 +49,8 @@ async function GET(
 		...options,
 		countries: options.countries?.toLowerCase()
 			.split(',')
+			.map((country: string) => country.trim()),
+		categories: options.categories?.split(',')
 			.map((country: string) => country.trim()),
 	})
 
@@ -91,6 +95,7 @@ async function POST(
 		pictures: fields?.pictures,
 		priceInCents: tryParseInt(fields?.priceInCents?.[0]),
 		countries: fields?.countries,
+		categories: fields?.categories,
 	}
 
 	const schema = Joi.object({
@@ -128,7 +133,10 @@ async function POST(
 			.default([]),
 		priceInCents: Joi.number().min(0).integer().required(),
 		countries: Joi.array()
-			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/))
+			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/).lowercase())
+			.default([]),
+		categories: Joi.array()
+			.items(Joi.string().required())
 			.default([]),
 	})
 
@@ -147,6 +155,7 @@ async function POST(
 		pictures: File[]
 		priceInCents: number
 		countries: string[]
+		categories: string[]
 	}
 
 	const filesToUpload = body.pictures.map((picture) => ({
@@ -182,14 +191,16 @@ async function POST(
 	}
 
 	await dbConnect()
-	const listing = await MarketListing.create({
+	const listing = new MarketListing({
 		title: body.title,
 		description: body.description,
 		pictures: filesToUpload.map(({ objectName }) => objectName),
 		author: auth.data.userId,
 		priceInCents: body.priceInCents,
 		countries: body.countries,
+		categories: body.categories ?? [],
 	})
+	await listing.save()
 
 	res.status(200).json({ id: listing.id })
 }
