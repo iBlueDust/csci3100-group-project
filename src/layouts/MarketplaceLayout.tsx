@@ -33,6 +33,7 @@ import {
   useHoveringChatBox,
 } from '@/hooks/useHoveringChatBox'
 import Input from '@/components/form/Input'
+import Select from '@/components/form/Select'
 const MarketListingListItem = dynamic(
   () => import('@/components/marketplace/MarketListingListItem'),
 )
@@ -222,18 +223,17 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
             </button>
           </div>
 
-          <div className='flex flex-wrap justify-between gap-2'>
-            <div className='flex items-center gap-2'>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-1 rounded-md p-2 ${
-                  showFilters ? 'bg-foreground/10' : ''
-                }`}
-              >
-                <FiFilter />
-                <span>Filters</span>
-              </button>
-            </div>
+          <div className='flex flex-wrap items-center justify-between gap-2'>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={classNames(
+                'flex items-center gap-1 rounded-md px-3 py-2 transition-colors hover:bg-foreground/10',
+                showFilters && 'bg-foreground/10',
+              )}
+            >
+              <FiFilter />
+              <span>Filters</span>
+            </button>
 
             <div className='flex items-center gap-2'>
               <div className='relative'>
@@ -281,7 +281,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 
         {/* Filter options */}
         {showFilters && (
-          <div className='mt-4 rounded-md border border-foreground/10 p-4'>
+          <div className='mt-4 rounded-md border border-foreground-light/25 p-4'>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
               <div>
                 <h4 className='mb-2 font-medium'>Categories</h4>
@@ -303,22 +303,19 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               </div>
 
               <div>
-                <h4 className='mb-2 font-medium'>Location</h4>
+                <h4 className='mb-3 font-medium'>Location</h4>
                 <div className='relative'>
-                  <div className='flex items-center'>
-                    <FiMapPin className='absolute left-3 top-2.5 text-foreground/50' />
-                    <select
+                  <div className='flex flex-row items-center'>
+                    <FiMapPin className='absolute left-3 top-2.5 text-foreground-light' />
+                    <Select
                       value={selectedCountry}
                       onChange={(e) => setSelectedCountry(e.target.value)}
-                      className='w-full appearance-none rounded-md border-2 border-foreground/10 bg-background p-2 px-10'
-                    >
-                      {countries.map((country) => (
-                        <option key={country.id} value={country.id}>
-                          {country.name}
-                        </option>
-                      ))}
-                    </select>
-                    <FiChevronDown className='pointer-events-none absolute right-3 top-3 text-foreground/50' />
+                      className='pl-8'
+                      options={countries.map((country) => ({
+                        id: country.id,
+                        name: country.name,
+                      }))}
+                    />
                   </div>
                 </div>
 
@@ -334,10 +331,10 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                         <button
                           key={code}
                           onClick={() => setSelectedCountry(code)}
-                          className={`rounded-full px-2 py-1 text-xs ${
+                          className={`rounded-full px-3 py-1 text-xs ${
                             selectedCountry === code
                               ? 'bg-foreground text-background'
-                              : 'border-2 border-foreground/10 bg-background-light'
+                              : 'border border-foreground-light/75 bg-background-light'
                           }`}
                         >
                           {country.name}
