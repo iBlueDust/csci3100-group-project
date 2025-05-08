@@ -39,6 +39,10 @@ const UserSchema = new mongoose.Schema(
 			type: Object,
 			required: true,
 		},
+		encryptedUserEncryptionKey: {
+			type: Buffer,
+			required: false,
+		},
 
 		roles: {
 			type: [String],
@@ -47,25 +51,27 @@ const UserSchema = new mongoose.Schema(
 	},
 	{
 		methods: {
-			verifyPasskey(passkey: string) {
+			verifyPasskey(passkey: Buffer) {
 				return hash(passkey, this.passkeySalt).equals(this.passkeyHash)
 			},
 		},
 		statics: {
-			createWithPasskey(
+			createWithPasskey(data: {
 				username: string,
-				passkey: string,
-				roles: string[] = [UserRole.USER],
+				passkey: Buffer,
+				roles?: string[],
 				publicKey: UserPublicKeyJWK,
-			) {
+				encryptedUserEncryptionKey?: Buffer,
+			}) {
 				const passkeySalt = crypto.randomBytes(32)
-				const passkeyHash = hash(passkey, passkeySalt)
+				const passkeyHash = hash(data.passkey, passkeySalt)
 				return this.create({
-					username,
-					passkeySalt,
-					passkeyHash,
-					roles,
-					publicKey,
+					username: data.username,
+					passkeySalt: passkeySalt,
+					passkeyHash: passkeyHash,
+					roles: data.roles ?? [UserRole.USER],
+					publicKey: data.publicKey,
+					encryptedUserEncryptionKey: data.encryptedUserEncryptionKey,
 				})
 			}
 		}

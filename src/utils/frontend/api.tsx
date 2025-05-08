@@ -211,6 +211,10 @@ export const useApi = (): Api => {
 
   const apiFetch = useCallback(
     async (url: string, options?: RequestInit) => {
+      if (!context.user && context.isInitialized) {
+        return await fetch(API_ENDPOINT + url, options)
+      }
+
       let wasTokenRefreshed = false
 
       if (context.tokenExpiresAt) {
@@ -236,7 +240,7 @@ export const useApi = (): Api => {
       return response
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [context.tokenExpiresAt, refreshToken, router],
+    [context, refreshToken, router],
   )
 
   return useMemo(
