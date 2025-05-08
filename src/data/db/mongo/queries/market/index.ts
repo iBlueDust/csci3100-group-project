@@ -14,6 +14,7 @@ export interface MarketListingSearchResult {
 	editedAt?: string,
 	priceInCents: number,
 	countries: string[],
+	categories: string[],
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,6 +33,7 @@ export const makeMarketListingClientFriendly = (listing: any) => {
 			: { id: listing.author },
 		priceInCents: listing.priceInCents,
 		countries: listing.countries,
+		categories: listing.categories ?? [],
 		listedAt: listing.listedAt.toISOString(),
 		editedAt: listing.editedAt?.toISOString(),
 	} as MarketListingSearchResult

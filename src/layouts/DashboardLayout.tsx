@@ -31,31 +31,31 @@ const navItems = [
   {
     key: Page.HOME,
     path: '/dashboard',
-    icon: <FiHome className='w-5 h-5 min-w-5' />,
+    icon: <FiHome className='size-5 min-w-5' />,
     label: 'Home',
   },
   {
     key: Page.MARKETPLACE,
     path: '/dashboard/marketplace',
-    icon: <FiPackage className='w-5 h-5 min-w-5' />,
+    icon: <FiPackage className='size-5 min-w-5' />,
     label: 'Marketplace',
   },
   {
     key: Page.MY_LISTINGS,
     path: '/dashboard/my-listings',
-    icon: <FiList className='w-5 h-5 min-w-5' />,
+    icon: <FiList className='size-5 min-w-5' />,
     label: 'My Listings',
   },
   {
     key: Page.MESSAGES,
     path: '/dashboard/messages',
-    icon: <FiMessageSquare className='w-5 h-5 min-w-5' />,
+    icon: <FiMessageSquare className='size-5 min-w-5' />,
     label: 'Messages',
   },
   {
     key: Page.SETTINGS,
     path: '/dashboard/settings',
-    icon: <FiSettings className='w-5 h-5 min-w-5' />,
+    icon: <FiSettings className='size-5 min-w-5' />,
     label: 'Settings',
   },
 ]
@@ -121,14 +121,14 @@ const DashboardLayout: PageWithLayout<DashboardLayoutProps> = ({
       )}
     >
       {/* Header */}
-      <header className='h-16 px-6 border-b-2 border-foreground/10 flex items-center justify-between fixed top-0 left-0 right-0 bg-background z-10'>
-        <Link href='/' className='font-bold text-xl'>
+      <header className='fixed inset-x-0 top-0 z-10 flex h-16 items-center justify-between border-b-2 border-foreground/10 bg-background px-6'>
+        <Link href='/' className='text-xl font-bold'>
           The Jade Trail
         </Link>
 
-        <div className='flex items-center cursor-default gap-4'>
+        <div className='flex cursor-default items-center gap-4'>
           {/* User Avatar or Placeholder */}
-          <div className='w-8 h-8 rounded-full bg-foreground/10 flex justify-center items-center'>
+          <div className='flex size-8 items-center justify-center rounded-full bg-foreground/10'>
             <span className='font-bold'>
               {api.user?.username.charAt(0) ?? ''}
             </span>
@@ -138,11 +138,11 @@ const DashboardLayout: PageWithLayout<DashboardLayoutProps> = ({
         </div>
       </header>
 
-      <div className='flex flex-col sm:flex-row pt-16'>
+      <div className='flex flex-col pt-16 sm:flex-row'>
         {' '}
         {/* Stack on mobile, row on sm+ */}
         {/* Fixed Sidebar (hidden on mobile) */}
-        <div className='hidden sm:block fixed left-0 top-16 bottom-0'>
+        <div className='fixed bottom-0 left-0 top-16 hidden sm:block'>
           {/* Sidebar */}
           <Sidebar
             key={activePage}
@@ -151,11 +151,11 @@ const DashboardLayout: PageWithLayout<DashboardLayoutProps> = ({
           />
         </div>
         {/* Main content */}
-        <main className='flex-1 p-6 pb-16 sm:pb-0 sm:ml-64'>{children}</main>
+        <main className='flex-1 p-6 pb-16 sm:ml-64 sm:pb-0'>{children}</main>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className='fixed bottom-0 bg-background border-t-2 border-foreground/10 flex justify-around p-2 sm:hidden z-10 w-full max-w-screen-sm mx-auto inset-x-0'>
+      <div className='fixed inset-x-0 bottom-0 z-10 mx-auto flex w-full max-w-screen-sm justify-around border-t-2 border-foreground/10 bg-background p-2 sm:hidden'>
         {navItems.map((item) => (
           <button
             key={item.key}

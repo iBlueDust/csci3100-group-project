@@ -6,6 +6,7 @@ export interface PostMarketListingPayload {
 	pictures: File[],
 	priceInCents: number,
 	countries: string[],
+	categories?: string[],
 }
 
 
@@ -26,9 +27,12 @@ export async function postMarketListing(
 	if (payload.priceInCents) {
 		formData.append('priceInCents', payload.priceInCents.toString())
 	}
-	if (payload.countries) {
-		formData.append('countries', payload.countries.join(',').toLowerCase())
-	}
+	payload.countries.forEach(country => {
+		formData.append('countries', country.toLowerCase())
+	})
+	payload.categories?.forEach(category => {
+		formData.append('categories', category.toLowerCase())
+	})
 
 	const response = await api.fetch('/market/listings', {
 		method: 'POST',

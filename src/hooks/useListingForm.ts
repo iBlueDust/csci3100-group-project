@@ -124,6 +124,8 @@ export const useListingForm = ({
       if (!initialData || !setEqual(formData.countries, initialData.countries))
         payload.countries = formData.countries
 
+      payload.categories = formData.category ? [formData.category] : []
+
       try {
         result = await updateMarketListing(api, listingId, payload)
       } catch (err) {
@@ -136,13 +138,12 @@ export const useListingForm = ({
     } else {
       const payload: PostMarketListingPayload = {
         ...formData,
-        pictures: formData as unknown as File[],
+        categories: formData.category ? [formData.category] : [],
+        pictures: formData.pictures as unknown as File[],
       }
 
       try {
-        result = listingId
-          ? await updateMarketListing(api, listingId, payload)
-          : await createMarketListing(api, payload)
+        result = await createMarketListing(api, payload)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred while processing the listing')
         console.error('Error processing listing:', err)

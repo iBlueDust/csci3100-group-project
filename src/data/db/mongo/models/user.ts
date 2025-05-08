@@ -72,8 +72,6 @@ const UserSchema = new mongoose.Schema(
 	}
 )
 
-UserSchema.index({ username: 1 }, { unique: true })
-
 function generateModel() {
 	const User = mongoose.model('User', UserSchema)
 

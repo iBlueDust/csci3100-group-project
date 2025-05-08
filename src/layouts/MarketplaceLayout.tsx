@@ -35,28 +35,10 @@ import PaginationControls from '@/components/PaginationControls'
 import MarketListingGridItem from '@/components/marketplace/MarketListingGridItem'
 import Input from '@/components/form/Input'
 import Select from '@/components/form/Select'
+import { categories } from '@/utils/categories'
 const MarketListingListItem = dynamic(
   () => import('@/components/marketplace/MarketListingListItem'),
 )
-
-// Mock categories
-const categories = [
-  { id: 'all', name: 'All Items' },
-  {
-    id: 'my-listings',
-    name: (
-      <div className='flex flex-row items-center gap-2'>
-        <FiUser /> <span>My Listings</span>
-      </div>
-    ),
-  },
-  { id: 'jade', name: 'Jade Items' },
-  { id: 'antiques', name: 'Antiques' },
-  { id: 'collectibles', name: 'Collectibles' },
-  { id: 'art', name: 'Artwork' },
-  { id: 'gems', name: 'Precious Gems' },
-]
-// Countries are now imported from @/utils/countries
 
 // Add interface for the Marketplace component props
 export interface MarketplaceLayoutProps {
@@ -340,7 +322,18 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               <div>
                 <h4 className='mb-2 font-medium'>Categories</h4>
                 <div className='space-y-2'>
-                  {categories.map((category) => (
+                  {[
+                    { id: 'all', name: 'All Items' },
+                    {
+                      id: 'my-listings',
+                      name: (
+                        <div className='flex flex-row items-center gap-2'>
+                          <FiUser /> <span>My Listings</span>
+                        </div>
+                      ),
+                    },
+                    ...categories,
+                  ].map((category) => (
                     <div key={category.id} className='flex items-center'>
                       <input
                         type='radio'

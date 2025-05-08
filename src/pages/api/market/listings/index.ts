@@ -91,6 +91,7 @@ async function POST(
 		pictures: fields?.pictures,
 		priceInCents: tryParseInt(fields?.priceInCents?.[0]),
 		countries: fields?.countries,
+		categories: fields?.categories,
 	}
 
 	const schema = Joi.object({
@@ -130,6 +131,9 @@ async function POST(
 		countries: Joi.array()
 			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/).lowercase())
 			.default([]),
+		categories: Joi.array()
+			.items(Joi.string().required())
+			.default([]),
 	})
 
 	const validation = schema.validate(unvalidatedBody)
@@ -147,6 +151,7 @@ async function POST(
 		pictures: File[]
 		priceInCents: number
 		countries: string[]
+		categories: string[]
 	}
 
 	const filesToUpload = body.pictures.map((picture) => ({
@@ -182,14 +187,16 @@ async function POST(
 	}
 
 	await dbConnect()
-	const listing = await MarketListing.create({
+	const listing = new MarketListing({
 		title: body.title,
 		description: body.description,
 		pictures: filesToUpload.map(({ objectName }) => objectName),
 		author: auth.data.userId,
 		priceInCents: body.priceInCents,
 		countries: body.countries,
+		categories: body.categories ?? [],
 	})
+	await listing.save()
 
 	res.status(200).json({ id: listing.id })
 }

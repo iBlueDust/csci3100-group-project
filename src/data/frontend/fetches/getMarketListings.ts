@@ -11,7 +11,9 @@ export async function getMarketListings(
 	if (options.query) params.append('query', options.query)
 	if (options.countries) params.append('countries', options.countries.join(','))
 	if (options.priceMin) params.append('priceMin', options.priceMin.toString())
-	if (options.priceMax) params.append('priceMax', options.priceMax.toString())
+	if (options.priceMax && Number.isFinite(options.priceMax)) {
+		params.append('priceMax', options.priceMax.toString())
+	}
 	if (options.author) params.append('author', options.author.toString())
 	if (options.skip) params.append('skip', options.skip.toString())
 	if (options.limit) params.append('limit', options.limit.toString())

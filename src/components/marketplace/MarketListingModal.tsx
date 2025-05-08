@@ -9,6 +9,7 @@ import SubmitButton from '../form/SubmitButton'
 import { useApi } from '@/utils/frontend/api'
 import Link from 'next/link'
 import { getCountryNameById } from '@/utils/countries'
+import { getCategoryNameById } from '@/utils/categories'
 
 export interface MarketListingModalProps {
   listing: MarketListingSearchResult
@@ -49,7 +50,7 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
             {/* Image Gallery */}
             <div className='space-y-3 md:col-span-2'>
               {/* Main Image */}
-              <div className='w-xl rounded-lg bg-foreground/5'>
+              <div className='rounded-lg bg-foreground/5'>
                 <Image
                   className='aspect-[4/3] w-full rounded-md object-cover'
                   width={650}
@@ -155,7 +156,12 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
               <div className='space-y-2 text-sm'>
                 <div>
                   <p className='text-xs text-foreground/70'>Category</p>
-                  <p className='font-medium capitalize'>{'--'}</p>
+                  <p className='font-medium capitalize'>
+                    {listing.categories
+                      .map((id) => getCategoryNameById(id))
+                      .filter(Boolean)
+                      .join(', ') || 'Others'}
+                  </p>
                 </div>
 
                 <div>

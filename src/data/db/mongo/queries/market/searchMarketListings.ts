@@ -12,6 +12,7 @@ import {
 
 export interface SearchMarketListingsOptions {
 	query?: string
+	categories?: string[]
 	countries?: string[]
 	priceMin?: number
 	priceMax?: number
@@ -23,7 +24,16 @@ export interface SearchMarketListingsOptions {
 export const searchMarketListings = async (
 	options: SearchMarketListingsOptions,
 ): Promise<PaginatedResult<MarketListingSearchResult>> => {
-	const { query, countries, priceMin, priceMax, author, skip = 0, limit = 10 } = options
+	const {
+		query,
+		countries,
+		categories,
+		priceMin,
+		priceMax,
+		author,
+		skip = 0,
+		limit = 10,
+	} = options
 
 	const pipeline: PipelineStage[] = []
 
@@ -32,6 +42,7 @@ export const searchMarketListings = async (
 		const filter: {
 			priceInCents?: { $gte?: number; $lte?: number }
 			countries?: { $in: string[] }
+			categories?: { $in: string[] }
 			author?: string
 		} = {}
 
@@ -44,6 +55,11 @@ export const searchMarketListings = async (
 		if (countries && countries.length > 0) {
 			filter.countries = {
 				$in: countries.map((country: string) => country.toLowerCase())
+			}
+		}
+		if (categories && categories.length > 0) {
+			filter.categories = {
+				$in: categories.map((country: string) => country.toLowerCase())
 			}
 		}
 		if (author) {
