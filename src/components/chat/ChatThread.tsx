@@ -1,8 +1,9 @@
-import React, { useLayoutEffect, useRef } from 'react'
+import React, { useCallback, useLayoutEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 
 import { ChatMessageType, ClientChatMessage } from '@/data/types/chats'
 import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
+import { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
 import { isSupportedImage } from '@/utils'
 import { useApi } from '@/utils/frontend/api'
 
@@ -22,12 +23,7 @@ export interface ChatThreadProps {
   sharedKey: CryptoKey
   wasRequestedToDelete?: boolean
   initialPreviewMarketListing?: MarketListingSearchResult
-  onSend?: (
-    message: string,
-    attachment?:
-      | { type: 'general'; value: File }
-      | { type: 'market-listing'; value: MarketListingSearchResult },
-  ) => Promise<boolean>
+  onSend?: (message: PostChatMessagePayload) => Promise<boolean>
   onDeleteChat?: () => void
 }
 
@@ -50,6 +46,53 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   useLayoutEffect(() => {
     scrollHelperRef.current?.scrollIntoView({ behavior: 'instant' })
   }, [])
+
+  const handleSend = useCallback(
+    async (
+      message: string,
+      attachment?:
+        | { type: 'general'; value: File }
+        | { type: 'market-listing'; value: MarketListingSearchResult },
+    ) => {
+      if (!message.trim() && !attachment) {
+        console.warn('Message input is empty')
+        return false
+      }
+
+      if (!api.user) {
+        console.warn('User is not yet authenticated')
+        return false
+      }
+
+      let payload: PostChatMessagePayload
+      if (!attachment) {
+        payload = {
+          type: ChatMessageType.Text,
+          content: message,
+        }
+      } else if (attachment.type === 'market-listing') {
+        payload = {
+          type: ChatMessageType.MarketListing,
+          content: attachment.value.id.toString(),
+        }
+      } else if (attachment.type === 'general') {
+        payload = {
+          type: ChatMessageType.Attachment,
+          content: await attachment.value.arrayBuffer(),
+          contentFilename: attachment.value.name,
+        }
+      } else {
+        throw new Error('Invalid attachment type')
+      }
+
+      if (!onSend) {
+        return true
+      }
+
+      return onSend(payload)
+    },
+    [api.user, onSend],
+  )
 
   /* Container for mobile that includes both the banner and messages with a single scroll */
   return (
@@ -133,7 +176,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         <div className='sticky bottom-0'>
           <ChatInput
             initialPreviewMarketListing={initialPreviewMarketListing}
-            onSend={onSend}
+            onSend={handleSend}
           />
         </div>
       </div>

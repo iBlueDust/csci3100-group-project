@@ -49,6 +49,8 @@ const MessagesLayout: PageWithLayout<MessagesLayoutProps> = ({ children }) => {
     enabled: !!api.user && !!api.uek,
     throwOnError: isDev,
     staleTime: 5 * 1000,
+    refetchInterval: 30 * 1000,
+    refetchOnWindowFocus: true,
   })
 
   // Calculate total pages

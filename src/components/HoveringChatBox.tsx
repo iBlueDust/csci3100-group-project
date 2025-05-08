@@ -5,13 +5,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import { queryChatMessages } from '@/data/frontend/queries/queryChatMessages'
-import {
-  ClientChatMessage,
-  ClientChat,
-  ChatMessageType,
-} from '@/data/types/chats'
-import { PaginatedResult } from '@/data/types/common'
+import { ClientChat } from '@/data/types/chats'
 import { QueryKeys } from '@/data/types/queries'
 import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { queryChatByRecipient } from '@/data/frontend/queries/queryChatByRecipient'
@@ -20,8 +14,8 @@ import { sendChatMessage } from '@/data/frontend/mutations/sendChatMessage'
 import { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
 import { createNewChatByUserId } from '@/data/frontend/mutations/createNewChatByUserId'
 import { useApi } from '@/utils/frontend/api'
-import { isDev } from '@/utils/frontend/env'
 import Link from 'next/link'
+import { useChatMessages } from '@/hooks/useChatMessages'
 
 export interface HoveringChatBoxProps {
   otherParty: ClientChat['participants'][number]
@@ -43,14 +37,11 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
     queryKey: [QueryKeys.CHAT_WITH_RECIPIENT, otherParty.id],
     queryFn: () => queryChatByRecipient(api, otherParty.id),
     enabled: !!api.user,
+    staleTime: 5 * 1000,
+    refetchInterval: 60 * 1000,
   })
 
-  const { data: messages } = useQuery<PaginatedResult<ClientChatMessage>>({
-    queryKey: [QueryKeys.CHAT_MESSAGES, chat?.id],
-    queryFn: async () => queryChatMessages(api, chat!.id, sharedKey),
-    throwOnError: isDev,
-    enabled: !!api.user && !!sharedKey && !!chat,
-  })
+  const { messages } = useChatMessages(api, chat?.id ?? '', sharedKey)
 
   const mutation = useMutation({
     mutationFn: async (arg: PostChatMessagePayload) => {
@@ -81,45 +72,9 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
   })
 
   const handleSend = useCallback(
-    async (
-      message: string,
-      attachment?:
-        | { type: 'general'; value: File }
-        | { type: 'market-listing'; value: MarketListingSearchResult },
-    ) => {
-      if (!message.trim() && !attachment) {
-        console.warn('Message input is empty')
-        return false
-      }
-
-      if (!api.user) {
-        console.warn('User is not yet authenticated')
-        return false
-      }
-
-      let payload: PostChatMessagePayload
-      if (!attachment) {
-        payload = {
-          type: ChatMessageType.Text,
-          content: message,
-        }
-      } else if (attachment.type === 'market-listing') {
-        payload = {
-          type: ChatMessageType.MarketListing,
-          content: attachment.value.id.toString(),
-        }
-      } else if (attachment.type === 'general') {
-        payload = {
-          type: ChatMessageType.Attachment,
-          content: await attachment.value.arrayBuffer(),
-          contentFilename: attachment.value.name,
-        }
-      } else {
-        throw new Error('Invalid attachment type')
-      }
-
+    async (message: PostChatMessagePayload) => {
       try {
-        await mutation.mutateAsync(payload)
+        await mutation.mutateAsync(message)
       } catch (error) {
         console.error('Error sending message:', error)
         return false
@@ -127,7 +82,7 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
 
       return true
     },
-    [api, mutation],
+    [mutation],
   )
 
   return (
@@ -174,7 +129,7 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
       </div>
 
       <ChatThread
-        messages={messages?.data ?? []}
+        messages={messages.data ?? []}
         sharedKey={sharedKey}
         wasRequestedToDelete={chat?.wasRequestedToDelete}
         initialPreviewMarketListing={initialPreviewMarketListing}
