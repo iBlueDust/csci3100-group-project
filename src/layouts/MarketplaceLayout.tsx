@@ -88,6 +88,14 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortOption, setSortOption] = useState('newest')
   const [showFilters, setShowFilters] = useState(false)
+  const activeFilterCount = useMemo(() => {
+    let count = 0
+    if (searchQuery) count++
+    if (priceMin > 0 || priceMax < Number.POSITIVE_INFINITY) count++
+    if (selectedCategory !== 'all') count++
+    if (selectedCountry !== 'all') count++
+    return count
+  }, [searchQuery, priceMin, priceMax, selectedCategory, selectedCountry])
 
   const {
     data: listings,
@@ -253,16 +261,32 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
             </button>
           </div>
 
-          <div className='flex flex-wrap items-center justify-between gap-2'>
+          <div className='flex flex-wrap items-center justify-between'>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={classNames(
                 'flex items-center gap-1 rounded-md px-3 py-2 transition-colors hover:bg-foreground/10',
                 showFilters && 'bg-foreground/10',
               )}
+              title={
+                !activeFilterCount
+                  ? 'Filters'
+                  : `${activeFilterCount} active ${
+                      activeFilterCount > 1 ? 'filters' : 'filter'
+                    }`
+              }
             >
               <FiFilter />
+
               <span>Filters</span>
+
+              {activeFilterCount > 0 && (
+                <div className='ml-2 size-5 rounded-xl bg-foreground text-center align-middle text-sm text-background'>
+                  <span className='mx-auto inline-block'>
+                    {activeFilterCount}
+                  </span>
+                </div>
+              )}
             </button>
 
             <div className='flex items-center gap-2'>
