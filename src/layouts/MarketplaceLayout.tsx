@@ -6,9 +6,9 @@ import {
   FiGrid,
   FiList,
   FiChevronDown,
-  FiHeart,
   FiMapPin,
   FiPlus,
+  FiUser,
 } from 'react-icons/fi'
 import { useRouter } from 'next/router'
 import dynamic from 'next/dynamic'
@@ -19,9 +19,6 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import DashboardLayout from '@/layouts/DashboardLayout'
-import PaginationControls from '@/components/PaginationControls'
-import MarketListingGridItem from '@/components/marketplace/MarketListingGridItem'
 import { PageWithLayout } from '@/data/types/layout'
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
@@ -32,6 +29,10 @@ import {
   HoveringChatBoxProvider,
   useHoveringChatBox,
 } from '@/hooks/useHoveringChatBox'
+
+import DashboardLayout from '@/layouts/DashboardLayout'
+import PaginationControls from '@/components/PaginationControls'
+import MarketListingGridItem from '@/components/marketplace/MarketListingGridItem'
 import Input from '@/components/form/Input'
 import Select from '@/components/form/Select'
 const MarketListingListItem = dynamic(
@@ -42,10 +43,10 @@ const MarketListingListItem = dynamic(
 const categories = [
   { id: 'all', name: 'All Items' },
   {
-    id: 'favorite',
+    id: 'my-listings',
     name: (
       <div className='flex flex-row items-center gap-2'>
-        <FiHeart /> <span>Favorites</span>
+        <FiUser /> <span>My Listings</span>
       </div>
     ),
   },
@@ -99,6 +100,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
         query: searchQuery,
         priceMin,
         priceMax,
+        author: selectedCategory === 'my-listings' ? api.user?.id : undefined,
         countries:
           typeof selectedCountry === 'string' && selectedCountry !== 'all'
             ? [selectedCountry]
@@ -125,14 +127,15 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   const [favorites, setFavorites] = useState<MarketListingSearchResult[]>([])
 
   const clearFilters = useCallback(() => {
-    setSearchQuery('')
     setSelectedCategory('all')
+    setSelectedCountry('all')
     setPriceMin(0)
+    setPriceMax(Number.POSITIVE_INFINITY)
   }, [])
 
   const clearQueryAndFilters = useCallback(() => {
     clearFilters()
-    setPriceMax(Number.POSITIVE_INFINITY)
+    setSearchQuery('')
   }, [clearFilters])
 
   // Pagination calculations
