@@ -14,6 +14,7 @@ import { useRouter } from 'next/router'
 import dynamic from 'next/dynamic'
 import classNames from 'classnames'
 import Link from 'next/link'
+import debounce from 'lodash/debounce'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
@@ -168,12 +169,18 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   )
 
   // Handle search button click
-  const handleSearch = () => {
-    // Reset to first page when performing a new search
+  const handleSearch = useCallback(() => {
     setCurrentPage(1)
-    // Additional search logic could be added here if needed
-    // For example, API calls or analytics tracking
-  }
+    refetch()
+  }, [refetch])
+
+  const handleSearchDebounced = useMemo(() => {
+    const debouncedSearch = debounce(handleSearch, 500)
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchQuery(e.target.value)
+      debouncedSearch()
+    }
+  }, [handleSearch])
 
   return (
     <div className='flex h-full flex-col pb-16'>
@@ -201,7 +208,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               type='text'
               placeholder='Search for items...'
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchDebounced}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className='flex-1 rounded-l-md border-y border-l border-foreground-light/75 bg-background-light px-4 py-2 text-foreground'
             />
