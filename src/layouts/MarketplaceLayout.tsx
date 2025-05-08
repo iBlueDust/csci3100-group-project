@@ -82,7 +82,11 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
   // Pagination parameters for API queries
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage
 
-  const { data: listings, refetch } = useQuery({
+  const {
+    data: listings,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: [QueryKeys.MARKET_LISTINGS],
     queryFn: async () => {
       const options = {
@@ -484,8 +488,15 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
         </div>
       )}
 
+      {/* Loading state */}
+      {isLoading && !listings && (
+        <div className='h-full py-12 text-center align-middle text-5xl font-bold text-foreground-light/50'>
+          Loading...
+        </div>
+      )}
+
       {/* Empty state */}
-      {(!listings || listings.meta.total === 0) && (
+      {!isLoading && (!listings || listings.meta.total === 0) && (
         <div className='py-12 text-center'>
           <p className='text-lg text-foreground/50'>
             No items found matching your criteria
