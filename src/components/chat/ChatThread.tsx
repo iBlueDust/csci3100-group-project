@@ -91,7 +91,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       return onSend(payload)
     },
-    [onSend],
+    [api.user, onSend],
   )
 
   /* Container for mobile that includes both the banner and messages with a single scroll */
