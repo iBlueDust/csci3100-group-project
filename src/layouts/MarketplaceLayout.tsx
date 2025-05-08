@@ -109,7 +109,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
             ? [selectedCountry]
             : undefined,
         // category: selectedCategory,
-        // sort: sortOption,
+        sort: sortOption,
         skip: indexOfFirstItem,
         limit: itemsPerPage,
       }
@@ -291,10 +291,10 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                   onChange={(e) => setSortOption(e.target.value)}
                   className='appearance-none rounded-md border border-foreground-light/50 bg-background px-4 py-2 pr-8'
                 >
-                  <option value='newest'>Newest</option>
-                  <option value='price_low'>Price: Low to High</option>
-                  <option value='price_high'>Price: High to Low</option>
-                  <option value='rating'>Highest Rated</option>
+                  <option value='listedAt-desc'>Newest</option>
+                  <option value='price-asc'>Price: Low to High</option>
+                  <option value='price-desc'>Price: High to Low</option>
+                  {/* <option value='rating'>Highest Rated</option> */}
                 </select>
                 <FiChevronDown className='pointer-events-none absolute right-3 top-3 text-foreground/50' />
               </div>

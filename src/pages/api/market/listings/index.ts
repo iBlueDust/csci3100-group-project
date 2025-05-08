@@ -32,6 +32,7 @@ async function GET(
 			}
 		).optional(),
 		author: Joi.string().custom(assertIsObjectId).optional(),
+		sort: Joi.string().allow('listedAt-desc', 'price-desc', 'price-asc').default('listedAt-desc'),
 		skip: Joi.number().min(0).default(0),
 		limit: Joi.number().min(1).max(100).default(30),
 	})

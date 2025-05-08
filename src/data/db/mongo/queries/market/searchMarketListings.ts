@@ -17,6 +17,7 @@ export interface SearchMarketListingsOptions {
 	priceMin?: number
 	priceMax?: number
 	author?: string
+	sort?: string
 	skip?: number
 	limit?: number
 }
@@ -31,6 +32,7 @@ export const searchMarketListings = async (
 		priceMin,
 		priceMax,
 		author,
+		sort = 'listedAt-desc',
 		skip = 0,
 		limit = 10,
 	} = options
@@ -81,10 +83,19 @@ export const searchMarketListings = async (
 		})
 	}
 
+	const sortBy: Record<string, -1 | 1> = { queryScore: -1 }
+	if (sort === 'listedAt-desc') {
+		sortBy.listedAt = -1
+	} else if (sort === 'price-asc') {
+		sortBy.priceInCents = 1
+	} else if (sort === 'price-desc') {
+		sortBy.priceInCents = -1
+	}
+
 	pipeline.push({
 		$facet: {
 			data: [
-				{ $sort: { queryScore: -1, listedAt: -1 } },
+				{ $sort: sortBy },
 				{ $skip: skip },
 				{ $limit: limit },
 				{
