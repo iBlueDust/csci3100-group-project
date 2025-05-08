@@ -53,7 +53,7 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
       : [1]
 
   return (
-    <div className='mt-8 flex justify-center flex-row items-center gap-4'>
+    <div className='mt-8 flex flex-row items-center justify-center gap-4'>
       <p className='text-sm text-foreground-light sm:ml-4'>
         {!noData
           ? `Showing ${indexOfFirstItem + 1}-${Math.min(
@@ -63,7 +63,7 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
           : 'Showing -- of -- items'}
       </p>
 
-      <div className='flex border border-foreground-light/50 rounded-md overflow-hidden'>
+      <div className='flex overflow-hidden rounded-md border border-foreground-light/50'>
         <button
           onClick={onPrevClick}
           disabled={indexOfFirstItem === 0}
@@ -134,11 +134,11 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
             ? (e) => onPageSizeChange(Number(e.target.value))
             : undefined
         }
-        className='ml-2 px-2 py-1 border self-stretch border-foreground-light/50 rounded-md text-foreground bg-background'
+        className='ml-2 self-stretch rounded-md border border-foreground-light/50 bg-background px-2 py-1 text-foreground'
       >
-        <option value={8}>8</option>
-        <option value={16}>16</option>
-        <option value={32}>32</option>
+        <option value={20}>20</option>
+        <option value={50}>50</option>
+        <option value={100}>100</option>
       </select>
     </div>
   )

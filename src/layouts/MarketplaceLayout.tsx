@@ -76,7 +76,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(8)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
   const [totalPages, setTotalPages] = useState(1)
 
   // Pagination parameters for API queries
