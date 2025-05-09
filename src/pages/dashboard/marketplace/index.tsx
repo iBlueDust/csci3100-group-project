@@ -1,9 +1,39 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import {
+  FiHeart,
+  FiGrid,
+  FiList,
+  FiFilter,
+  FiSearch,
+  FiChevronDown,
+  FiMapPin,
+  FiPlus,
+  FiPaperclip,
+  FiMessageCircle,
+  FiX,
+  FiCreditCard,
+  FiCheckCircle
+} from 'react-icons/fi'
+import Image from 'next/image'
+import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import classNames from 'classnames'
 dayjs.extend(relativeTime)
 
+import { useApi } from '@/utils/frontend/api'
+import { formatCurrency } from '@/utils/format'
+import { countries } from '@/utils/countries'
+import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
+import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
+import { QueryKeys } from '@/data/types/queries'
 import MarketplaceLayout from '@/layouts/MarketplaceLayout'
 import { PageWithLayout } from '@/data/types/layout'
+import MarketListingGridItem from '@/components/marketplace/MarketListingGridItem'
+import MarketListingListItem from '@/components/marketplace/MarketListingListItem'
+import MarketListingModal from '@/components/marketplace/MarketListingModal'
+import NewMarketListingModal from '@/components/marketplace/NewMarketListingModal'
+import PaginationControls from '@/components/PaginationControls'
 
 const categories = [
   { id: 'all', name: 'All Items' },
@@ -878,12 +908,12 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
       )}
 
       {(isCreateListingOpen || editingListing) && (
-        <CreateListingForm
+        <NewMarketListingModal
           onClose={() => {
             setIsCreateListingOpen(false)
             setEditingListing(null)
           }}
-          onSuccess={(listingId) => {
+          onSuccess={(listingId: string) => {
             setIsCreateListingOpen(false)
             setEditingListing(null)
 
@@ -912,9 +942,9 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
   )
 }
 
-MarketplaceHome.getLayout = (page) => {
-  const GrandfatherLayout = MarketplaceLayout.getLayout ?? ((page) => page)
+Marketplace.getLayout = (page: React.ReactNode) => {
+  const GrandfatherLayout = MarketplaceLayout.getLayout ?? ((page: React.ReactNode) => page)
   return GrandfatherLayout(<MarketplaceLayout>{page}</MarketplaceLayout>)
 }
 
-export default MarketplaceHome
+export default Marketplace
