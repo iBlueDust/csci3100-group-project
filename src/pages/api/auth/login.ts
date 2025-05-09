@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next"
 import Joi from 'joi'
 
 import dbConnect from "@/data/db/mongo"
-import User from "@/data/db/mongo/models/user"
+import User, { UserPublicKeyJWK } from "@/data/db/mongo/models/user"
 import { sessionStore, sessionToCookie } from "@/data/session"
 import { UserRole } from "@/data/types/auth"
 import { sleep } from "@/utils"
@@ -11,6 +11,8 @@ import { sleep } from "@/utils"
 type Data = {
 	id: string
 	expiresAt: string
+	publicKey: UserPublicKeyJWK
+	encryptedUserEncryptionKey?: string
 }
 
 type Error = {
@@ -35,7 +37,7 @@ async function POST(
 
 	await dbConnect()
 	const user = await User.findOne({ username: body.username })
-	if (!user || !user.verifyPasskey(body.passkey)) {
+	if (!user || !user.verifyPasskey(Buffer.from(body.passkey, 'base64'))) {
 		// delay response to prevent timing attacks
 		await sleep(Math.random() * 2000)
 		res.status(401).json({ code: 'INVALID_CREDENTIALS' })
@@ -48,7 +50,13 @@ async function POST(
 	res.setHeader('Set-Cookie', sessionToCookie(session))
 	res
 		.status(200)
-		.send({ id: user.id, expiresAt: session.expiresAt.toISOString() })
+		.send({
+			id: user.id,
+			expiresAt: session.expiresAt.toISOString(),
+			publicKey: user.publicKey,
+			encryptedUserEncryptionKey:
+				user.encryptedUserEncryptionKey?.toString('base64'),
+		})
 }
 
 export default async function handler(

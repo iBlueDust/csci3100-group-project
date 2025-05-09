@@ -1,78 +1,8 @@
-import { generateDeterministicKeyPair } from './kdf'
-
 export { hash, HashAlgorithm } from './hash'
 
 export type UserEncryptionKey = CryptoKeyPair
 
-export async function generateUserEncryptionKey(username: string, password: string): Promise<UserEncryptionKey> {
-	const secret = password
-	const salt = username
-	return await generateDeterministicKeyPair(secret, salt)
-}
-
-// https://www.keithbartholomew.com/blog/posts/2024-01-22-webcrypto-diffie-hellman
-
 const algorithm = { name: 'ECDH', namedCurve: 'P-521' }
-
-/**
- * @param userDerivationKey Must be a Uint8Array of 32 bytes or more
- */
-// export async function generateDeterministicKeys(
-// 	seed: Uint8Array<ArrayBufferLike>,
-// ): Promise<CryptoKeyPair> {
-// 	// Generate 128-bit hash of the seed
-// 	const seedHash1 = await hash(seed, HashAlgorithm.SHA512)
-// 	const seed2 = new Uint8Array([...new Uint8Array(seedHash1), ...seed])
-// 	const seedHash2 = await hash(seed2, HashAlgorithm.SHA512)
-// 	// Pick the first 66 bytes
-// 	const seedHashHex = ab2hex(seedHash2.slice(0, 66)).padStart(66 * 2, '0')
-
-// 	// Dynamically load elliptic
-// 	const elliptic = (await import('elliptic')).default
-// 	const ec = new elliptic.ec('p521')
-// 	const key = ec.keyFromPrivate(seedHashHex, 'hex')
-// 	const publicKeyPoint = key.getPublic()
-
-// 	const xHex = publicKeyPoint.getX().toString('hex').padStart(66 * 2, '0')
-// 	const yHex = publicKeyPoint.getY().toString('hex').padStart(66 * 2, '0')
-
-// 	const publicJwk = {
-// 		kty: 'EC',
-// 		crv: 'P-521',
-// 		x: hex2base64url(xHex),
-// 		y: hex2base64url(yHex),
-// 		ext: true,
-// 	}
-// 	const privateJwk = {
-// 		...publicJwk,
-// 		d: hex2base64url(seedHashHex),
-// 	}
-
-// 	const keypair: Partial<CryptoKeyPair> = {}
-
-// 	await Promise.all([
-// 		crypto.subtle.importKey(
-// 			'jwk',
-// 			privateJwk,
-// 			algorithm,
-// 			true,
-// 			['deriveKey', 'deriveBits'],
-// 		).then(key => {
-// 			keypair.privateKey = key
-// 		}),
-// 		crypto.subtle.importKey(
-// 			'jwk',
-// 			publicJwk,
-// 			algorithm,
-// 			true,
-// 			[],
-// 		).then(key => {
-// 			keypair.publicKey = key
-// 		}),
-// 	])
-
-// 	return keypair as CryptoKeyPair
-// }
 
 export async function exportKey(
 	key: CryptoKey,
@@ -134,6 +64,17 @@ export async function deriveKey(
 	)
 }
 
+export async function generateRandomKeyPair(
+	extractable: boolean = true,
+	keyUsages: KeyUsage[] = ['deriveKey', 'deriveBits'],
+): Promise<CryptoKeyPair> {
+	return await crypto.subtle.generateKey(
+		algorithm,
+		extractable,
+		keyUsages,
+	)
+}
+
 export async function encryptMessage(
 	message: Uint8Array<ArrayBufferLike>,
 	sharedKey: CryptoKey,
@@ -160,4 +101,93 @@ export async function decryptMessage(
 	)
 
 	return decrypted
+}
+
+
+const AES_IV_SIZE = 12
+
+function decodeEncryptedUserEncryptionKeyFormat(
+	encodedEncryptedKey: ArrayBuffer,
+): { version: number; iv: Uint8Array; encryptedKeyPkcs8: Uint8Array } {
+	if (encodedEncryptedKey.byteLength < 8) {
+		throw new Error('Encrypted user encryption key is too short')
+	}
+
+
+	const header = new Uint32Array(encodedEncryptedKey.slice(0, 8))
+	const [version, ivLength] = header
+	if (version !== 1 || ivLength !== AES_IV_SIZE) {
+		throw new Error('Unsupported encrypted user encryption key version')
+	}
+
+	const iv = new Uint8Array(encodedEncryptedKey.slice(8, 8 + AES_IV_SIZE))
+	const encryptedKeyPkcs8 = new Uint8Array(
+		encodedEncryptedKey.slice(8 + AES_IV_SIZE)
+	)
+	return { version, iv, encryptedKeyPkcs8 }
+}
+
+
+export async function decryptUserEncryptionKey(
+	encryptedUek: ArrayBuffer,
+	decryptionKey: CryptoKey,
+): Promise<CryptoKey> {
+	const { iv, encryptedKeyPkcs8 } = decodeEncryptedUserEncryptionKeyFormat(
+		encryptedUek,
+	)
+
+	const decryptedUek = await crypto.subtle.decrypt(
+		{ name: 'AES-GCM', iv },
+		decryptionKey,
+		encryptedKeyPkcs8,
+	)
+
+	return await crypto.subtle.importKey(
+		'pkcs8',
+		decryptedUek,
+		algorithm,
+		true,
+		['deriveBits', 'deriveKey'],
+	)
+}
+
+function encodeEncryptedUserEncryptionKeyFormat(
+	encryptedKey: ArrayBuffer,
+	iv: ArrayBuffer,
+): ArrayBuffer {
+	const version = 1
+	const header = new Uint32Array([version, AES_IV_SIZE])
+	return concatArrayBuffers(
+		header.buffer,
+		iv,
+		encryptedKey,
+	)
+}
+
+export async function encryptUserEncryptionKey(
+	uek: CryptoKey,
+	encryptionKey: CryptoKey,
+): Promise<ArrayBuffer> {
+	const iv = crypto.getRandomValues(new Uint8Array(AES_IV_SIZE))
+	const uekBuffer = await crypto.subtle.exportKey('pkcs8', uek)
+	const encryptedUek = await crypto.subtle.encrypt(
+		{ name: 'AES-GCM', iv },
+		encryptionKey,
+		uekBuffer,
+	)
+
+	return encodeEncryptedUserEncryptionKeyFormat(encryptedUek, iv.buffer)
+}
+
+function concatArrayBuffers(
+	...buffers: ArrayBuffer[]
+): ArrayBuffer {
+	const totalLength = buffers.reduce((sum, buffer) => sum + buffer.byteLength, 0)
+	const result = new Uint8Array(totalLength)
+	let offset = 0
+	for (const buffer of buffers) {
+		result.set(new Uint8Array(buffer), offset)
+		offset += buffer.byteLength
+	}
+	return result.buffer
 }
