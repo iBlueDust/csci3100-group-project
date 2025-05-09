@@ -13,7 +13,7 @@ import type { PageWithLayout } from '@/data/types/layout'
 import { PaginatedResult } from '@/data/types/common'
 import { ClientChat } from '@/data/types/chats'
 import { useApi } from '@/utils/frontend/api'
-import { useDeleteChat } from '@/data/frontend/mutations/useDeleteChat'
+import { deleteChat } from '@/data/frontend/mutations/deleteChat'
 
 const MessagesHome: PageWithLayout = () => {
   const api = useApi()
@@ -21,7 +21,6 @@ const MessagesHome: PageWithLayout = () => {
   const chatId = router.query.chatId as string
 
   const queryClient = useQueryClient()
-  const deleteChatMutation = useDeleteChat(api)
   const { data: chat, isLoading } = useQuery({
     queryKey: [QueryKeys.CHATS, chatId],
     queryFn: async () => {
@@ -43,7 +42,7 @@ const MessagesHome: PageWithLayout = () => {
 
   // Handle delete chat
   const [isDeleting, setIsDeleting] = useState(false)
-  const handleDeleteChat = useCallback(() => {
+  const handleDeleteChat = useCallback(async () => {
     if (!chatId) return
     if (
       !window.confirm(
@@ -53,6 +52,7 @@ const MessagesHome: PageWithLayout = () => {
       return
 
     setIsDeleting(true)
+<<<<<<< HEAD
     deleteChatMutation.mutate(chatId, {
       onSuccess: () => {
         router.replace('/dashboard/messages')
@@ -67,6 +67,26 @@ const MessagesHome: PageWithLayout = () => {
       },
     })
   }, [chatId, deleteChatMutation, router])
+=======
+
+    try {
+      const success = await deleteChat(api, chatId)
+      if (!success) {
+        throw new Error('Failed to delete chat')
+      }
+    } catch (error) {
+      console.error('Failed to delete chat', error)
+      alert('Failed to delete chat')
+      return
+    } finally {
+      setIsDeleting(false)
+    }
+
+    router.replace('/dashboard/messages')
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.CHATS] })
+    console.log(`Deleted conversation: ${chatId}`)
+  }, [api, chatId, router, queryClient])
+>>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
 
   return isLoading || !chat ? (
     <div className='flex-1 flex items-center justify-center text-foreground/50'>

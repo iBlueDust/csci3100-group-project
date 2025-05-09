@@ -287,28 +287,9 @@ async function DELETE(
 
 	await dbConnect()
 
-	// First check if the listing exists at all
-	const listing = await MarketListing.findById(listingId);
-	if (!listing) {
-		return res
-			.status(404)
-			.json({ code: 'NOT_FOUND', message: 'Market listing not found' });
-	}
-	
-	// Then check if the user is the author
-	if (listing.author.toString() !== auth.data.userId.toString()) {
-		return res
-			.status(403)
-			.json({ code: 'FORBIDDEN', message: 'You do not have permission to delete this listing' });
-	}
-	
-	// If we get here, the user is the author, so delete the listing
-	// First, get the pictures that need to be deleted
-	const picturesToDelete = listing.pictures || [];
-	
-	// Delete the listing document
 	const result = await MarketListing.deleteOne({
 		_id: listingId,
+<<<<<<< HEAD
 	});
 
 	// Delete associated pictures from MinIO storage
@@ -323,6 +304,14 @@ async function DELETE(
 			// We don't want to fail the entire operation if image deletion fails
 			// The MongoDB document is already deleted at this point
 		}
+=======
+		author: auth.data.userId,
+	})
+	if (result.deletedCount === 0) {
+		return res
+			.status(404)
+			.json({ code: 'NOT_FOUND', message: 'Market listing not found' })
+>>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
 	}
 
 	return res.status(200).json({ success: result.deletedCount > 0 })

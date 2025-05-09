@@ -10,13 +10,12 @@ import {
   FiPlus,
 } from 'react-icons/fi'
 import Image from 'next/image'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import { queryMyMarketListings } from '@/data/frontend/queries/queryMyMarketListings'
-import { useDeleteMarketListing } from '@/data/frontend/mutations/useDeleteMarketListing'
+import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
 import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import type { PageWithLayout } from '@/data/types/layout'
 import { QueryKeys } from '@/data/types/queries'
@@ -29,8 +28,6 @@ export type MyListingsProps = object
 
 const MyListings: PageWithLayout<MyListingsProps> = () => {
   const api = useApi()
-  const queryClient = useQueryClient()
-  const deleteMarketListingMutation = useDeleteMarketListing(api)
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortOption, setSortOption] = useState('newest')
@@ -40,14 +37,26 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [listingToDelete, setListingToDelete] =
     useState<MarketListingSearchResult | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
 
+<<<<<<< HEAD
+=======
+  // Filter listings to only show the user's own listings (mock implementation)
+  // In a real app, you would fetch these from an API
+>>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
   const { data: listings } = useQuery({
-    queryKey: [QueryKeys.MARKET_LISTINGS, 'mine'],
+    queryKey: [QueryKeys.MARKET_LISTINGS],
     queryFn: async () => {
       const options = {
+<<<<<<< HEAD
+=======
+        // query: searchQuery,
+        // minPrice,
+        // maxPrice,
+        // skip: indexOfFirstItem,
+        // limit: itemsPerPage,
+>>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
       }
-      return await queryMyMarketListings(api, options)
+      return await queryMarketListings(api, options)
     },
     enabled: !!api.user,
     refetchOnWindowFocus: false,
@@ -55,6 +64,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
 
   const viewListingInMarketplace = useCallback((_: string) => {}, [])
 
+<<<<<<< HEAD
   const confirmDelete = useCallback(async () => {
     if (!listingToDelete) return;
     setIsDeleting(true);
@@ -73,6 +83,17 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
       },
     });
   }, [listingToDelete, deleteMarketListingMutation]);
+=======
+  // Handle deletion of a listing
+  const confirmDelete = useCallback(() => {
+    // In a real app, you would call an API to delete the listing
+    // For now, we'll just close the modal
+    setIsDeleteModalOpen(false)
+    setListingToDelete(null)
+    // Show success message
+    alert('Listing deleted successfully!')
+  }, [])
+>>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
 
   return (
     <div className='h-full flex flex-col pb-16'>
@@ -390,16 +411,14 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
                 className='button px-4'
-                disabled={isDeleting}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
                 className='button bg-red-500 text-white px-4 hover:bg-red-600'
-                disabled={isDeleting}
               >
-                {isDeleting ? 'Deleting...' : 'Delete Listing'}
+                Delete Listing
               </button>
             </div>
           </div>

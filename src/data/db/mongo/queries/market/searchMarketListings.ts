@@ -1,5 +1,4 @@
 import type { PipelineStage } from 'mongoose'
-import mongoose from 'mongoose'
 
 import MarketListing from '@/data/db/mongo/models/market-listing'
 import User from '@/data/db/mongo/models/user'
@@ -16,7 +15,6 @@ export interface SearchMarketListingsOptions {
 	countries?: string[]
 	priceMin?: number
 	priceMax?: number
-	authorId?: string | mongoose.Types.ObjectId // Add author ID option
 	skip?: number
 	limit?: number
 }
@@ -24,11 +22,12 @@ export interface SearchMarketListingsOptions {
 export const searchMarketListings = async (
 	options: SearchMarketListingsOptions,
 ): Promise<PaginatedResult<MarketListingSearchResult>> => {
-	const { query, countries, priceMin, priceMax, authorId, skip = 0, limit = 10 } = options
+	const { query, countries, priceMin, priceMax, skip = 0, limit = 10 } = options
 
 	const pipeline: PipelineStage[] = []
 
 
+<<<<<<< HEAD
 	const filter: Record<string, object | string> = {}
 	
 	if (typeof priceMin === 'number' && !isNaN(priceMin)) {
@@ -52,6 +51,19 @@ export const searchMarketListings = async (
 	
 
 	if (Object.keys(filter).length > 0) {
+=======
+	if (countries || priceMin || priceMax) {
+		const filter: Record<string, object> = {}
+		if (priceMin) {
+			filter.priceInCents = { $gte: priceMin * 100 }
+		}
+		if (priceMax) {
+			filter.priceInCents = { ...filter.priceInCents, $lte: priceMax * 100 }
+		}
+		if (countries && countries.length > 0) {
+			filter.countries = { $in: countries }
+		}
+>>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
 		pipeline.push({ $match: filter })
 	}
 

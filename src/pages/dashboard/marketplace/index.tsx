@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useCallback, useState, useEffect, useMemo } from 'react'
 import {
   FiSearch,
@@ -14,7 +14,6 @@ import {
   FiCheckCircle,
   FiMapPin,
   FiPlus,
-  FiAlertCircle,
 } from 'react-icons/fi'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
@@ -24,7 +23,6 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
-import { useDeleteMarketListing } from '@/data/frontend/mutations/useDeleteMarketListing'
 import { QueryKeys } from '@/data/types/queries'
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { countries } from '@/utils/countries'
@@ -74,8 +72,6 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
   const [totalPages, setTotalPages] = useState(1)
 
   const api = useApi()
-  const queryClient = useQueryClient()
-  const deleteMarketListingMutation = useDeleteMarketListing(api)
 
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage
 
@@ -197,6 +193,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
     useState<MarketListingSearchResult | null>(null)
 
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false)
+<<<<<<< HEAD
   const [buyingListing, setBuyingListing] = useState<MarketListingSearchResult | null>(null)
   const [purchaseStep, setPurchaseStep] = useState<'confirm' | 'payment' | 'complete'>('confirm')
   const handlePurchase = useCallback(() => {
@@ -209,12 +206,22 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
   const [listingToDelete, setListingToDelete] =
     useState<MarketListingSearchResult | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+=======
+  const [buyingListing, setBuyingListing] =
+    useState<MarketListingSearchResult | null>(null)
+  const [purchaseStep, setPurchaseStep] = useState<
+    'confirm' | 'payment' | 'complete'
+  >('confirm')
+
+  // Open buy modal with a specific listing
+>>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
   const openBuyModal = (item: MarketListingSearchResult) => {
     setBuyingListing(item)
-    setPurchaseStep('confirm')
     setIsBuyModalOpen(true)
+    setPurchaseStep('confirm')
   }
 
+<<<<<<< HEAD
   const confirmDelete = useCallback(async () => {
     if (!listingToDelete) return;
     if (listingToDelete.author.id.toString() !== api.user?.id) {
@@ -237,6 +244,25 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
       },
     });
   }, [api, listingToDelete, deleteMarketListingMutation]);
+=======
+  // Handle the purchase flow
+  const handlePurchase = () => {
+    if (purchaseStep === 'confirm') {
+      setPurchaseStep('payment')
+    } else if (purchaseStep === 'payment') {
+      // In a real app, you would process the payment here
+      setPurchaseStep('complete')
+      // Simulate completion after 2 seconds
+      setTimeout(() => {
+        setIsBuyModalOpen(false)
+        setBuyingListing(null)
+        setPurchaseStep('confirm')
+        // Show success message or notification
+        alert('Purchase completed successfully!')
+      }, 2000)
+    }
+  }
+>>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
 
   const clearFilters = useCallback(() => {
     setSearchQuery('')
@@ -466,22 +492,20 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
                   <input
                     type='number'
                     placeholder='Min'
-                    value={minPrice ? Math.round(minPrice) / 100 : ''}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value)
-                      setMinPrice(isNaN(val) ? 0 : 100 * val)
-                    }}
+                    value={Math.round(minPrice) / 100}
+                    onChange={(e) =>
+                      setMinPrice(100 * parseInt(e.target.value))
+                    }
                     className='w-full p-2 border-2 border-foreground/10 rounded-md'
                   />
                   <span>to</span>
                   <input
                     type='number'
                     placeholder='Max'
-                    value={isFinite(maxPrice) ? Math.round(maxPrice) / 100 : ''}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value)
-                      setMaxPrice(isNaN(val) ? Number.POSITIVE_INFINITY : 100 * val)
-                    }}
+                    value={Math.round(maxPrice) / 100}
+                    onChange={(e) =>
+                      setMaxPrice(100 * parseInt(e.target.value))
+                    }
                     className='w-full p-2 border-2 border-foreground/10 rounded-md'
                   />
                 </div>
@@ -546,8 +570,13 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
               onBuy={() => openBuyModal(item)}
               onEdit={() => setEditingListing(item)}
               onDelete={() => {
-                setListingToDelete(item);
-                setIsDeleteModalOpen(true);
+                if (
+                  !confirm(`Are you sure you want to delete "${item.title}"?`)
+                ) {
+                  return
+                }
+
+                // TODO: Delete listing API call
               }}
             />
           ))}
@@ -577,8 +606,13 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
               onBuy={() => openBuyModal(item)}
               onEdit={() => setEditingListing(item)}
               onDelete={() => {
-                setListingToDelete(item);
-                setIsDeleteModalOpen(true);
+                if (
+                  !confirm(`Are you sure you want to delete "${item.title}"?`)
+                ) {
+                  return
+                }
+
+                // TODO: Delete listing API call
               }}
             />
           ))}
@@ -948,11 +982,6 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
             closeDetailModal()
             setEditingListing(detailedListing)
           }}
-          onDeleteListing={() => {
-            closeDetailModal()
-            setListingToDelete(detailedListing)
-            setIsDeleteModalOpen(true)
-          }}
         />
       )}
 
@@ -988,6 +1017,7 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
           isEditing={!!editingListing}
         />
       )}
+<<<<<<< HEAD
 
 
       {isDeleteModalOpen && listingToDelete && (
@@ -1023,6 +1053,8 @@ const Marketplace: PageWithLayout<MarketplaceProps> = () => {
           </div>
         </div>
       )}
+=======
+>>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
     </div>
   )
 }
