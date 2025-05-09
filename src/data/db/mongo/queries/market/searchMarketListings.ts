@@ -40,6 +40,7 @@ export const searchMarketListings = async (
 	const pipeline: PipelineStage[] = []
 
 
+<<<<<<< HEAD
 	if (priceMin || priceMax || countries || categories || author) {
 		const filter: {
 			priceInCents?: { $gte?: number; $lte?: number }
@@ -48,6 +49,35 @@ export const searchMarketListings = async (
 			author?: string
 		} = {}
 
+=======
+<<<<<<< HEAD
+	const filter: Record<string, object | string> = {}
+	
+	if (typeof priceMin === 'number' && !isNaN(priceMin)) {
+		filter.priceInCents = { $gte: priceMin };
+	}
+	if (typeof priceMax === 'number' && isFinite(priceMax)) {
+		if (filter.priceInCents && typeof filter.priceInCents === 'object') {
+			filter.priceInCents = { ...filter.priceInCents, $lte: priceMax };
+		} else {
+			filter.priceInCents = { $lte: priceMax };
+		}
+	}
+	if (countries && countries.length > 0) {
+		filter.countries = { $in: countries }
+	}
+	
+
+	if (authorId) {
+		filter.author = authorId
+	}
+	
+
+	if (Object.keys(filter).length > 0) {
+=======
+	if (countries || priceMin || priceMax) {
+		const filter: Record<string, object> = {}
+>>>>>>> delete-listing-integration
 		if (priceMin) {
 			filter.priceInCents = { $gte: priceMin * 100 }
 		}
@@ -67,6 +97,7 @@ export const searchMarketListings = async (
 		if (author) {
 			filter.author = author
 		}
+>>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
 		pipeline.push({ $match: filter })
 	}
 

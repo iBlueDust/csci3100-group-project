@@ -15,7 +15,7 @@ export async function getChatMessages(
 		headers: { 'Content-Type': 'application/json' },
 	})
 	if (!response.ok) {
-		console.error('Failed to fetch messages')
+
 		throw new Error(`Failed to fetch messages ${response.statusText}`)
 	}
 

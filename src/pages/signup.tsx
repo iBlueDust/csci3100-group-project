@@ -169,18 +169,17 @@ const SignUp: PageWithLayout = () => {
         }
 
         const body = await response.json()
-        console.log('Logged in as user', body.id)
-
-        api.setUser({
-          id: body.id,
-          username: data.username,
-        })
-        api.setUek(uek)
-        api.setTokenExpiresAt(new Date(body.expiresAt))
-
-        router.push('/dashboard')
+        setIsLoading(false)
+        if (body.success && body.id) {
+          router.push('/dashboard')
+        } else {
+          setFormErrors((prev) => ({
+            ...prev,
+            general: 'An unexpected error occurred',
+          }))
+        }
       } catch (error) {
-        console.error('Error signing up:', error)
+
         setFormErrors((prev) => ({
           ...prev,
           general: 'An unexpected error occurred',

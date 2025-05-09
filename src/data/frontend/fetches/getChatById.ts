@@ -9,7 +9,7 @@ export async function getChatById(
 		headers: { 'Content-Type': 'application/json' },
 	})
 	if (!response.ok) {
-		console.error(`Failed to fetch chat ${id} ${response.statusText}`)
+
 		throw new Error(`Failed to fetch chat ${id} ${response.statusText}`)
 	}
 

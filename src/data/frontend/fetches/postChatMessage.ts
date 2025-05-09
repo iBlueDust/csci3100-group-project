@@ -76,7 +76,7 @@ export async function postChatMessage(
 		body: formData,
 	})
 	if (!response.ok) {
-		console.error('Failed to send message')
+
 		throw new Error(`Failed to send message ${response.statusText}`)
 	}
 

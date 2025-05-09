@@ -82,7 +82,7 @@ async function POST(
 	)
 
 	if (error) {
-		console.warn('POST /market/listings | Error parsing form data:', error)
+
 		res.status(400).json({ code: 'INVALID_REQUEST', message: 'Invalid form data' })
 		return
 	}
@@ -143,7 +143,7 @@ async function POST(
 	const validation = schema.validate(unvalidatedBody)
 
 	if (validation.error) {
-		console.warn('POST /market/listings | Rejected request for invalid body:', validation.error)
+
 		res.status(400)
 			.json({ code: 'INVALID_REQUEST', message: validation.error.message })
 		return
@@ -162,9 +162,6 @@ async function POST(
 		...picture,
 		objectName: generateMinioObjectName(picture),
 	}))
-	filesToUpload.forEach(({ objectName, size, filename, mimetype, encoding }) => {
-		console.log(`POST /market/listings | Uploading picture: target=${objectName} size=${size} filename=${filename} mimetype=${mimetype} encoding=${encoding}`)
-	})
 
 	const uploadedAt = new Date().toISOString()
 	const minioObjects = filesToUpload.map(({ objectName, data, filename, mimetype }) => ({
@@ -185,7 +182,7 @@ async function POST(
 	)
 
 	if (!uploadResults.success) {
-		console.warn('POST /market/listings | Error uploading pictures:', uploadResults.failedObjects)
+
 
 		return res.status(500).json({ code: 'SERVER_ERROR', message: 'Error uploading pictures' })
 	}
