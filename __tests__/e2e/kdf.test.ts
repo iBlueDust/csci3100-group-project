@@ -1,82 +1,92 @@
-/**
- * @jest-environment node
- */
+// __tests__/e2e/kdf.test.ts
+import { webcrypto } from 'crypto'
 
-import { TextEncoder, TextDecoder } from 'util'
+import { generateDeterministicSymmetricKey } from '@/utils/frontend/e2e/kdf'
 
-// Polyfill TextEncoder/TextDecoder for Node
-;(global as any).TextEncoder = TextEncoder
-;(global as any).TextDecoder = TextDecoder
-
-describe('generateDeterministicSymmetricKey (mocking crypto.subtle)', () => {
-  let stubImportKey: jest.Mock<Promise<CryptoKey>, any>
-  let stubDeriveKey: jest.Mock<Promise<CryptoKey>, any>
-  let generateDeterministicSymmetricKey: (
-    secret: string,
-    salt: string,
-    usages?: KeyUsage[]
-  ) => Promise<CryptoKey>
-  const dummyKey = {} as CryptoKey
-
-  beforeAll(() => {
-    // 1) stub subtle.importKey
-    stubImportKey = jest.fn().mockResolvedValue({} as CryptoKey)
-    // 2) stub subtle.deriveKey
-    stubDeriveKey = jest.fn().mockResolvedValue(dummyKey)
-
-    // Install our stubs onto global.crypto.subtle
-    Object.defineProperty(global, 'crypto', {
-      value: {
-        subtle: {
-          importKey: stubImportKey,
-          deriveKey: stubDeriveKey,
-        },
-      },
-      writable: true,
-    })
+describe('generateDeterministicSymmetricKey', () => {
+  it('returns something', async () => {
+    const key = await generateDeterministicSymmetricKey('secret', 'salt', ['encrypt'])
+    expect(key).toBeDefined()
   })
 
-  beforeEach(() => {
-    // Reset module registry so require() picks up our stubbed crypto
-    jest.resetModules()
-    const mod = require('../../src/utils/frontend/e2e/kdf')
-    generateDeterministicSymmetricKey = mod.generateDeterministicSymmetricKey
+  it('is deterministic', async () => {
+    const secret = 'secret'
+    const salt = 'salt'
+    const key1 = await generateDeterministicSymmetricKey(secret, salt)
+    const key2 = await generateDeterministicSymmetricKey(secret, salt)
+
+    const key1Bytes = await webcrypto.subtle.exportKey('raw', key1)
+    const key2Bytes = await webcrypto.subtle.exportKey('raw', key2)
+
+    expect(key1Bytes.byteLength).toBeGreaterThan(0)
+    expect(Buffer.from(key1Bytes).equals(Buffer.from(key2Bytes))).toBe(true)
   })
 
-  afterEach(() => {
-    jest.clearAllMocks()
+  it('returns different keys for different secrets', async () => {
+    const salt = 'salt'
+    const key1 = await generateDeterministicSymmetricKey('secret1', salt)
+    const key2 = await generateDeterministicSymmetricKey('secret2', salt)
+
+    const key1Bytes = await webcrypto.subtle.exportKey('raw', key1)
+    const key2Bytes = await webcrypto.subtle.exportKey('raw', key2)
+
+    expect(key1Bytes.byteLength).toBeGreaterThan(0)
+    expect(Buffer.from(key1Bytes).equals(Buffer.from(key2Bytes))).toBe(false)
   })
 
-  it('calls importKey then deriveKey with correct args and returns the derived key', async () => {
-    const usages: KeyUsage[] = ['encrypt', 'decrypt']
-    const result = await generateDeterministicSymmetricKey('mySecret', 'mySalt', usages)
+  it('returns different keys for different secrets', async () => {
+    const salt = 'salt'
+    const key1 = await generateDeterministicSymmetricKey('secret1', salt)
+    const key2 = await generateDeterministicSymmetricKey('secret2', salt)
 
-    // importKey assertions
-    expect(stubImportKey).toHaveBeenCalledTimes(1)
-    expect(stubImportKey).toHaveBeenCalledWith(
-      'raw',
-      expect.any(Uint8Array),
-      { name: 'PBKDF2' },
-      false,
-      ['deriveBits', 'deriveKey'],
+    const key1Bytes = await webcrypto.subtle.exportKey('raw', key1)
+    const key2Bytes = await webcrypto.subtle.exportKey('raw', key2)
+
+    expect(Buffer.from(key1Bytes).equals(Buffer.from(key2Bytes))).toBe(false)
+  })
+
+
+  it('can be used to encrypt AES-GCM', async () => {
+    const key = await generateDeterministicSymmetricKey('secret', 'salt', ['encrypt'])
+    const iv = crypto.getRandomValues(new Uint8Array(16))
+    const plaintext = new TextEncoder().encode('hello world')
+    const ciphertext = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      plaintext,
     )
 
-    // deriveKey assertions
-    expect(stubDeriveKey).toHaveBeenCalledTimes(1)
-    expect(stubDeriveKey).toHaveBeenCalledWith(
-      {
-        name:       'PBKDF2',
-        salt:       expect.any(Uint8Array),
-        iterations: 100000,
-        hash:       'SHA-512',
-      },
-      expect.any(Object),
-      { name: 'AES-GCM', length: 256 },
-      true,
-      usages,
+    expect(ciphertext.byteLength).toBeGreaterThan(0)
+    expect(Buffer.from(ciphertext).equals(Buffer.from(plaintext))).toBe(false)
+  })
+
+  it('can be used to decrypt AES-GCM', async () => {
+    const key = await generateDeterministicSymmetricKey('secret', 'salt', ['encrypt', 'decrypt'])
+    const iv = crypto.getRandomValues(new Uint8Array(16))
+    const plaintext = new TextEncoder().encode('hello world')
+    const ciphertext = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      plaintext,
     )
 
-    // return value
-    expect(result).toBe(dummyKey)
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      ciphertext,
+    )
+    expect(decrypted.byteLength).toBe(plaintext.byteLength)
+    expect(new TextDecoder().decode(decrypted)).toBe('hello world')
+  })
+
+  it('obeys keyUsages restriction', async () => {
+    const key = await generateDeterministicSymmetricKey('secret', 'salt', ['decrypt'])
+    const iv = crypto.getRandomValues(new Uint8Array(16))
+    const plaintext = new TextEncoder().encode('hello world')
+    await expect(crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      plaintext,
+    )).rejects.toThrow()
   })
 })
