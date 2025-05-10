@@ -10,7 +10,7 @@ import {
   FiPlus,
 } from 'react-icons/fi'
 import Image from 'next/image'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
@@ -21,29 +21,13 @@ import type { PageWithLayout } from '@/data/types/layout'
 import { QueryKeys } from '@/data/types/queries'
 import { useApi } from '@/utils/frontend/api'
 import { formatCurrency } from '@/utils/format'
-import NewMarketListingModal from '@/components/marketplace/NewMarketListingModal'
+import CreateListingForm from '../../components/marketplace/CreateListingForm'
 import DashboardLayout from '@/layouts/DashboardLayout'
 
 export type MyListingsProps = object
 
-// Function to delete a market listing
-const deleteMarketListing = async (api: any, listingId: string): Promise<void> => {
-  const response = await fetch(`/api/market/listings/${listingId}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to delete listing');
-  }
-};
-
 const MyListings: PageWithLayout<MyListingsProps> = () => {
   const api = useApi()
-  const queryClient = useQueryClient()
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortOption, setSortOption] = useState('newest')
@@ -53,7 +37,6 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [listingToDelete, setListingToDelete] =
     useState<MarketListingSearchResult | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
 
   const { data: listings } = useQuery({
     queryKey: [QueryKeys.MARKET_LISTINGS],
@@ -63,13 +46,6 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
     },
     enabled: !!api.user,
     refetchOnWindowFocus: false,
-  })
-
-  const deleteMarketListingMutation = useMutation({
-    mutationFn: (id: string) => deleteMarketListing(api, id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.MARKET_LISTINGS] })
-    }
   })
 
   const viewListingInMarketplace = useCallback((_: string) => {}, [])
@@ -84,6 +60,7 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
         setListingToDelete(null);
       },
       onError: (error: any) => {
+
         alert(`Error: ${error.message || 'Failed to delete listing. Please try again.'}`);
       },
       onSettled: () => {
@@ -349,12 +326,12 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
       )}
 
       {(isCreateListingOpen || editingListing) && (
-        <NewMarketListingModal
+        <CreateListingForm
           onClose={() => {
             setIsCreateListingOpen(false)
             setEditingListing(null)
           }}
-          onSuccess={(listingId: string) => {
+          onSuccess={(listingId) => {
             setIsCreateListingOpen(false)
             setEditingListing(null)
 
@@ -415,8 +392,14 @@ const MyListings: PageWithLayout<MyListingsProps> = () => {
   )
 }
 
-MyListings.getLayout = function getLayout(page: React.ReactNode) {
-  return <DashboardLayout>{page}</DashboardLayout>
+MyListings.PageLayout = function MyListingsLayout({ children }) {
+  const GrandfatherLayout =
+    DashboardLayout.PageLayout ?? (({ children }) => children)
+  return (
+    <GrandfatherLayout>
+      <DashboardLayout>{children}</DashboardLayout>
+    </GrandfatherLayout>
+  )
 }
 
 export default MyListings
