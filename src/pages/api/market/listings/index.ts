@@ -111,7 +111,8 @@ async function POST(
 		description: Joi.string()
 			.pattern(
 				new RegExp(
-					`^\\s*\\S.{0,${env.MARKET_LISTING_DESCRIPTION_MAX_LENGTH - 1}}\\s*$`
+					`^\\s*\\S.{0,${env.MARKET_LISTING_DESCRIPTION_MAX_LENGTH - 1}}\\s*$`,
+					'm',
 				)
 			)
 			.optional(),
