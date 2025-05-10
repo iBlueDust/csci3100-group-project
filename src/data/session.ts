@@ -370,5 +370,8 @@ export function sessionToCookie(session: Session): readonly string[] {
 	]
 }
 
-// export const sessionStore = new InMemorySessionStore()
-export const sessionStore = new RedisSessionStore()
+// Use InMemorySessionStore in test, RedisSessionStore otherwise
+export const sessionStore =
+  process.env.NODE_ENV === "test"
+    ? new InMemorySessionStore()
+    : new RedisSessionStore()

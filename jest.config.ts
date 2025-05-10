@@ -14,9 +14,8 @@ const config: Config = {
   // Setup files to be run after the test framework is installed
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 
-
-  // Use jsdom for browser-like testing environment
-  testEnvironment: 'jsdom',
+  
+  testEnvironment: "node",
 
   // Automatically clear mock calls, instances, contexts, and results before every test
   clearMocks: true,
