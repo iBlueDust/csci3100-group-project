@@ -39,6 +39,7 @@ export function useAttachment(
 		const url = URL.createObjectURL(
 			new Blob([decryptedFile], { type: mimeType ?? '' }),
 		)
+		console.log({ url })
 		setUrl(url)
 		setIsDownloading(false)
 	}, [message, sharedKey, isDownloading])

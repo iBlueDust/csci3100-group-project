@@ -2,7 +2,7 @@ import type { NextComponentType, NextPage, NextPageContext } from "next"
 import type { AppProps } from 'next/app'
 import type React from "react"
 
-
+// https://stackoverflow.com/questions/69965829/how-to-extend-nextpage-type-to-add-custom-field-to-page-component
 
 export type PageWithLayout<P = unknown, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: React.ReactNode) => React.ReactNode

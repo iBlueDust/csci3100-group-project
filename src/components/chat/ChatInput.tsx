@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { FiPaperclip, FiSend, FiTrash2 } from 'react-icons/fi'
+import { FiPaperclip, FiSend } from 'react-icons/fi'
 import dynamic from 'next/dynamic'
 import TextareaAutosize from 'react-textarea-autosize'
 
@@ -99,14 +99,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   }, [onSend, messageInput, attachment])
 
-  const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    await handleSendMessage()
-  }, [handleSendMessage])
+  const handleFormSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      await handleSendMessage()
+    },
+    [handleSendMessage],
+  )
 
   useEffect(() => {
-    if (!messageInputRef.current) return
+    if (!messageInputRef.current) {
+      console.error('messageInputRef is not set')
+      return
+    }
     const elem = messageInputRef.current
+
     const listener = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
@@ -115,12 +122,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
       }
     }
     elem.addEventListener('keydown', listener)
-    return () => elem.removeEventListener('keydown', listener)
-  }, [handleSendMessage])
+
+    return () => {
+      elem.removeEventListener('keydown', listener)
+    }
+  }, [messageInputRef, formRef, handleSendMessage])
 
   useLayoutEffect(() => {
     messageInputRef.current?.focus()
-  }, [])
+  }, [messageInputRef])
 
   return (
     <div className='border-t-2 border-foreground/10 bg-background p-2 md:p-4'>

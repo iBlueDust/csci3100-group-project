@@ -19,6 +19,7 @@ export async function fetchConversations(
     
     return await response.json();
   } catch (error) {
+    console.error('Error fetching conversations:', error);
     throw error;
   }
 }
@@ -36,6 +37,7 @@ export async function fetchConversation(id: string): Promise<ConversationsRespon
     
     return await response.json();
   } catch (error) {
+    console.error(`Error fetching conversation ${id}:`, error);
     throw error;
   }
 }
@@ -59,6 +61,7 @@ export async function fetchMessages(
     
     return await response.json();
   } catch (error) {
+    console.error(`Error fetching messages for conversation ${conversationId}:`, error);
     throw error;
   }
 }
@@ -92,6 +95,7 @@ export async function sendMessage(
     
     return await response.json();
   } catch (error) {
+    console.error(`Error sending message to conversation ${conversationId}:`, error);
     throw error;
   }
 }
@@ -115,6 +119,7 @@ export async function createConversation(recipientId: string): Promise<{ id: str
     
     return await response.json();
   } catch (error) {
+    console.error('Error creating conversation:', error);
     throw error;
   }
 }
@@ -134,6 +139,7 @@ export async function deleteConversation(conversationId: string): Promise<{ succ
     
     return await response.json();
   } catch (error) {
+    console.error(`Error deleting conversation ${conversationId}:`, error);
     throw error;
   }
 }

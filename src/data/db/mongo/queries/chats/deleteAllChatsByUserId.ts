@@ -3,7 +3,6 @@ import type mongoose from "mongoose"
 import dbConnect from '@/data/db/mongo'
 import Chat from '@/data/db/mongo/models/chat'
 import { deleteOrphanedChatMessages } from "./deleteOrphanedChatMessages"
-// TODO: Fix logger setup - import logger from '@/utils/logger'
 
 
 /**
@@ -43,10 +42,9 @@ export const deleteAllChatsByUserId = async (
 		})
 
 		if (chatDeleteResult.deletedCount === chatsToDelete.length) {
-
-			// logger.info(`Deleted ${chatDeleteResult.deletedCount} chats belonging to user ${userId}`)
+			console.log(`Deleted ${chatDeleteResult.deletedCount} chats belonging to user ${userId}`)
 		} else {
-			// logger.warn(`Deleted ${chatDeleteResult.deletedCount} chats, but expected to delete ${chatsToDelete.length} belonging to user ${userId}`)
+			console.warn(`Deleted ${chatDeleteResult.deletedCount} chats, but expected to delete ${chatsToDelete.length} belonging to user ${userId}`)
 		}
 
 		// In case this chat was deleted by the other party between the time we checked
@@ -62,10 +60,9 @@ export const deleteAllChatsByUserId = async (
 		}).catch(() => null)
 
 		if (results) {
-
-			// logger.info(`Deleted ${results.deletedCount ?? 0} empty chats`)
+			console.log(`Deleted ${results.deletedCount ?? 0} empty chats`)
 		} else {
-			// logger.error('Failed to delete empty chats')
+			console.error('Failed to delete empty chats')
 		}
 	}
 

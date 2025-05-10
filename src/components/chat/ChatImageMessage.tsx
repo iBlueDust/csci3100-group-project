@@ -19,7 +19,7 @@ const ChatImageMessage: React.FC<ChatImageMessageProps> = ({
   const attachment = useAttachment(message, sharedKey)
   useEffect(() => {
     attachment.download()
-    // intentionally omitting dependencies to only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

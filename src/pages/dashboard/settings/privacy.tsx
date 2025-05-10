@@ -21,7 +21,7 @@ const SettingsPrivacyPage: PageWithLayout = () => {
     try {
       success = await deleteMyAccount(api)
     } catch (error) {
-
+      console.error('Failed to delete account', error)
       alert('Failed to delete account')
       return
     }

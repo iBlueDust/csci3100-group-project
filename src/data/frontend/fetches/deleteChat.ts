@@ -6,7 +6,7 @@ export async function deleteChat(
 ): Promise<boolean> {
 	const response = await api.fetch(`/chats/${chatId}`, { method: 'DELETE' })
 	if (!response.ok) {
-
+		console.error('Failed to delete chat')
 		throw new Error(`Failed to delete chat ${chatId} ${response.statusText}`)
 	}
 

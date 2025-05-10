@@ -15,20 +15,25 @@ import { PageWithLayout } from '@/data/types/layout'
 import DashboardLayout from '@/layouts/DashboardLayout'
 import Link from 'next/link'
 
-// Calculate mock market statistics
+// Get recent listings (first 4)
+// const recentListings = getRecentListings(4)
+
+// Calculate market statistics
 const calculateMarketStats = () => {
   const totalListings = mockListings.length
 
-  // Approximate completed trades (30%)
+  // Calculate completed trades (just a mock example - approximately 30% of listings)
   const completedTrades = Math.floor(totalListings * 0.3)
 
+  // Calculate average price
   const totalValue = mockListings.reduce((sum, item) => {
     return sum + parseFloat(item.price.replace('$', '').replace(',', ''))
   }, 0)
 
   const averagePrice = Math.round(totalValue / totalListings)
-  const tradeVolume = Math.round(totalValue * 0.3)
+  const tradeVolume = Math.round(totalValue * 0.3) // Assuming 30% of items were traded
 
+  // Calculate category distribution
   const categories: Record<string, number> = {}
   mockListings.forEach((item) => {
     if (categories[item.category]) {
@@ -45,11 +50,12 @@ const calculateMarketStats = () => {
     )
   })
 
+  // Get top categories
   const topCategories = Object.entries(categoryPercentages)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4)
 
-  // Approximate new accounts (10%)
+  // Approximate new accounts - just a mock example
   const newAccounts = Math.floor(totalListings * 0.1)
 
   return {
@@ -68,7 +74,7 @@ export interface HomeProps {
   navigateToMarketplace?: (listingId: number) => void
 }
 
-// Stats popup
+// Stats popup component
 const StatsPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const stats = calculateMarketStats()
 
@@ -149,7 +155,7 @@ const Home: PageWithLayout<HomeProps> = ({
   const [showStatsPopup, setShowStatsPopup] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
 
-
+  // Handle successful listing creation
   const handleCreateSuccess = (listingId: string) => {
     setShowCreateForm(false)
     if (navigateToMarketplace) {
@@ -167,11 +173,11 @@ const Home: PageWithLayout<HomeProps> = ({
       </div>
 
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
-
+        {/* Market Summary Card */}
         <div className='bg-background-light p-6 rounded-lg border-2 border-foreground/10 shadow-sm'>
           <h3 className='text-xl font-bold mb-4'>Market Summary</h3>
           <div className='space-y-2'>
-
+            {/* Using useMemo to avoid recalculating on every render */}
             {useMemo(() => {
               const stats = calculateMarketStats()
               return (
@@ -273,7 +279,7 @@ const Home: PageWithLayout<HomeProps> = ({
         </div>
       </div>
 
-
+      {/* Create Listing Form Modal */}
       {showCreateForm && (
         <NewMarketListingModal
           onClose={() => setShowCreateForm(false)}
@@ -281,7 +287,7 @@ const Home: PageWithLayout<HomeProps> = ({
         />
       )}
 
-
+      {/* Stats Pop-up Modal */}
       {showStatsPopup && (
         <StatsPopup onClose={() => setShowStatsPopup(false)} />
       )}
