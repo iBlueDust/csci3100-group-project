@@ -12,7 +12,8 @@ export type PaginatedResult<TData, TMeta = object> = {
 	} & TMeta
 }
 
-export interface Error {
+export interface Error<TExtraInfo = never> {
 	code: string
 	message?: string
+	extraInfo?: TExtraInfo
 }

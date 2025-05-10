@@ -10,7 +10,7 @@ export interface SelectProps
 
 const Select: React.FC<SelectProps> = (props) => {
   const selectProps = useMemo(() => {
-    // Using 'any' here to generically copy props for select element
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const copy: any = { ...props }
     delete copy.label
     delete copy.options

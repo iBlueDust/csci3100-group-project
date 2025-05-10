@@ -9,8 +9,14 @@ import SubmitButton from '@/components/form/SubmitButton'
 import { toPasskey } from '@/utils/frontend/e2e/auth'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { PageWithLayout } from '@/data/types/layout'
-import { exportKey, generateUserEncryptionKey } from '@/utils/frontend/e2e'
+import {
+  encryptUserEncryptionKey,
+  exportKey,
+  generateRandomKeyPair,
+} from '@/utils/frontend/e2e'
 import { isDev } from '@/utils/frontend/env'
+import { generateDeterministicSymmetricKey } from '@/utils/frontend/e2e/kdf'
+import { ab2base64 } from '@/utils'
 
 const SignUp: PageWithLayout = () => {
   const router = useRouter()
@@ -119,17 +125,23 @@ const SignUp: PageWithLayout = () => {
       setIsLoading(true)
 
       try {
-        const uek = await generateUserEncryptionKey(
-          data.username,
-          data.password,
-        )
+        const uek = await generateRandomKeyPair()
         const jwk = await exportKey(uek.publicKey)
-        api.setUek(uek)
+        const uekEncryptionKey = await generateDeterministicSymmetricKey(
+          `${data.username}:${data.password}`,
+          process.env.NEXT_PUBLIC_UEK_DERIVATION_SALT ?? data.username,
+          ['encrypt'],
+        )
+        const encryptedUek = await encryptUserEncryptionKey(
+          uek.privateKey,
+          uekEncryptionKey,
+        )
 
         const payload = {
           username: data.username,
           passkey: await toPasskey(data.username, data.password),
           publicKey: jwk,
+          encryptedUserEncryptionKey: ab2base64(encryptedUek),
           licenseKey: data.licenseKey,
         }
 
@@ -157,17 +169,18 @@ const SignUp: PageWithLayout = () => {
         }
 
         const body = await response.json()
-        setIsLoading(false)
-        if (body.success && body.id) {
-          router.push('/dashboard')
-        } else {
-          setFormErrors((prev) => ({
-            ...prev,
-            general: 'An unexpected error occurred',
-          }))
-        }
-      } catch (error) {
+        console.log('Logged in as user', body.id)
 
+        api.setUser({
+          id: body.id,
+          username: data.username,
+        })
+        api.setUek(uek)
+        api.setTokenExpiresAt(new Date(body.expiresAt))
+
+        router.push('/dashboard')
+      } catch (error) {
+        console.error('Error signing up:', error)
         setFormErrors((prev) => ({
           ...prev,
           general: 'An unexpected error occurred',
@@ -187,8 +200,8 @@ const SignUp: PageWithLayout = () => {
         'grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-body',
       )}
     >
-      <main className='flex flex-col gap-8 row-start-2 items-center w-full max-w-md'>
-        <h1 className='text-4xl font-bold border-b border-foreground font-mono'>
+      <main className='row-start-2 flex w-full max-w-md flex-col items-center gap-8'>
+        <h1 className='border-b border-foreground font-mono text-4xl font-bold'>
           Sign Up
         </h1>
 
@@ -226,13 +239,13 @@ const SignUp: PageWithLayout = () => {
             type='password'
             name='confirmPassword'
             label='Confirm Password'
-            autoComplete={isDev ? undefined : 'new-password'}
+            autoComplete={isDev ? undefined : ''}
             error={formErrors.confirmPassword}
             required
           />
 
           {formErrors.general && (
-            <p className='text-red-500 text-center max-w-96 mx-auto text-sm'>
+            <p className='mx-auto max-w-96 text-center text-sm text-red-500'>
               {formErrors.general}
             </p>
           )}
@@ -249,7 +262,7 @@ const SignUp: PageWithLayout = () => {
           </div>
         </form>
 
-        <div className='text-center pt-2'>
+        <div className='pt-2 text-center'>
           <p>
             Already have an account?{' '}
             <Link href='/login' className='link underline underline-offset-4'>
@@ -262,8 +275,8 @@ const SignUp: PageWithLayout = () => {
   )
 }
 
-SignUp.PageLayout = function SignUpLayout({ children }) {
-  return <ApiProvider>{children}</ApiProvider>
+SignUp.getLayout = (page) => {
+  return <ApiProvider>{page}</ApiProvider>
 }
 
 export default SignUp

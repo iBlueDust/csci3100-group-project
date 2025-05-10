@@ -1,10 +1,15 @@
 import React, { useState } from 'react'
-import { FiHeart, FiMessageCircle, FiShoppingCart, FiX } from 'react-icons/fi'
+import { FiEdit, FiHeart, FiMessageCircle, FiX } from 'react-icons/fi'
 import dayjs from 'dayjs'
 
 import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { formatCurrency } from '@/utils/format'
 import Image from 'next/image'
+import SubmitButton from '../form/SubmitButton'
+import { useApi } from '@/utils/frontend/api'
+import Link from 'next/link'
+import { getCountryNameById } from '@/utils/countries'
+import { getCategoryNameById } from '@/utils/categories'
 
 export interface MarketListingModalProps {
   listing: MarketListingSearchResult
@@ -18,38 +23,38 @@ export interface MarketListingModalProps {
 const MarketListingModal: React.FC<MarketListingModalProps> = ({
   listing,
   isMine = false,
-  onBuy,
   onChat,
   onEditListing,
   onClose,
 }) => {
+  const api = useApi()
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   return (
-    <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-      <div className='bg-background rounded-lg max-w-3xl w-full shadow-xl border-2 border-foreground/10 max-h-[90vh] flex flex-col'>
+    <div className='fixed inset-0 z-10 flex items-center justify-center bg-foreground/30 p-4 backdrop-blur-sm'>
+      <div className='flex max-h-[90vh] w-full max-w-5xl flex-col rounded-lg border-2 border-foreground/10 bg-background shadow-xl'>
         {/* Modal Header */}
-        <div className='flex justify-between items-center p-4 border-b border-foreground/10 shrink-0'>
-          <h2 className='text-xl font-bold truncate'>{listing.title}</h2>
+        <div className='flex shrink-0 items-center justify-between border-b border-foreground/10 p-4'>
+          <h2 className='truncate text-xl font-bold'>Listing Details</h2>
           <button
             onClick={onClose}
-            className='p-1 hover:bg-background-dark rounded-full'
+            className='rounded-full p-1 hover:bg-background-dark'
           >
             <FiX size={20} />
           </button>
         </div>
 
         {/* Modal Body - Scrollable */}
-        <div className='p-4 overflow-y-auto'>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+        <div className='overflow-y-auto p-4'>
+          <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
             {/* Image Gallery */}
-            <div className='md:col-span-2 space-y-3'>
+            <div className='space-y-3 md:col-span-2'>
               {/* Main Image */}
-              <div className='bg-foreground/5 rounded-lg h-72 overflow-'>
+              <div className='rounded-lg bg-foreground/5'>
                 <Image
-                  className='rounded-md object-cover w-full h-full'
-                  width={620}
-                  height={288}
+                  className='aspect-[4/3] w-full rounded-md object-cover'
+                  width={650}
+                  height={480}
                   src={listing.pictures[selectedImageIndex]}
                   alt={`Listing Image #${selectedImageIndex + 1}`}
                 />
@@ -60,13 +65,13 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                 {listing.pictures.map((url, i) => (
                   <label
                     key={i}
-                    className='rounded-md h-12 cursor-pointer hover:border hover:border-foreground/30 overflow-hidden'
+                    className='cursor-pointer overflow-hidden rounded-md hover:border hover:border-foreground/30'
                     onClick={() => setSelectedImageIndex(i)}
                   >
                     <Image
-                      className='w-full h-full object-cover'
+                      className='aspect-[4/3] w-full object-cover'
                       width={108}
-                      height={48}
+                      height={81}
                       src={url}
                       alt={`Listing Image #${i + 1}`}
                     />
@@ -87,13 +92,16 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
             </div>
 
             {/* Item Details */}
-            <div className='md:col-span-1 flex flex-col'>
+            <div className='flex flex-col md:col-span-1'>
               {/* Price and Actions */}
               <div className='mb-2'>
-                <div className='flex justify-between items-center mb-3'>
-                  <p className='text-2xl font-mono font-bold mr-4'>
+                <h1 className='mb-2 text-xl'>{listing.title}</h1>
+
+                <div className='mb-3 flex items-center justify-between'>
+                  <p className='mr-4 font-mono text-2xl font-bold'>
                     {formatCurrency(listing.priceInCents)}
                   </p>
+
                   <div className='flex items-center gap-2'>
                     <button className='text-foreground/50 hover:text-red-500'>
                       <FiHeart size={20} />
@@ -110,35 +118,77 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                   </div>
                 </div>
 
-                <div className='space-y-2'>
-                  <button
+                <div className='mb-2 space-y-2'>
+                  {/* <button
                     onClick={onBuy}
                     className='button-primary w-full py-2 flex items-center justify-center gap-2 text-sm'
                   >
                     <FiShoppingCart size={16} />
                     Buy Now
-                  </button>
+                  </button> */}
 
-                  <button
-                    onClick={onChat}
-                    className='button w-full py-2 flex items-center justify-center gap-2 text-sm'
-                  >
-                    <FiMessageCircle size={16} />
-                    Message Seller
-                  </button>
+                  {api.user?.id.toString() !== listing.author.id.toString() ? (
+                    <SubmitButton
+                      look='primary'
+                      className='w-full'
+                      onClick={onChat}
+                    >
+                      <div className='flex flex-row items-center justify-center gap-2 text-sm'>
+                        <FiMessageCircle size={16} />
+                        <span>Message Seller</span>
+                      </div>
+                    </SubmitButton>
+                  ) : (
+                    <Link
+                      className='button-shape w-full bg-amber-400 text-black hover:bg-amber-500'
+                      href={`/dashboard/marketplace/${listing.id}/edit`}
+                    >
+                      <div className='flex flex-row items-center justify-center gap-2 text-sm'>
+                        <FiEdit size={16} />
+                        <span>Edit</span>
+                      </div>
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {/* Item Details */}
+              <div className='space-y-2 text-sm'>
+                <div>
+                  <p className='text-xs text-foreground/70'>Category</p>
+                  <p className='font-medium capitalize'>
+                    {listing.categories
+                      .map((id) => getCategoryNameById(id))
+                      .filter(Boolean)
+                      .join(', ') || 'Others'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className='text-xs text-foreground/70'>Location</p>
+                  <p className='font-medium'>
+                    {listing.countries.map(getCountryNameById).join(', ')}
+                  </p>
+                </div>
+
+                <div>
+                  <p className='text-xs text-foreground/70'>Listed</p>
+                  <p className='font-medium'>
+                    {dayjs(listing.listedAt).format('DD MMM YYYY HH:mm')}
+                  </p>
                 </div>
               </div>
 
               {/* Seller Info */}
-              <div className='mb-4 p-3 border-2 border-foreground/10 rounded-lg'>
-                <div className='flex items-center gap-2 mb-1'>
-                  <div className='w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center text-sm'>
+              <div className='mt-4 rounded-lg border border-foreground-light/50 p-3'>
+                <div className='mb-1 flex items-center gap-2'>
+                  <div className='flex size-8 items-center justify-center rounded-full bg-foreground/10 text-sm'>
                     {(listing.author.username ?? listing.author.id.toString())
                       ?.charAt(0)
                       .toUpperCase()}
                   </div>
                   <div>
-                    <p className='font-medium text-sm'>
+                    <p className='text-sm font-medium'>
                       {listing.author.username ?? listing.author.id.toString()}
                     </p>
                     <div className='flex items-center text-xs text-foreground/70'>
@@ -150,35 +200,22 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
                 </div>
               </div>
 
-              {/* Item Details */}
-              <div className='space-y-2 text-sm'>
-                <div>
-                  <p className='text-xs text-foreground/70'>Category</p>
-                  <p className='font-medium capitalize'>{'--'}</p>
-                </div>
-
-                <div>
-                  <p className='text-xs text-foreground/70'>Location</p>
-                  <p className='font-medium'>{listing.countries.join(', ')}</p>
-                </div>
-
-                <div>
-                  <p className='text-xs text-foreground/70'>Listed</p>
-                  <p className='font-medium'>
-                    {dayjs(listing.listedAt).format('DD MMM YYYY HH:mm')}
-                  </p>
-                </div>
+              {/* Description */}
+              <div className='mb-4 mt-6'>
+                <h3 className='mb-2 text-lg font-bold'>Description</h3>
+                <p className='whitespace-pre-line text-sm text-foreground/90'>
+                  {listing.description.split('\n').map((line, i) => (
+                    <span key={i}>
+                      {i > 0 && <br />}
+                      {line}
+                    </span>
+                  ))}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Description */}
-          <div className='mt-6 border-t border-foreground/10 pt-6'>
-            <h3 className='text-lg font-bold mb-3'>Description</h3>
-            <p className='whitespace-pre-line text-foreground/90 text-sm'>
-              {listing.description}
-            </p>
-          </div>
+          {/* Old description location */}
         </div>
       </div>
     </div>

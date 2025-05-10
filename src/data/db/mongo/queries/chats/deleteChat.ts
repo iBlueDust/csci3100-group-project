@@ -31,13 +31,8 @@ export const deleteChat = async (
 	const userIsLastInChat = chat.deleteRequesters.length >= chat.participants.length - 1
 	if (userIsLastInChat) {
 		// Delete the chat, orphan the messages (will be deleted later)
-		const chatDeleteResult = await Chat.deleteOne({ _id: chatId });
-		if (chatDeleteResult.acknowledged && chatDeleteResult.deletedCount === 1) {
-
-			// logger.info(`Deleted chat ${chatId}`)
-		} else {
-			// logger.warn(`Failed to delete chat ${chatId}`)
-		}
+		await chat.deleteOne()
+		console.log(`Deleted chat ${chatId}`)
 
 		// In case this chat was deleted by the other party between the time we checked
 		// and now (race condition), let's clean up all chats that should be deleted
@@ -52,10 +47,9 @@ export const deleteChat = async (
 		}).catch(() => null)
 
 		if (results) {
-
-			// logger.info(`Deleted ${results.deletedCount ?? 0} empty chats`)
+			console.log(`Deleted ${results.deletedCount ?? 0} empty chats`)
 		} else {
-			// logger.error('Failed to delete empty chats')
+			console.error('Failed to delete empty chats')
 		}
 	} else {
 		chat.deleteRequesters.push(userId)

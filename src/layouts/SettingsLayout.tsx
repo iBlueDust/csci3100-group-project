@@ -34,11 +34,12 @@ const SettingsLayout: PageWithLayout<SettingsLayoutProps> = ({ children }) => {
         <Link
           href='/dashboard/settings'
           replace
-          className={`flex items-center gap-1 px-4 py-2 border-b-2 font-medium transition-colors ${
+          className={classNames(
+            'flex items-center gap-1 px-4 py-2 border-b-2 font-medium transition-colors',
             activeTab === '' || activeTab === '/'
               ? 'border-foreground text-foreground'
-              : 'border-transparent text-foreground/50 hover:text-foreground/80'
-          }`}
+              : 'border-transparent text-foreground/50 hover:text-foreground/80',
+          )}
         >
           <FiUser className='w-4 h-4' />
           <span>Profile</span>
@@ -67,14 +68,9 @@ const SettingsLayout: PageWithLayout<SettingsLayoutProps> = ({ children }) => {
   )
 }
 
-SettingsLayout.PageLayout = function SettingsMetaLayout({ children }) {
-  const GrandfatherLayout =
-    DashboardLayout.PageLayout ?? (({ children }) => children)
-  return (
-    <GrandfatherLayout>
-      <DashboardLayout>{children}</DashboardLayout>
-    </GrandfatherLayout>
-  )
+SettingsLayout.getLayout = (page) => {
+  const GrandfatherLayout = DashboardLayout.getLayout ?? ((page) => page)
+  return GrandfatherLayout(<DashboardLayout>{page}</DashboardLayout>)
 }
 
 export default SettingsLayout

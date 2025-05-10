@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems, value, onChange }) => {
   }, [router, api])
 
   return (
-    <aside className='w-16 sm:w-64 border-r-2 border-foreground/10 min-h-screen h-full p-4 flex flex-col bg-background'>
+    <aside className='flex h-full min-h-screen w-16 flex-col border-r-2 border-foreground/10 bg-background p-4 sm:w-64'>
       {' '}
       {/* Added bg-background, removed sticky top-0 */}
       <nav className='space-y-1'>
@@ -75,10 +75,10 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems, value, onChange }) => {
 
         {/* Logout button moved here, right after the settings button */}
         <button
-          className='flex items-center gap-3 px-3 py-2 rounded-md hover:bg-background-dark w-full transition-colors text-red-500 mt-1'
+          className='mt-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-red-500 transition-colors hover:bg-background-dark'
           onClick={logoutHandler}
         >
-          <FiLogOut className='w-5 h-5 min-w-5' />
+          <FiLogOut className='size-5 min-w-5' />
           <span className='hidden sm:inline'>Logout</span>
         </button>
       </nav>

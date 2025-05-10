@@ -1,3 +1,4 @@
+import { isDev } from "@/env"
 import mongoose from "mongoose"
 
 const MarketListingSchema = new mongoose.Schema({
@@ -45,9 +46,16 @@ const MarketListingSchema = new mongoose.Schema({
 		required: true,
 		index: true,
 	},
+
+	categories: {
+		type: [String],
+		default: [],
+		index: true,
+	}
 })
 
-
+// Create compound text index for title and description
+// https://www.mongodb.com/docs/v4.4/core/text-search-operators/
 MarketListingSchema.index(
 	{ title: 'text', description: 'text' },
 	{
@@ -59,13 +67,15 @@ MarketListingSchema.index(
 function generateModel() {
 	const MarketListing = mongoose.model('MarketListing', MarketListingSchema)
 
-	MarketListing.on('index', (err) => {
-		if (err) {
-
-		} else {
-			console.info('MarketListing indexing complete')
-		}
-	})
+	if (isDev) {
+		MarketListing.on('index', (err) => {
+			if (err) {
+				console.error('[DB] MarketListing index error: %s', err)
+			} else {
+				console.info('[DB] MarketListing indexing complete')
+			}
+		})
+	}
 
 	return MarketListing
 }

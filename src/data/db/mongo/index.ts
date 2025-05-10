@@ -1,9 +1,9 @@
 import mongoose from "mongoose"
 
 declare global {
+	// Don't use let or const here
 
-
-
+	// eslint-disable-next-line no-var
 	var mongoose: {
 		conn: mongoose.Mongoose | null,
 		promise: Promise<mongoose.Mongoose> | null
@@ -24,7 +24,7 @@ if (!MONGO_USERNAME || !MONGO_PASSWORD) {
 	throw new Error("MONGO_USERNAME and MONGO_PASSWORD are required")
 }
 
-
+// Cached mongoose connection
 let cached = globalThis.mongoose
 
 async function dbConnect() {
@@ -37,6 +37,7 @@ async function dbConnect() {
 	}
 
 	if (!cached.promise) {
+		console.log('Connecting to', `mongodb://${MONGO_USERNAME}:*****@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`)
 		cached.promise = mongoose.connect(MONGO_URI)
 	}
 	cached.conn = await cached.promise

@@ -45,6 +45,11 @@ export function ab2base64(bytes: ArrayBuffer): string {
 	return base64
 }
 
+export function base642ab(base64: string): ArrayBuffer {
+	return str2ab(atob(base64))
+}
+
+
 export function ab2hex(buffer: ArrayBuffer) {
 	return [...new Uint8Array(buffer)]
 		.map((b) => b.toString(16).padStart(2, '0'))

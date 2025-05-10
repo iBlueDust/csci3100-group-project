@@ -12,9 +12,12 @@ import {
 
 export interface SearchMarketListingsOptions {
 	query?: string
+	categories?: string[]
 	countries?: string[]
 	priceMin?: number
 	priceMax?: number
+	author?: string
+	sort?: string
 	skip?: number
 	limit?: number
 }
@@ -22,38 +25,29 @@ export interface SearchMarketListingsOptions {
 export const searchMarketListings = async (
 	options: SearchMarketListingsOptions,
 ): Promise<PaginatedResult<MarketListingSearchResult>> => {
-	const { query, countries, priceMin, priceMax, skip = 0, limit = 10 } = options
+	const {
+		query,
+		countries,
+		categories,
+		priceMin,
+		priceMax,
+		author,
+		sort = 'listedAt-desc',
+		skip = 0,
+		limit = 10,
+	} = options
 
 	const pipeline: PipelineStage[] = []
 
 
-<<<<<<< HEAD
-	const filter: Record<string, object | string> = {}
-	
-	if (typeof priceMin === 'number' && !isNaN(priceMin)) {
-		filter.priceInCents = { $gte: priceMin };
-	}
-	if (typeof priceMax === 'number' && isFinite(priceMax)) {
-		if (filter.priceInCents && typeof filter.priceInCents === 'object') {
-			filter.priceInCents = { ...filter.priceInCents, $lte: priceMax };
-		} else {
-			filter.priceInCents = { $lte: priceMax };
-		}
-	}
-	if (countries && countries.length > 0) {
-		filter.countries = { $in: countries }
-	}
-	
+	if (priceMin || priceMax || countries || categories || author) {
+		const filter: {
+			priceInCents?: { $gte?: number; $lte?: number }
+			countries?: { $in: string[] }
+			categories?: { $in: string[] }
+			author?: string
+		} = {}
 
-	if (authorId) {
-		filter.author = authorId
-	}
-	
-
-	if (Object.keys(filter).length > 0) {
-=======
-	if (countries || priceMin || priceMax) {
-		const filter: Record<string, object> = {}
 		if (priceMin) {
 			filter.priceInCents = { $gte: priceMin * 100 }
 		}
@@ -61,9 +55,18 @@ export const searchMarketListings = async (
 			filter.priceInCents = { ...filter.priceInCents, $lte: priceMax * 100 }
 		}
 		if (countries && countries.length > 0) {
-			filter.countries = { $in: countries }
+			filter.countries = {
+				$in: countries.map((country: string) => country.toLowerCase())
+			}
 		}
->>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
+		if (categories && categories.length > 0) {
+			filter.categories = {
+				$in: categories.map((c: string) => c.trim())
+			}
+		}
+		if (author) {
+			filter.author = author
+		}
 		pipeline.push({ $match: filter })
 	}
 
@@ -80,10 +83,19 @@ export const searchMarketListings = async (
 		})
 	}
 
+	const sortBy: Record<string, -1 | 1> = { queryScore: -1 }
+	if (sort === 'listedAt-desc') {
+		sortBy.listedAt = -1
+	} else if (sort === 'price-asc') {
+		sortBy.priceInCents = 1
+	} else if (sort === 'price-desc') {
+		sortBy.priceInCents = -1
+	}
+
 	pipeline.push({
 		$facet: {
 			data: [
-				{ $sort: { queryScore: -1, listedAt: -1 } },
+				{ $sort: sortBy },
 				{ $skip: skip },
 				{ $limit: limit },
 				{
@@ -93,7 +105,7 @@ export const searchMarketListings = async (
 						foreignField: '_id',
 						as: 'authorLookup',
 						pipeline: [
-							{ $project: { username: 1, _id: 1 } }
+							{ $project: { username: 1, publicKey: 1, _id: 1 } }
 						]
 					}
 				},

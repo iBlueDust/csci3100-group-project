@@ -103,7 +103,7 @@ async function POST(
 	)
 
 	if (error) {
-
+		console.warn('Error parsing form data', error)
 		return res.status(400).json({ code: 'INVALID_REQUEST', message: 'Invalid form data' })
 	}
 

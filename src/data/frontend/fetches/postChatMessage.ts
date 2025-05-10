@@ -2,16 +2,29 @@ import { ChatMessageType } from "@/data/types/chats"
 import { ab2base64, toBinaryBlob } from "@/utils"
 import type { Api } from "@/utils/frontend/api"
 
-export type PostChatMessagePayload = {
+
+interface BasePostChatMessagePayload {
 	e2e?: { iv: ArrayBuffer }
-} & (
-		{ type: ChatMessageType.Text, content: string }
-		| {
-			type: ChatMessageType.Attachment
-			content: ArrayBuffer
-			contentFilename?: string
-		}
-	)
+}
+
+export interface PostChatTextMessagePayload extends BasePostChatMessagePayload {
+	type: ChatMessageType.Text
+	content: string
+}
+
+export interface PostChatAttachmentMessagePayload extends BasePostChatMessagePayload {
+	type: ChatMessageType.Attachment
+	content: ArrayBuffer
+	contentFilename?: string
+}
+
+export interface PostChatMarketListingMessagePayload extends BasePostChatMessagePayload {
+	type: ChatMessageType.MarketListing
+	content: string
+}
+
+export type PostChatMessagePayload = PostChatTextMessagePayload | PostChatAttachmentMessagePayload | PostChatMarketListingMessagePayload
+
 
 export type EncryptedPostChatMessagePayload = {
 	e2e?: { iv: ArrayBuffer }
@@ -33,19 +46,21 @@ export async function postChatMessage(
 
 	formData.set('type', message.type)
 
-	if (message.type === ChatMessageType.Text) {
+	if ([ChatMessageType.Text, ChatMessageType.MarketListing].includes(message.type)) {
 		if (typeof message.content === 'string') {
 			formData.set('content', message.content)
 		} else {
 			formData.set('content', toBinaryBlob(message.content))
 		}
-	} else {
+
+	} else if (message.type === ChatMessageType.Attachment) {
 		formData.set('content', toBinaryBlob(message.content))
 
 		if (message.contentFilename) {
 			formData.set('contentFilename', toBinaryBlob(message.contentFilename))
 		}
 	}
+
 
 	if (message.e2e) {
 		formData.set('e2e', JSON.stringify({
@@ -61,7 +76,7 @@ export async function postChatMessage(
 		body: formData,
 	})
 	if (!response.ok) {
-
+		console.error('Failed to send message')
 		throw new Error(`Failed to send message ${response.statusText}`)
 	}
 

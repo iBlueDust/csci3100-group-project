@@ -20,15 +20,15 @@ const categories: CategoryOption[] = [
   { id: 'gems', name: 'Precious Gems' },
 ]
 
-interface CreateListingFormProps {
+export interface NewMarketListingModalProps {
   onClose: () => void
   onSuccess?: (listingId: string) => void
-  initialData?: ListingFormData
+  initialData?: Partial<ListingFormData>
   listingId?: string
   isEditing?: boolean
 }
 
-const CreateListingForm: React.FC<CreateListingFormProps> = ({
+const NewMarketListingModal: React.FC<NewMarketListingModalProps> = ({
   onClose,
   onSuccess,
   initialData,
@@ -37,26 +37,37 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
 }) => {
   const {
     formData,
-    images,
     isSubmitting,
     error,
     handleChange,
+    handleCountryChange,
     handlePriceInCentsChange,
     handleImageChange,
     removeImage,
     handleSubmit,
-  } = useListingForm({ initialData, listingId, onSuccess })
+  } = useListingForm({
+    initialData: {
+      title: initialData?.title || '',
+      description: initialData?.description || '',
+      pictures: initialData?.pictures || [],
+      priceInCents: initialData?.priceInCents || 0,
+      category: initialData?.category || 'jade',
+      countries: initialData?.countries || ['hk'],
+    },
+    listingId,
+    onSuccess,
+  })
 
   return (
-    <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex justify-center items-center z-50 p-4'>
-      <div className='bg-background w-full max-w-screen-sm md:max-w-2xl md:mx-auto rounded-lg shadow-xl overflow-hidden'>
-        <div className='flex justify-between items-center p-4 border-b border-foreground/10'>
+    <div className='fixed inset-0 z-10 flex items-center justify-center bg-foreground/30 p-4 backdrop-blur-sm'>
+      <div className='w-full max-w-screen-sm overflow-hidden rounded-lg bg-background shadow-xl md:mx-auto md:max-w-2xl'>
+        <div className='flex items-center justify-between border-b border-foreground/10 p-4'>
           <h2 className='text-xl font-bold'>
             {isEditing ? 'Edit Listing' : 'Create New Listing'}
           </h2>
           <button
             onClick={onClose}
-            className='text-foreground/70 hover:text-foreground rounded-full p-1'
+            className='rounded-full p-1 text-foreground/70 hover:text-foreground'
           >
             <FiX size={24} />
           </button>
@@ -64,10 +75,10 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
 
         <form
           onSubmit={handleSubmit}
-          className='p-6 overflow-y-auto max-h-[70vh] flex flex-col gap-6'
+          className='flex max-h-[70vh] flex-col gap-6 overflow-y-auto p-6'
         >
           {error && (
-            <div className='p-3 bg-red-100 text-red-700 rounded-md'>
+            <div className='rounded-md bg-red-100 p-3 text-red-700'>
               {error}
             </div>
           )}
@@ -91,7 +102,7 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
             onChange={handleChange}
           />
 
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
             <Input
               name='priceInCents'
               label='Price (USD)'
@@ -104,11 +115,10 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
             />
 
             <Select
-              id='country'
-              name='country'
+              name='countries'
               label='Country'
               value={formData.countries[0].toUpperCase()}
-              onChange={handleChange}
+              onChange={handleCountryChange}
               options={countries.filter((country) => country.id !== 'all')}
               required
             />
@@ -125,13 +135,13 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
 
           <ImageUploadField
             name='pictures'
-            images={images}
+            images={formData.pictures}
             maxImages={env.NEXT_PUBLIC_MARKET_LISTING_ATTACHMENT_LIMIT}
             onChange={handleImageChange}
             onRemove={removeImage}
           />
 
-          <div className='flex gap-3 justify-end'>
+          <div className='flex justify-end gap-3'>
             <SubmitButton
               type='button'
               onClick={onClose}
@@ -155,4 +165,4 @@ const CreateListingForm: React.FC<CreateListingFormProps> = ({
   )
 }
 
-export default CreateListingForm
+export default NewMarketListingModal

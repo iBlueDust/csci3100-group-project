@@ -39,12 +39,9 @@ const NewChatModal: React.FC<NewChatModalProps> = ({
 
       setIsLoading(true)
 
-      let chatId: string
+      let result: Awaited<ReturnType<typeof createNewChatByUsername>>
       try {
-        const response = await createNewChatByUsername(api, username)
-        // Simulate loading delay (for testing):
-        // await new Promise((resolve) => setTimeout(resolve, 10000))
-        chatId = response.id
+        result = await createNewChatByUsername(api, username)
       } catch (error) {
         console.error('Failed to create new chat', error)
         setError('Failed to create new chat')
@@ -53,6 +50,12 @@ const NewChatModal: React.FC<NewChatModalProps> = ({
         setIsLoading(false)
       }
 
+      if (result.alreadyExists) {
+        setError('Chat already exists')
+        return
+      }
+
+      const chatId = result.id
       onConfirm?.(username, chatId)
       setUsername('')
     },

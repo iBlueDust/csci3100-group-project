@@ -55,16 +55,9 @@ const SettingsProfilePage: PageWithLayout = () => {
   )
 }
 
-SettingsProfilePage.PageLayout = function SettingsProfilePageLayout({
-  children,
-}) {
-  const GrandfatherLayout =
-    SettingsLayout.PageLayout ?? (({ children }) => children)
-  return (
-    <GrandfatherLayout>
-      <SettingsLayout>{children}</SettingsLayout>
-    </GrandfatherLayout>
-  )
+SettingsProfilePage.getLayout = (page) => {
+  const GrandfatherLayout = SettingsLayout.getLayout ?? ((page) => page)
+  return GrandfatherLayout(<SettingsLayout>{page}</SettingsLayout>)
 }
 
 export default SettingsProfilePage

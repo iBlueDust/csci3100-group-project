@@ -3,6 +3,7 @@ import type mongoose from 'mongoose'
 export enum ChatMessageType {
 	Text = 'text',
 	Attachment = 'attachment',
+	MarketListing = 'market-listing',
 }
 
 export interface ChatWithPopulatedFields {
@@ -34,7 +35,7 @@ export interface EncryptedClientChat {
 		username: string
 		publicKey: JsonWebKey
 	}[]
-	lastMessage?: EncryptedClientChatMessage
+	lastMessage?: EncryptedClientChatMessage<string>
 	wasRequestedToDelete: boolean
 }
 
@@ -53,35 +54,50 @@ export interface ClientTextChatMessage extends BaseClientChatMessage {
 	contentFilename?: never
 }
 
+export interface ClientMarketListingChatMessage extends BaseClientChatMessage {
+	type: ChatMessageType.MarketListing
+	content: string
+}
+
+
 export interface ClientAttachmentChatMessage extends BaseClientChatMessage {
 	type: ChatMessageType.Attachment
 	content: string
 	contentFilename?: string
 }
 
-export interface ClientMarketListingChatMessage extends BaseClientChatMessage {
-	type: ChatMessageType.Text
-	content: string
-	contentFilename?: never
-	listingId: string
+export type ClientChatMessage = ClientTextChatMessage
+	| ClientMarketListingChatMessage
+	| ClientAttachmentChatMessage
+
+
+interface BaseEncryptedClientChatMessage<
+	T extends ArrayBuffer | string = ArrayBuffer
+> {
+	id: string
+	sender: string
+	sentAt: string
+	content: T
+	e2e?: {
+		iv: T
+	}
 }
 
-export type ClientChatMessage = ClientTextChatMessage | ClientAttachmentChatMessage
+export interface EncryptedClientTextChatMessage<
+	T extends ArrayBuffer | string = ArrayBuffer
+> extends BaseEncryptedClientChatMessage<T> {
+	type: ChatMessageType.Text
+}
 
+export interface EncryptedClientAttachmentChatMessage<
+	T extends ArrayBuffer | string = ArrayBuffer
+> extends BaseEncryptedClientChatMessage<T> {
+	type: ChatMessageType.Attachment
+	contentFilename?: T
+}
 
-export type EncryptedClientChatMessage = {
-	id: string
-	content: string
-	sender: string
-	e2e?: {
-		iv: string
-	}
-	sentAt: string
-} & (
-		{
-			type: ChatMessageType.Text
-		} | {
-			type: ChatMessageType.Attachment
-			contentFilename?: string
-		}
-	)
+export type EncryptedClientChatMessage<
+	T extends ArrayBuffer | string = ArrayBuffer
+> =
+	| EncryptedClientTextChatMessage<T>
+	| EncryptedClientAttachmentChatMessage<T>

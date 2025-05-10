@@ -4,6 +4,6 @@ import { postChat } from "@/data/frontend/fetches/postChat"
 export async function createNewChatByUsername(
 	api: Api,
 	recipientUsername: string,
-): Promise<{ id: string }> {
+): ReturnType<typeof postChat> {
 	return await postChat(api, { recipientUsername })
 }

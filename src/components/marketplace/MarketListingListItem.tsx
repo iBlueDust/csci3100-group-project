@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import Image from 'next/image'
 import {
   FiEdit,
@@ -11,7 +11,8 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency, formatTruncatedList } from '@/utils/format'
+import { getCountryNameById } from '@/utils/countries'
 
 export interface MarketListingListItemProps {
   listing: MarketListingSearchResult
@@ -28,62 +29,81 @@ export interface MarketListingListItemProps {
 
 const MarketListingListItem: React.FC<MarketListingListItemProps> = ({
   listing,
+  // isFavorite = false,
   isMine = false,
   onClick,
+  // onFavorite,
+  // onUnfavorite,
   onChat,
   onBuy,
   onEdit,
   onDelete,
 }) => {
+  const countries = useMemo(
+    () => listing.countries.map((c) => c.toUpperCase()).map(getCountryNameById),
+    [listing.countries],
+  )
+
   return (
     <button
       key={listing.id.toString()}
-      className='w-full text-left bg-background-light border-2 border-foreground/10 rounded-lg p-4 flex gap-4 hover:shadow-md transition-shadow'
+      className='flex w-full gap-4 rounded-lg border-2 border-foreground/10 bg-background-light p-4 text-left transition-shadow hover:shadow-md'
       onClick={onClick}
     >
       {/* Item image */}
-      <div className='h-24 w-24 bg-foreground/5 shrink-0 overflow-hidden'>
+      <div className='size-24 shrink-0 overflow-hidden bg-foreground/5'>
         {listing.pictures.length > 0 ? (
           <Image
             src={listing.pictures[0]}
             width={96}
             height={96}
             alt='Market listing picture'
-            className='w-full h-full object-cover rounded-md'
+            className='size-full rounded-md object-cover'
           />
         ) : (
-          <div className='h-full w-full flex items-center justify-center'>
+          <div className='flex size-full items-center justify-center rounded-md'>
             <span className='text-foreground/30'>Image</span>
           </div>
         )}
       </div>
 
-      <div className='flex-1 min-w-0'>
-        <div className='flex justify-between items-start'>
+      <div className='min-w-0 flex-1'>
+        <div className='flex items-start justify-between'>
           <h3 className='font-medium'>{listing.title}</h3>
-          <p className='text-lg font-mono font-bold'>
+          <p className='font-mono text-lg font-bold'>
             {formatCurrency(listing.priceInCents)}
           </p>
         </div>
 
-        <div className='flex mt-3 gap-4 flex-row flex-nowrap items-end'>
+        <div className='mt-3 flex flex-row flex-nowrap items-end gap-4'>
           <div>
-            <p className='text-sm  mt-1 line-clamp-2 text-foreground/70'>
-              {listing.description}
+            <p className='mt-1  line-clamp-2 text-sm text-foreground/70'>
+              {listing.description
+                .split('\n')
+                .slice(0, 3)
+                .map((line, i) => (
+                  <span key={i}>
+                    {i > 0 && <br />}
+                    {line}
+                  </span>
+                ))}
             </p>
 
-            <div className='flex flex-wrap items-center gap-x-4 gap-y-1 mt-2'>
+            <div className='mt-2 flex flex-wrap items-center gap-x-4 gap-y-1'>
               <span className='text-sm text-foreground/70'>
                 Seller:{' '}
                 {listing.author?.username ?? listing.author.id.toString()}
               </span>
 
-              <span className='text-sm flex items-center text-foreground/70'>
+              <span className='flex items-center text-sm text-foreground/70'>
                 ★ {0} ({0} reviews)
               </span>
 
-              <span className='text-sm text-foreground/70'>
-                Location: {listing.countries.join(', ')}
+              <span
+                className='text-sm text-foreground/70'
+                title={countries.join(', ')}
+              >
+                Location: {formatTruncatedList(countries, 3)}
               </span>
 
               <span className='text-sm text-foreground/70'>
@@ -97,7 +117,7 @@ const MarketListingListItem: React.FC<MarketListingListItemProps> = ({
           {!isMine ? (
             <>
               <button
-                className='button py-1.5 px-3 h-auto flex items-center gap-1 justify-center'
+                className='button flex h-auto items-center justify-center gap-1 px-3 py-1.5'
                 onClick={(e) => {
                   e.stopPropagation() // Prevent triggering parent onClick
                   onChat?.()
@@ -108,7 +128,7 @@ const MarketListingListItem: React.FC<MarketListingListItemProps> = ({
               </button>
 
               <button
-                className='button-primary py-1.5 px-3 h-auto flex items-center gap-1 justify-center'
+                className='button-primary flex h-auto items-center justify-center gap-1 px-3 py-1.5'
                 onClick={(e) => {
                   e.stopPropagation() // Prevent triggering parent onClick
                   onBuy?.()
@@ -121,7 +141,7 @@ const MarketListingListItem: React.FC<MarketListingListItemProps> = ({
           ) : (
             <>
               <button
-                className='button py-1.5 !border-red-500 px-3 h-auto flex items-center gap-1 justify-center text-red-500'
+                className='button flex h-auto items-center justify-center gap-1 !border-red-500 px-3 py-1.5 text-red-500'
                 onClick={(e) => {
                   e.stopPropagation() // Prevent triggering parent onClick
                   onDelete?.()
@@ -132,7 +152,7 @@ const MarketListingListItem: React.FC<MarketListingListItemProps> = ({
               </button>
 
               <button
-                className='button-primary py-1.5 px-3 h-auto flex items-center gap-1 justify-center'
+                className='button-primary flex h-auto items-center justify-center gap-1 px-3 py-1.5'
                 onClick={(e) => {
                   e.stopPropagation() // Prevent triggering parent onClick
                   onEdit?.()

@@ -4,7 +4,7 @@ import Joi from 'joi'
 import { MongoServerError } from "mongodb"
 
 import dbConnect from "@/data/db/mongo"
-import User from "@/data/db/mongo/models/user"
+import User, { UserPublicKeyJWK } from "@/data/db/mongo/models/user"
 import { sessionStore, sessionToCookie } from "@/data/session"
 import { UserRole } from "@/data/types/auth"
 import { isLicenseKey, isValidLicenseKey } from "@/data/licenses"
@@ -46,13 +46,23 @@ async function POST(
 			})
 			.required(),
 		publicKey: jwkSchema.required(),
+		encryptedUserEncryptionKey: Joi.string().base64().optional(),
 	})
 
-	const { value: body, error } = schema.validate(req.body)
+	const validation = schema.validate(req.body)
 
-	if (error) {
-		res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
+	if (validation.error) {
+		res.status(400)
+			.json({ code: 'INVALID_REQUEST', message: validation.error.message })
 		return
+	}
+
+	const body = validation.value as {
+		username: string,
+		passkey: string,
+		licenseKey: string,
+		publicKey: UserPublicKeyJWK,
+		encryptedUserEncryptionKey?: string,
 	}
 
 	if (!isValidLicenseKey(body.licenseKey)) {
@@ -68,12 +78,16 @@ async function POST(
 
 	let user: Awaited<ReturnType<typeof User.createWithPasskey>>
 	try {
-		user = await User.createWithPasskey(
-			body.username,
-			body.passkey,
-			[UserRole.USER],
-			body.publicKey,
-		)
+		user = await User.createWithPasskey({
+			username: body.username,
+			passkey: Buffer.from(body.passkey, 'base64'),
+			roles: [UserRole.USER],
+			publicKey: body.publicKey,
+			encryptedUserEncryptionKey:
+				body.encryptedUserEncryptionKey
+					? Buffer.from(body.encryptedUserEncryptionKey, 'base64')
+					: undefined,
+		})
 	} catch (error) {
 		if (
 			error instanceof MongoServerError
@@ -84,7 +98,7 @@ async function POST(
 				.json({ code: 'USERNAME_TAKEN', message: 'Username is already taken' })
 		}
 
-
+		console.error('Error creating user:', error)
 		return res
 			.status(500)
 			.json({

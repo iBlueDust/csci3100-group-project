@@ -4,6 +4,7 @@ export interface ListingFormData {
   title: string
   description: string
   priceInCents: number
+  pictures: (string | File)[]
   category: string
   countries: string[]
 }

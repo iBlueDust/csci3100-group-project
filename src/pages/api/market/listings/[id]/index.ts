@@ -104,7 +104,8 @@ async function PATCH(
 		description: Joi.string()
 			.pattern(
 				new RegExp(
-					`^\\s*\\S.{0,${env.MARKET_LISTING_DESCRIPTION_MAX_LENGTH - 1}}\\s*$`
+					`^\\s*\\S.{0,${env.MARKET_LISTING_DESCRIPTION_MAX_LENGTH - 1}}\\s*$`,
+					'm',
 				)
 			)
 			.optional(),
@@ -127,7 +128,10 @@ async function PATCH(
 			).optional(),
 		priceInCents: Joi.number().min(0).integer().optional(),
 		countries: Joi.array()
-			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/))
+			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/).lowercase())
+			.optional(),
+		categories: Joi.array()
+			.items(Joi.string().required())
 			.optional(),
 	})
 
@@ -137,6 +141,7 @@ async function PATCH(
 		pictures: fields?.pictures,
 		priceInCents: fields?.priceInCents?.[0],
 		countries: fields?.countries,
+		categories: fields?.categories,
 	})
 	if (validation.error) {
 		res.status(400)
@@ -150,6 +155,7 @@ async function PATCH(
 		pictures?: (number | File)[]
 		priceInCents?: number
 		countries?: string[]
+		categories?: string[]
 	}
 
 	const listing = await MarketListing.findOne({
@@ -209,7 +215,7 @@ async function PATCH(
 		)
 
 		if (!uploadResults.success) {
-
+			console.warn(`PATCH /market/listings/${listingId} | Error uploading pictures:`, uploadResults.failedObjects)
 
 			res.status(500).json({
 				code: 'SERVER_ERROR',
@@ -223,13 +229,14 @@ async function PATCH(
 			patchPictureArray, numOldPics
 		).filter(index => index >= 0)
 			.map((index) => listing.pictures[index])
+		console.log(`PATCH /market/listings/${listingId} | Deleting unused pictures:`, picturesToDelete)
 		await Promise.all(
 			picturesToDelete.map((objectName) =>
 				minioClient
 					.removeObject(env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS, objectName)
 			)
 		).catch((err) => {
-
+			console.error('PATCH /market/listings | Error deleting pictures:', err)
 		})
 
 		const newPictureArray: string[] = []
@@ -250,6 +257,7 @@ async function PATCH(
 	if (body.description) listing.description = body.description.trim()
 	if (body.priceInCents) listing.priceInCents = body.priceInCents
 	if (body.countries) listing.countries = body.countries
+	if (body.categories) listing.categories = body.categories
 	listing.editedAt = new Date()
 
 	await listing.save()
@@ -289,29 +297,12 @@ async function DELETE(
 
 	const result = await MarketListing.deleteOne({
 		_id: listingId,
-<<<<<<< HEAD
-	});
-
-	// Delete associated pictures from MinIO storage
-	if (picturesToDelete.length > 0) {
-		try {
-			await minioClient.removeObjects(
-				env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS,
-				picturesToDelete.map(pic => pic.toString())
-			);
-		} catch (error) {
-
-			// We don't want to fail the entire operation if image deletion fails
-			// The MongoDB document is already deleted at this point
-		}
-=======
 		author: auth.data.userId,
 	})
 	if (result.deletedCount === 0) {
 		return res
 			.status(404)
 			.json({ code: 'NOT_FOUND', message: 'Market listing not found' })
->>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
 	}
 
 	return res.status(200).json({ success: result.deletedCount > 0 })

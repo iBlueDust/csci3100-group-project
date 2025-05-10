@@ -9,7 +9,7 @@ import { searchMarketListings } from '@/data/db/mongo/queries/market/searchMarke
 import { sessionStore } from '@/data/session'
 import minioClient, { putManyObjects } from '@/data/db/minio'
 import { isSupportedImageMimeType } from '@/utils'
-import { parseFormDataBody, File, generateMinioObjectName } from '@/utils/api'
+import { parseFormDataBody, File, generateMinioObjectName, assertIsObjectId } from '@/utils/api'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import env from '@/env'
 
@@ -21,7 +21,6 @@ async function GET(
 ) {
 	const schema = Joi.object({
 		query: Joi.string().optional(),
-		countries: Joi.string().optional(),
 		priceMin: Joi.number().min(0).optional(),
 		priceMax: Joi.when(
 			Joi.ref('priceMin'),
@@ -31,6 +30,10 @@ async function GET(
 				otherwise: Joi.allow(null),
 			}
 		).optional(),
+		countries: Joi.array().items(Joi.string().required()).optional(),
+		categories: Joi.string().pattern(/^[a-zA-Z0-9]+(,[a-zA-Z0-9]+)*$/).optional(),
+		author: Joi.string().custom(assertIsObjectId).optional(),
+		sort: Joi.string().allow('listedAt-desc', 'price-desc', 'price-asc').default('listedAt-desc'),
 		skip: Joi.number().min(0).default(0),
 		limit: Joi.number().min(1).max(100).default(30),
 	})
@@ -46,6 +49,8 @@ async function GET(
 		...options,
 		countries: options.countries?.toLowerCase()
 			.split(',')
+			.map((country: string) => country.trim()),
+		categories: options.categories?.split(',')
 			.map((country: string) => country.trim()),
 	})
 
@@ -77,7 +82,7 @@ async function POST(
 	)
 
 	if (error) {
-
+		console.warn('POST /market/listings | Error parsing form data:', error)
 		res.status(400).json({ code: 'INVALID_REQUEST', message: 'Invalid form data' })
 		return
 	}
@@ -90,6 +95,7 @@ async function POST(
 		pictures: fields?.pictures,
 		priceInCents: tryParseInt(fields?.priceInCents?.[0]),
 		countries: fields?.countries,
+		categories: fields?.categories,
 	}
 
 	const schema = Joi.object({
@@ -105,10 +111,11 @@ async function POST(
 		description: Joi.string()
 			.pattern(
 				new RegExp(
-					`^\\s*\\S.{0,${env.MARKET_LISTING_DESCRIPTION_MAX_LENGTH - 1}}\\s*$`
+					`^\\s*\\S.{0,${env.MARKET_LISTING_DESCRIPTION_MAX_LENGTH - 1}}\\s*$`,
+					'm',
 				)
 			)
-			.required(),
+			.optional(),
 		pictures: Joi.array()
 			.items(
 				Joi.object({
@@ -127,14 +134,17 @@ async function POST(
 			.default([]),
 		priceInCents: Joi.number().min(0).integer().required(),
 		countries: Joi.array()
-			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/))
+			.items(Joi.string().pattern(/^[a-zA-Z]{2}$/).lowercase())
+			.default([]),
+		categories: Joi.array()
+			.items(Joi.string().required())
 			.default([]),
 	})
 
 	const validation = schema.validate(unvalidatedBody)
 
 	if (validation.error) {
-
+		console.warn('POST /market/listings | Rejected request for invalid body:', validation.error)
 		res.status(400)
 			.json({ code: 'INVALID_REQUEST', message: validation.error.message })
 		return
@@ -146,12 +156,16 @@ async function POST(
 		pictures: File[]
 		priceInCents: number
 		countries: string[]
+		categories: string[]
 	}
 
 	const filesToUpload = body.pictures.map((picture) => ({
 		...picture,
 		objectName: generateMinioObjectName(picture),
 	}))
+	filesToUpload.forEach(({ objectName, size, filename, mimetype, encoding }) => {
+		console.log(`POST /market/listings | Uploading picture: target=${objectName} size=${size} filename=${filename} mimetype=${mimetype} encoding=${encoding}`)
+	})
 
 	const uploadedAt = new Date().toISOString()
 	const minioObjects = filesToUpload.map(({ objectName, data, filename, mimetype }) => ({
@@ -172,20 +186,22 @@ async function POST(
 	)
 
 	if (!uploadResults.success) {
-
+		console.warn('POST /market/listings | Error uploading pictures:', uploadResults.failedObjects)
 
 		return res.status(500).json({ code: 'SERVER_ERROR', message: 'Error uploading pictures' })
 	}
 
 	await dbConnect()
-	const listing = await MarketListing.create({
+	const listing = new MarketListing({
 		title: body.title,
 		description: body.description,
 		pictures: filesToUpload.map(({ objectName }) => objectName),
 		author: auth.data.userId,
 		priceInCents: body.priceInCents,
 		countries: body.countries,
+		categories: body.categories ?? [],
 	})
+	await listing.save()
 
 	res.status(200).json({ id: listing.id })
 }

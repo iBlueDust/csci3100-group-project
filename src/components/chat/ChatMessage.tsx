@@ -5,33 +5,36 @@ import isToday from 'dayjs/plugin/isToday'
 dayjs.extend(isToday)
 
 export interface ChatMessageProps {
-  key?: string | number
   children?: React.ReactNode
+  className?: string
   isMe?: boolean
   sentAt: string | number
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
   children,
-  key,
+  className,
   isMe = false,
   sentAt,
 }) => {
   const date = dayjs(sentAt)
 
   return (
-    <div
-      key={key}
-      className={classNames(
-        'max-w-[80%] rounded-lg px-4 py-2 w-max',
-        isMe ? 'bg-blue-500 text-white ml-auto' : 'bg-background-dark mr-auto',
-      )}
-    >
-      {children}
-
+    <div>
+      <div
+        className={classNames(
+          'max-w-[80%] rounded-lg w-max',
+          isMe
+            ? 'bg-blue-500 text-white ml-auto'
+            : 'bg-background-dark mr-auto',
+          className,
+        )}
+      >
+        {children}
+      </div>
       <p
         className={classNames(
-          'text-xs mt-1',
+          'text-xs mt-1 mx-2',
           isMe ? 'text-white/70 text-right' : 'text-foreground/50',
         )}
       >

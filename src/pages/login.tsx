@@ -9,7 +9,10 @@ import SubmitButton from '@/components/form/SubmitButton'
 import { toPasskey } from '@/utils/frontend/e2e/auth'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { PageWithLayout } from '@/data/types/layout'
-import { generateUserEncryptionKey } from '@/utils/frontend/e2e'
+import { decryptUserEncryptionKey, importKey } from '@/utils/frontend/e2e'
+import { generateDeterministicSymmetricKey } from '@/utils/frontend/e2e/kdf'
+import env from '@/utils/frontend/env'
+import { base642ab } from '@/utils'
 
 const Login: PageWithLayout = () => {
   const router = useRouter()
@@ -90,13 +93,22 @@ const Login: PageWithLayout = () => {
         }
 
         const body = await response.json()
+        console.log('Logged in as user', body.id)
 
-        const uek = await generateUserEncryptionKey(
-          data.username,
-          data.password,
+        const uekDecryptionKey = await generateDeterministicSymmetricKey(
+          `${data.username}:${data.password}`,
+          env.NEXT_PUBLIC_UEK_DERIVATION_SALT,
+          ['decrypt'],
         )
 
-        api.setUek(uek)
+        const encryptedUekBuffer = base642ab(body.encryptedUserEncryptionKey)
+        const uekPrivate = await decryptUserEncryptionKey(
+          encryptedUekBuffer,
+          uekDecryptionKey,
+        )
+        const uekPublic = await importKey(body.publicKey, 'jwk', [])
+
+        api.setUek({ privateKey: uekPrivate, publicKey: uekPublic })
         api.setUser({
           id: body.id,
           username: data.username,
@@ -105,7 +117,7 @@ const Login: PageWithLayout = () => {
 
         router.push('/dashboard')
       } catch (error) {
-
+        console.error('Login error:', error)
         setFormErrors((prev) => ({
           ...prev,
           general: 'Invalid username or password',
@@ -125,8 +137,8 @@ const Login: PageWithLayout = () => {
         'grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-4 pb-10 gap-8 sm:p-8 md:p-20 md:pb-20 md:gap-16 font-body',
       )}
     >
-      <main className='flex flex-col gap-6 sm:gap-8 row-start-2 items-center w-full max-w-md'>
-        <h1 className='text-4xl font-bold border-b-2 border-foreground font-mono text-center'>
+      <main className='row-start-2 flex w-full max-w-md flex-col items-center gap-6 sm:gap-8'>
+        <h1 className='border-b-2 border-foreground text-center font-mono text-4xl font-bold'>
           Log In
         </h1>
 
@@ -135,7 +147,7 @@ const Login: PageWithLayout = () => {
           <Input type='password' name='password' label='Password' required />
 
           {formErrors.general && (
-            <p className='max-w-96 mx-auto text-center text-red-500 text-sm'>
+            <p className='mx-auto max-w-96 text-center text-sm text-red-500'>
               {formErrors.general}
             </p>
           )}
@@ -152,7 +164,7 @@ const Login: PageWithLayout = () => {
           </div>
         </form>
 
-        <div className='text-center pt-2'>
+        <div className='pt-2 text-center'>
           <p>
             Don&apos;t have an account?{' '}
             <Link href='/signup' className='link underline underline-offset-4'>
@@ -165,8 +177,8 @@ const Login: PageWithLayout = () => {
   )
 }
 
-Login.PageLayout = function LoginLayout({ children }) {
-  return <ApiProvider>{children}</ApiProvider>
+Login.getLayout = (page) => {
+  return <ApiProvider>{page}</ApiProvider>
 }
 
 export default Login

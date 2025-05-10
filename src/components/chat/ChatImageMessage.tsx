@@ -19,11 +19,11 @@ const ChatImageMessage: React.FC<ChatImageMessageProps> = ({
   const attachment = useAttachment(message, sharedKey)
   useEffect(() => {
     attachment.download()
-    // intentionally omitting dependencies to only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
-    <ChatMessage isMe={isMe} sentAt={message.sentAt}>
+    <ChatMessage className='p-1' isMe={isMe} sentAt={message.sentAt}>
       {attachment.url ? (
         <a href={attachment.url} target='_blank' rel='noopener noreferrer'>
           <Image
@@ -32,11 +32,11 @@ const ChatImageMessage: React.FC<ChatImageMessageProps> = ({
             src={attachment.url}
             alt={message.contentFilename ?? 'Attachment Image'}
             title='Download'
-            className='max-w-full max-h-96 h-auto rounded-lg'
+            className='h-auto max-h-96 max-w-full rounded-lg'
           />
         </a>
       ) : (
-        <div className='bg-foreground-light/75 rounded-md animate-pulse w-80 h-80' />
+        <div className='size-80 animate-pulse rounded-md bg-foreground-light/75' />
       )}
     </ChatMessage>
   )

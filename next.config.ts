@@ -1,4 +1,4 @@
-import env, { isDev } from "@/env"
+import env from "@/env"
 import type { NextConfig } from "next"
 
 const minioPublicUrl = new URL(env.MINIO_PUBLIC_ENDPOINT)
@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
     // `domains` field still required despite being reported as deprecated
     domains: [minioPublicUrl.hostname],
 
-    remotePatterns: isDev ? [
+    remotePatterns: [
       {
         protocol: isHttps ? 'https' : 'http',
         hostname: minioPublicUrl.hostname,
@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
         port: minioPublicUrl.port || defaultPort,
         pathname: `${pathname}/${env.MINIO_BUCKET_MARKET_LISTING_ATTACHMENTS}/**`,
       },
-    ] : [],
+    ],
   }
 }
 

@@ -1,18 +1,25 @@
 import React from 'react'
 import Image from 'next/image'
 
-import type { BaseClientChatMessage } from '@/data/types/chats'
+import type { ClientMarketListingChatMessage } from '@/data/types/chats'
+import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
 import { formatCurrency } from '@/utils/format'
 import ChatMessage from './ChatMessage'
-import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
+import dynamic from 'next/dynamic'
+import { useQuery } from '@tanstack/react-query'
+import { QueryKeys } from '@/data/types/queries'
+import { useApi } from '@/utils/frontend/api'
+import { queryMarketListingById } from '@/data/frontend/queries/queryMarketListingById'
 
-export interface ClientChatMarketListingMessage extends BaseClientChatMessage {
-  type: 'market-listing'
-  content: MarketListingSearchResult
-}
+const ShimmerChatMarketListingMessage = dynamic(
+  () => import('./ShimmerChatMarketListingMessage'),
+  {
+    ssr: false,
+  },
+)
 
 export interface ChatMarketListingMessageProps {
-  message: ClientChatMarketListingMessage
+  message: ClientMarketListingChatMessage
   isMe?: boolean
 }
 
@@ -20,35 +27,54 @@ const ChatMarketListingMessage: React.FC<ChatMarketListingMessageProps> = ({
   message,
   isMe = false,
 }) => {
-  return (
-    <ChatMessage isMe={isMe} sentAt={message.sentAt}>
-      <div className='bg-background-light rounded p-2 space-y-1'>
-        <div className='flex justify-between'>
-          <p className='text-sm font-medium text-foreground mr-4'>
-            {message.content.title}
-          </p>
-          <p className='text-sm font-mono font-bold text-foreground'>
-            {formatCurrency(message.content.priceInCents)}
-          </p>
-        </div>
+  const api = useApi()
 
-        {message.content.pictures.length > 0 ? (
-          <div className='h-16'>
+  const { data: listing } = useQuery<MarketListingSearchResult>({
+    queryKey: [QueryKeys.MARKET_LISTINGS, message.content],
+    queryFn: () => queryMarketListingById(api, message.content),
+    enabled: !!message.content,
+  })
+
+  if (!listing) {
+    return <ShimmerChatMarketListingMessage message={message} isMe={isMe} />
+  }
+
+  return (
+    <div>
+      <ChatMessage isMe={isMe} sentAt={message.sentAt}>
+        <div className='flex min-w-72 flex-row flex-nowrap items-start gap-2'>
+          {listing.pictures.length > 0 ? (
             <Image
-              width={128}
-              height={64}
-              src={message.content.pictures[0]}
+              width={96}
+              height={96}
+              src={listing.pictures[0]}
               alt='Market Listing Image'
+              className='inline-block size-24 rounded-l bg-background-dark object-cover'
             />
+          ) : (
+            <div className='size-24 bg-foreground/5 align-middle text-xs text-foreground/30'>
+              Item Image
+            </div>
+          )}
+
+          <div className='h-full flex-1 py-2 pr-4'>
+            <p className='text-sm font-medium text-foreground'>
+              {listing.title}
+            </p>
+            <p className='truncate text-xs text-foreground'>
+              {listing.description}
+            </p>
+
+            <p className='mt-2 font-mono text-sm font-bold text-foreground'>
+              {formatCurrency(listing.priceInCents)}
+            </p>
+            <p className='truncate text-xs text-foreground-light'>
+              by {listing.author.username ?? listing.author.id.toString()}
+            </p>
           </div>
-        ) : (
-          <div className='h-16 bg-foreground/5 flex items-center justify-center text-xs text-foreground/30'>
-            Item Image
-          </div>
-        )}
-        <p className='text-xs text-foreground'>{message.content.description}</p>
-      </div>
-    </ChatMessage>
+        </div>
+      </ChatMessage>
+    </div>
   )
 }
 
