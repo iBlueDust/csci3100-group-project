@@ -35,8 +35,11 @@ jobs:
       - name: Run lint
         run: npm run lint
 
-      - name: Build project
-        run: npm run build --if-present
+      - name: Run tests
+        run: npm run test -- --watchAll=false --passWithNoTests
+
+      - name: Build project # Don't lint again, just build
+        run: npm run build --if-present --no-lint
 
   # Validate docker compose config
   docker:
