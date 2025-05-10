@@ -115,7 +115,7 @@ export class InMemorySessionStore extends SessionStore {
 
 		let token: string
 		let refreshToken: string
-
+		// Ensure tokens are unique
 		do {
 			token = generateToken()
 		} while (await this.checkToken(token))
@@ -219,7 +219,7 @@ export class RedisSessionStore extends SessionStore {
 
 		let token: string
 		let refreshToken: string
-
+		// Ensure tokens are unique
 		do {
 			token = generateToken()
 		} while (await this.checkToken(token))
@@ -370,5 +370,5 @@ export function sessionToCookie(session: Session): readonly string[] {
 	]
 }
 
-
+// export const sessionStore = new InMemorySessionStore()
 export const sessionStore = new RedisSessionStore()

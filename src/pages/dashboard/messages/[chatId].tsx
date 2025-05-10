@@ -52,22 +52,6 @@ const MessagesHome: PageWithLayout = () => {
       return
 
     setIsDeleting(true)
-<<<<<<< HEAD
-    deleteChatMutation.mutate(chatId, {
-      onSuccess: () => {
-        router.replace('/dashboard/messages')
-
-      },
-      onError: (error: any) => {
-
-        alert('Failed to delete chat')
-      },
-      onSettled: () => {
-        setIsDeleting(false)
-      },
-    })
-  }, [chatId, deleteChatMutation, router])
-=======
 
     try {
       const success = await deleteChat(api, chatId)
@@ -87,7 +71,6 @@ const MessagesHome: PageWithLayout = () => {
     queryClient.invalidateQueries({ queryKey: [QueryKeys.CHATS, chatId] })
     console.log(`Deleted conversation: ${chatId}`)
   }, [api, chatId, router, queryClient])
->>>>>>> parent of 356dc51 (implement delete functionality for market listings and chats)
 
   return isLoading || !chat ? (
     <div className='flex-1 flex items-center justify-center text-foreground/50'>
