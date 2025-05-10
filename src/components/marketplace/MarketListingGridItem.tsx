@@ -35,30 +35,30 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
 }) => {
   return (
     <div
-      className='text-left bg-background-light w-full border-2 border-foreground/10 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer h-[500px] flex flex-col'
+      className='flex h-[490px] w-full cursor-pointer flex-col overflow-hidden rounded-lg border-2 border-foreground/10 bg-background-light text-left shadow-sm transition-shadow hover:shadow-md'
       onClick={onClick}
     >
       {/* Item image - fixed height */}
-      <div className='h-48 bg-foreground/5 overflow-hidden flex-shrink-0'>
+      <div className='h-48 shrink-0 overflow-hidden bg-foreground/5'>
         {listing.pictures.length > 0 ? (
           <Image
             src={listing.pictures[0]}
             width={300}
             height={192}
-            className='object-cover w-full h-full bg-foreground/5'
+            className='size-full bg-foreground/5 object-cover'
             alt='Market listing picture'
           />
         ) : (
-          <div className='h-full flex items-center justify-center'>
+          <div className='flex h-full items-center justify-center'>
             <span className='text-foreground/30'>Item Image</span>
           </div>
         )}
       </div>
 
-      <div className='p-4 flex flex-col flex-grow'>
-        <div className='flex justify-between items-start'>
+      <div className='flex grow flex-col p-4'>
+        <div className='flex items-start justify-between'>
           <h3
-            className='font-medium truncate max-w-[85%]'
+            className='max-w-[85%] truncate font-medium'
             title={listing.title}
           >
             {listing.title}
@@ -85,28 +85,32 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
           </button>
         </div>
 
-        <p className='text-lg font-mono font-bold mt-1'>
+        <p className='mt-1 font-mono text-lg font-bold'>
           {formatCurrency(listing.priceInCents)}
         </p>
 
-        <div className='flex items-center text-sm mt-1 text-foreground/70'>
+        <div className='mt-1 flex items-center text-sm text-foreground/70'>
           <span className='flex items-center'>★ {0}</span>
           <span className='mx-1'>•</span>
           <span>{0} reviews</span>
         </div>
 
-        <p className='text-sm mt-1 text-foreground/70 line-clamp-1'>
+        <p className='mt-1 line-clamp-1 text-sm text-foreground/70'>
           Seller: {listing.author.username ?? listing.author.id.toString()}
         </p>
 
         {/* Add description with line clamp */}
-        <p className='text-sm mt-2 text-foreground/70 line-clamp-2 flex-grow'>
-          {listing.description}
+        <p className='mt-2 line-clamp-3 grow text-sm text-foreground/70'>
+          {listing.description
+            .split('\n')
+            .slice(0, 4)
+            .map((line, i) => [i > 0 && <br />, line])
+            .flat()}
         </p>
 
         {/* Push buttons to the bottom with mt-auto */}
-        <div className='flex flex-col mt-auto pt-4'>
-          <span className='text-xs text-foreground/50 mb-3'>
+        <div className='mt-auto flex flex-col pt-4'>
+          <span className='mb-3 text-xs text-foreground/50'>
             Listed: {dayjs(listing.listedAt).fromNow()}
           </span>
           <div className='flex justify-between gap-4'>
@@ -140,7 +144,7 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
             ) : (
               <>
                 <button
-                  className='button py-1.5 !border-red-500 px-3 h-auto flex items-center gap-1 flex-1 justify-center text-red-500'
+                  className='button flex h-auto flex-1 items-center justify-center gap-1 !border-red-500 px-3 py-1.5 text-red-500'
                   onClick={(e) => {
                     e.stopPropagation() // Prevent triggering parent onClick
                     onDelete?.()
@@ -151,7 +155,7 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
                 </button>
 
                 <button
-                  className='button-shape bg-amber-400 hover:bg-amber-500 text-black flex-1 gap-1'
+                  className='button-shape flex-1 gap-1 bg-amber-400 text-black hover:bg-amber-500'
                   onClick={(e) => {
                     e.stopPropagation() // Prevent triggering parent onClick
                     onEdit?.()
