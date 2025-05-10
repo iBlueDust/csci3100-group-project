@@ -93,6 +93,7 @@ const Login: PageWithLayout = () => {
         }
 
         const body = await response.json()
+        console.log('Logged in as user', body.id)
 
         const uekDecryptionKey = await generateDeterministicSymmetricKey(
           `${data.username}:${data.password}`,
@@ -116,7 +117,7 @@ const Login: PageWithLayout = () => {
 
         router.push('/dashboard')
       } catch (error) {
-
+        console.error('Login error:', error)
         setFormErrors((prev) => ({
           ...prev,
           general: 'Invalid username or password',

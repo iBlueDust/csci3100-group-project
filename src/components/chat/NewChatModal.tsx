@@ -42,8 +42,6 @@ const NewChatModal: React.FC<NewChatModalProps> = ({
       let result: Awaited<ReturnType<typeof createNewChatByUsername>>
       try {
         result = await createNewChatByUsername(api, username)
-        // Simulate loading delay (for testing):
-        // await new Promise((resolve) => setTimeout(resolve, 10000))
       } catch (error) {
         console.error('Failed to create new chat', error)
         setError('Failed to create new chat')

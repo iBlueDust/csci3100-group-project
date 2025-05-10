@@ -8,7 +8,7 @@ export async function deleteMyAccount(
 		headers: { 'Content-Type': 'application/json' },
 	})
 	if (!response.ok) {
-
+		console.error('Failed to delete account')
 		throw new Error(`Failed to delete account ${response.statusText}`)
 	}
 
