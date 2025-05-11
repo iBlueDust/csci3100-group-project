@@ -51,7 +51,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           <div className='flex size-8 items-center justify-center rounded-full bg-foreground/10 text-foreground'>
             {otherParty?.username.charAt(0).toUpperCase()}
           </div>
-          <h3 className='font-medium'>{otherParty?.username}</h3>
+          <h3
+            className='line-clamp-1 flex-1 font-medium'
+            title={otherParty?.username}
+          >
+            {otherParty?.username}
+          </h3>
         </div>
 
         <button

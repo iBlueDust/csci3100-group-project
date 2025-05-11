@@ -204,7 +204,12 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
               <div className='mb-4 mt-6'>
                 <h3 className='mb-2 text-lg font-bold'>Description</h3>
                 <p className='whitespace-pre-line text-sm text-foreground/90'>
-                  {listing.description}
+                  {listing.description.split('\n').map((line, i) => (
+                    <span key={i}>
+                      {i > 0 && <br />}
+                      {line}
+                    </span>
+                  ))}
                 </p>
               </div>
             </div>
