@@ -19,7 +19,14 @@ export const useChatMessages = (
 
   const messages = useQuery<PaginatedResult<ClientChatMessage>>({
     queryKey: [QueryKeys.CHAT_MESSAGES, chatId],
-    queryFn: async () => queryChatMessages(api, chatId!, sharedKey),
+    queryFn: async () => {
+      if (!chatId) {
+        throw new Error(
+          'Chat ID is required. This error should not happen unless React Query is misconfigured.',
+        )
+      }
+      return queryChatMessages(api, chatId, sharedKey)
+    },
     throwOnError: isDev,
     enabled: !!api.user && !!chatId && !!sharedKey,
     staleTime: 1000,
