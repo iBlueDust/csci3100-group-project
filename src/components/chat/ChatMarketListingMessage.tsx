@@ -57,11 +57,11 @@ const ChatMarketListingMessage: React.FC<ChatMarketListingMessageProps> = ({
             </div>
           )}
 
-          <div className='h-full flex-1 py-2 pr-4'>
-            <p className='text-sm font-medium text-foreground'>
+          <div className='h-full w-44 flex-1 py-2 pr-4'>
+            <p className='line-clamp-1 text-sm font-medium text-foreground'>
               {listing.title}
             </p>
-            <p className='truncate text-xs text-foreground'>
+            <p className='line-clamp-1 text-xs text-foreground'>
               {listing.description}
             </p>
 
