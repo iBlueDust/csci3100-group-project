@@ -33,15 +33,16 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
   const api = useApi()
   const queryClient = useQueryClient()
 
-  const { data: chat } = useQuery<ClientChat>({
+  const { data: chat } = useQuery<ClientChat | undefined>({
     queryKey: [QueryKeys.CHAT_WITH_RECIPIENT, otherParty.id],
-    queryFn: () => queryChatByRecipient(api, otherParty.id),
+    queryFn: () =>
+      queryChatByRecipient(api, otherParty.id).catch(() => undefined),
     enabled: !!api.user,
     staleTime: 5 * 1000,
     refetchInterval: 60 * 1000,
   })
 
-  const { messages } = useChatMessages(api, chat?.id ?? '', sharedKey)
+  const { messages } = useChatMessages(api, chat?.id, sharedKey)
 
   const mutation = useMutation({
     mutationFn: async (arg: PostChatMessagePayload) => {
@@ -68,6 +69,9 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.CHAT_MESSAGES, chatId],
       })
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.CHAT_WITH_RECIPIENT, otherParty.id],
+      })
     },
   })
 
@@ -86,9 +90,9 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
   )
 
   return (
-    <div className='fixed bottom-4 right-4 flex h-[36rem] w-80 flex-col rounded-lg border-2 border-black z-20 bg-background shadow-xl md:w-96 dark:border-[#343434]'>
+    <div className='fixed bottom-4 right-4 z-20 flex h-[36rem] w-80 flex-col rounded-lg border-2 border-black bg-background shadow-xl md:w-96 dark:border-[#343434]'>
       {/* Chat Header */}
-      <div className='flex items-center justify-between rounded-t-lg border-x border-b border-foreground/10 bg-background-light pl-3 py-3 pr-2'>
+      <div className='flex items-center justify-between rounded-t-lg border-x border-b border-foreground/10 bg-background-light py-3 pl-3 pr-2'>
         {/* Added border-l, border-r, and rounded-t-lg */}
         <div className='flex items-center gap-2'>
           <div className='flex size-8 items-center justify-center rounded-full bg-foreground/10 text-foreground'>
@@ -96,13 +100,19 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
               .charAt(0)
               .toUpperCase()}
           </div>
-          <div>
-            <p className='text-sm font-medium'>
+          <div className='flex-1'>
+            <p
+              className='line-clamp-1 text-sm font-medium'
+              title={otherParty.username ?? otherParty.id.toString()}
+            >
               {otherParty.username ?? otherParty.id.toString()}
             </p>
 
             {initialPreviewMarketListing && (
-              <p className='truncate text-xs text-foreground/70'>
+              <p
+                className='line-clamp-1 text-xs text-foreground/70'
+                title={initialPreviewMarketListing.title}
+              >
                 {initialPreviewMarketListing.title}
               </p>
             )}
@@ -113,7 +123,7 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
           <Link
             href={`/dashboard/messages/${chat.id}`}
             onClick={onClose}
-            className='text-foreground/70 p-2 hover:text-foreground'
+            className='p-2 text-foreground/70 hover:text-foreground'
             rel='noopener noreferrer'
             target='_blank'
           >
@@ -122,7 +132,7 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
         )}
         <button
           onClick={onClose}
-          className='text-foreground/70 p-2 hover:text-foreground'
+          className='p-2 text-foreground/70 hover:text-foreground'
         >
           <FiX size={20} />
         </button>

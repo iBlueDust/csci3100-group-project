@@ -18,7 +18,7 @@ const MarketListingSendPreview: React.FC<MarketListingSendPreviewProps> = ({
   onCancel,
 }) => {
   return (
-    <div className='group mb-2 flex items-stretch gap-4 rounded-lg border-2 border-foreground/10 bg-background-dark/10'>
+    <div className='group mb-2 flex w-full items-stretch gap-4 rounded-lg border-2 border-foreground/10 bg-background-dark/10'>
       {listing.pictures.length > 0 ? (
         <Image
           src={listing.pictures[0]}
@@ -36,8 +36,13 @@ const MarketListingSendPreview: React.FC<MarketListingSendPreviewProps> = ({
       <div className='flex flex-1 flex-col flex-nowrap justify-between gap-2 py-2'>
         <div className='flex justify-between gap-2'>
           <div className='inline-block'>
-            <p className='mb-1 truncate'>{listing.title}</p>
-            <p className='line-clamp-2 text-xs text-foreground/70'>
+            <p className='mb-1 line-clamp-1' title={listing.title}>
+              {listing.title}
+            </p>
+            <p
+              className='line-clamp-2 text-xs text-foreground/70'
+              title={listing.description}
+            >
               {listing.description}
             </p>
           </div>
