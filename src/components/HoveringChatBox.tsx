@@ -100,13 +100,19 @@ const HoveringChatBox: React.FC<HoveringChatBoxProps> = ({
               .charAt(0)
               .toUpperCase()}
           </div>
-          <div>
-            <p className='text-sm font-medium'>
+          <div className='flex-1'>
+            <p
+              className='line-clamp-1 text-sm font-medium'
+              title={otherParty.username ?? otherParty.id.toString()}
+            >
               {otherParty.username ?? otherParty.id.toString()}
             </p>
 
             {initialPreviewMarketListing && (
-              <p className='truncate text-xs text-foreground/70'>
+              <p
+                className='line-clamp-1 text-xs text-foreground/70'
+                title={initialPreviewMarketListing.title}
+              >
                 {initialPreviewMarketListing.title}
               </p>
             )}
