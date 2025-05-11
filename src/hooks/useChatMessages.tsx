@@ -41,10 +41,12 @@ export const useChatMessages = (
     },
   })
 
-  const sendMessage = useCallback(
+  const sendMessage = useCallback<
+    (message: PostChatMessagePayload) => Promise<boolean>
+  >(
     async (message: PostChatMessagePayload) => {
       if (!chatId) {
-        return
+        return false
       }
 
       try {
@@ -62,8 +64,8 @@ export const useChatMessages = (
   return {
     messages: {
       ...messages,
-      data: messages.data?.data,
-      meta: messages.data?.meta,
+      data: messages.data?.data as ClientChatMessage[],
+      meta: messages.data?.meta as { total: number },
     },
     sendMessage,
     isLoading: messages.isLoading,
