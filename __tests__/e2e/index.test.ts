@@ -126,14 +126,17 @@ describe('exportKey / importKey (asymmetric only)', () => {
     const { publicKey } = await generateRandomKeyPair()
     const exported = await exportKey(publicKey, 'jwk')
     const imported = await importKey(exported, 'jwk', [])
-    expect(imported).toEqual(publicKey)
+    const reExported = await exportKey(imported, 'jwk')
+    expect(reExported).toEqual(exported)
   })
 
   it('can export and import a private key', async () => {
     const { privateKey } = await generateRandomKeyPair()
     const exported = await exportKey(privateKey, 'jwk')
-    const imported = await importKey(exported, 'jwk', ['deriveBits'])
-    expect(imported).toEqual(privateKey)
+    // Use both usages to match the original
+    const imported = await importKey(exported, 'jwk', ['deriveKey', 'deriveBits'])
+    const reExported = await exportKey(imported, 'jwk')
+    expect(reExported).toEqual(exported)
   })
 })
 
