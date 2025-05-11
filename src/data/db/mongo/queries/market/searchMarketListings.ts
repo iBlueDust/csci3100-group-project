@@ -49,10 +49,10 @@ export const searchMarketListings = async (
 		} = {}
 
 		if (priceMin) {
-			filter.priceInCents = { $gte: priceMin * 100 }
+			filter.priceInCents = { $gte: priceMin }
 		}
 		if (priceMax) {
-			filter.priceInCents = { ...filter.priceInCents, $lte: priceMax * 100 }
+			filter.priceInCents = { ...filter.priceInCents, $lte: priceMax }
 		}
 		if (countries && countries.length > 0) {
 			filter.countries = {

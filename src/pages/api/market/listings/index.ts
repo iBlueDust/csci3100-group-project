@@ -31,13 +31,32 @@ async function GET(
 			}
 		).optional(),
 		countries: Joi.array().items(Joi.string().required()).optional(),
-		categories: Joi.string().pattern(/^[a-zA-Z0-9]+(,[a-zA-Z0-9]+)*$/).optional(),
+		categories: Joi.array().items(Joi.string().pattern(/^[a-zA-Z0-9]+(,[a-zA-Z0-9]+)*$/)).optional(),
 		author: Joi.string().custom(assertIsObjectId).optional(),
 		sort: Joi.string().allow('listedAt-desc', 'price-desc', 'price-asc').default('listedAt-desc'),
 		skip: Joi.number().min(0).default(0),
 		limit: Joi.number().min(1).max(100).default(30),
 	})
-	const { value: options, error } = schema.validate(req.query)
+	// parse and normalize countries parameter
+	const countriesRaw = req.query.countries
+		? Array.isArray(req.query.countries)
+			? req.query.countries
+			: (req.query.countries as string).split(',')
+		: undefined
+	const categoriesRaw = req.query.categories
+		? Array.isArray(req.query.categories)
+			? req.query.categories
+			: (req.query.categories as string).split(',')
+		: undefined
+
+	const countries = countriesRaw?.map(country => country.trim().toLowerCase())
+	const categories = categoriesRaw?.map(category => category.trim().toLowerCase())
+
+	const { value: options, error } = schema.validate({
+		...req.query,
+		countries,
+		categories,
+	})
 
 	if (error) {
 		res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
@@ -45,14 +64,7 @@ async function GET(
 	}
 
 	await dbConnect()
-	const listings = await searchMarketListings({
-		...options,
-		countries: options.countries?.toLowerCase()
-			.split(',')
-			.map((country: string) => country.trim()),
-		categories: options.categories?.split(',')
-			.map((country: string) => country.trim()),
-	})
+	const listings = await searchMarketListings(options)
 
 	for (const listing of listings.data) {
 		listing.pictures = listing.pictures.map(
