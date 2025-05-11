@@ -12,23 +12,23 @@ import { useCallback } from 'react'
 
 export const useChatMessages = (
   api: Api,
-  chatId: string,
+  chatId: string | undefined,
   sharedKey: CryptoKey,
 ) => {
   const queryClient = useQueryClient()
 
   const messages = useQuery<PaginatedResult<ClientChatMessage>>({
     queryKey: [QueryKeys.CHAT_MESSAGES, chatId],
-    queryFn: async () => queryChatMessages(api, chatId, sharedKey),
+    queryFn: async () => queryChatMessages(api, chatId!, sharedKey),
     throwOnError: isDev,
-    enabled: !!api.user && !!sharedKey,
+    enabled: !!api.user && !!chatId && !!sharedKey,
     staleTime: 1000,
     refetchInterval: 5 * 1000,
     refetchOnWindowFocus: true,
   })
 
   const mutation = useMutation({
-    mutationFn: async (arg: PostChatMessagePayload) =>
+    mutationFn: async ([chatId, arg]: [string, PostChatMessagePayload]) =>
       sendChatMessage(api, chatId, arg, sharedKey),
     onSuccess: () => {
       // Reload chat messages
@@ -43,8 +43,12 @@ export const useChatMessages = (
 
   const sendMessage = useCallback(
     async (message: PostChatMessagePayload) => {
+      if (!chatId) {
+        return
+      }
+
       try {
-        await mutation.mutateAsync(message)
+        await mutation.mutateAsync([chatId, message])
       } catch (error) {
         console.error('Error sending message:', error)
         return false
@@ -52,7 +56,7 @@ export const useChatMessages = (
 
       return true
     },
-    [api, mutation],
+    [mutation, chatId],
   )
 
   return {
