@@ -1,4 +1,5 @@
 // __tests__/e2e/index.test.ts
+/** @jest-environment jsdom */
 import { encryptMessage, decryptMessage } from '@/utils/frontend/e2e/index'
 
 describe('encryptMessage / decryptMessage', () => {
