@@ -152,7 +152,7 @@ const MarketListingListItem: React.FC<MarketListingListItemProps> = ({
               </button>
 
               <button
-                className='button-primary flex h-auto items-center justify-center gap-1 px-3 py-1.5'
+                className='button-shape flex-1 gap-1 bg-amber-400 text-black hover:bg-amber-500'
                 onClick={(e) => {
                   e.stopPropagation() // Prevent triggering parent onClick
                   onEdit?.()
