@@ -27,7 +27,7 @@ async function GET(
 			{
 				is: Joi.exist(),
 				then: Joi.number().greater(Joi.ref('priceMin')),
-				otherwise: Joi.allow(null),
+				otherwise: Joi.number().min(0).optional(),
 			}
 		).optional(),
 		countries: Joi.array().items(Joi.string().required()).optional(),
@@ -48,7 +48,7 @@ async function GET(
 			? req.query.categories
 			: (req.query.categories as string).split(',')
 		: undefined
-
+	console.log({ reqQuery: req.query })
 	const countries = countriesRaw?.map(country => country.trim().toLowerCase())
 	const categories = categoriesRaw?.map(category => category.trim().toLowerCase())
 
@@ -62,7 +62,7 @@ async function GET(
 		res.status(400).json({ code: 'INVALID_REQUEST', message: error.message })
 		return
 	}
-
+	console.log('GET /market/listings | options:', options)
 	await dbConnect()
 	const listings = await searchMarketListings(options)
 
