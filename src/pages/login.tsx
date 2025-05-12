@@ -83,7 +83,7 @@ const Login: PageWithLayout = () => {
         return
       }
 
-      await login(data)
+      await login(data).catch(() => {}) // error handled in useLogin
     },
     [login],
   )
