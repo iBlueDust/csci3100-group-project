@@ -13,14 +13,7 @@ const ChatTextMessage: React.FC<ChatTextMessageProps> = ({
 }) => {
   return (
     <ChatMessage className='px-4 py-2' isMe={isMe} sentAt={message.sentAt}>
-      <p>
-        {message.content.split('\n').map((line, i) => (
-          <span key={i}>
-            {i > 0 && <br />}
-            {line}
-          </span>
-        ))}
-      </p>
+      <p className='whitespace-pre-wrap'>{message.content}</p>
     </ChatMessage>
   )
 }

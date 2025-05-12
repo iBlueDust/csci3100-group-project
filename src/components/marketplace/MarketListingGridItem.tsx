@@ -100,12 +100,8 @@ const MarketListingGridListItem: React.FC<MarketListingGridListItemProps> = ({
         </p>
 
         {/* Add description with line clamp */}
-        <p className='mt-2 line-clamp-3 grow text-sm text-foreground/70'>
-          {listing.description
-            .split('\n')
-            .slice(0, 4)
-            .map((line, i) => [i > 0 && <br />, line])
-            .flat()}
+        <p className='mt-2 line-clamp-3 grow whitespace-pre-wrap text-sm text-foreground/70'>
+          {listing.description}
         </p>
 
         {/* Push buttons to the bottom with mt-auto */}
