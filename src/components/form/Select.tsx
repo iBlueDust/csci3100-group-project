@@ -19,7 +19,7 @@ const Select: React.FC<SelectProps> = (props) => {
   }, [props])
 
   return (
-    <label className='block text-sm font-medium mb-4'>
+    <label className='mb-4 block text-sm font-medium'>
       {props.label != null && <span className='mb-1 block'>{props.label}</span>}
       <select
         {...selectProps}

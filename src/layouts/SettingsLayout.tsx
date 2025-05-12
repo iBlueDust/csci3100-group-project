@@ -26,11 +26,11 @@ const SettingsLayout: PageWithLayout<SettingsLayoutProps> = ({ children }) => {
   }, [activeTab, router])
 
   return (
-    <div className='h-full flex flex-col'>
-      <h2 className='text-3xl font-bold mb-6'>Settings</h2>
+    <div className='flex h-full flex-col'>
+      <h2 className='mb-6 text-3xl font-bold'>Settings</h2>
 
       {/* Tabs Navigation - removed the notifications tab */}
-      <div className='flex border-b-2 border-foreground/10 mb-6 overflow-x-auto hide-scrollbar'>
+      <div className='mb-6 flex overflow-x-auto border-b-2 border-foreground/10'>
         <Link
           href='/dashboard/settings'
           replace
@@ -41,7 +41,7 @@ const SettingsLayout: PageWithLayout<SettingsLayoutProps> = ({ children }) => {
               : 'border-transparent text-foreground/50 hover:text-foreground/80',
           )}
         >
-          <FiUser className='w-4 h-4' />
+          <FiUser className='size-4' />
           <span>Profile</span>
         </Link>
 
@@ -55,13 +55,13 @@ const SettingsLayout: PageWithLayout<SettingsLayoutProps> = ({ children }) => {
               : 'border-transparent text-foreground/50 hover:text-foreground/80',
           )}
         >
-          <FiShield className='w-4 h-4' />
+          <FiShield className='size-4' />
           <span>Privacy</span>
         </Link>
       </div>
 
       {/* Tab Content */}
-      <div className='bg-background rounded-lg flex-1 overflow-y-auto'>
+      <div className='flex-1 overflow-y-auto rounded-lg bg-background'>
         <div className='p-6'>{children}</div>
       </div>
     </div>

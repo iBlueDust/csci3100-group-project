@@ -7,7 +7,7 @@ import MessagesLayout from '@/layouts/MessagesLayout'
 
 const MessagesHome: PageWithLayout = () => {
   return (
-    <div className='flex-1 flex items-center justify-center text-foreground/50'>
+    <div className='flex flex-1 items-center justify-center text-foreground/50'>
       <div className='text-center'>
         <p>Select a conversation to start messaging</p>
       </div>
