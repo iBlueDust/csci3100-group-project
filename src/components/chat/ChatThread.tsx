@@ -175,6 +175,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         {/* Message Input - Fixed at bottom for mobile */}
         <div className='sticky bottom-0'>
           <ChatInput
+            wasRequestedToDelete={wasRequestedToDelete}
             initialPreviewMarketListing={initialPreviewMarketListing}
             onSend={handleSend}
           />
