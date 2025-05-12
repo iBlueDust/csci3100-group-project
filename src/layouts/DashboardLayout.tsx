@@ -13,6 +13,7 @@ import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings
 import { queryChats } from '@/data/frontend/queries/queryChats'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
 import MobileBottomNav from '@/components/MobileBottomNav'
+import UserAvatar from '@/components/UserAvatar'
 
 enum Page {
   HOME = 'home',
@@ -116,11 +117,7 @@ const DashboardLayout: PageWithLayout<DashboardLayoutProps> = ({
 
         <div className='flex cursor-default items-center gap-4'>
           {/* User Avatar or Placeholder */}
-          <div className='flex size-8 items-center justify-center rounded-full bg-foreground/10'>
-            <span className='font-bold'>
-              {api.user?.username.charAt(0) ?? ''}
-            </span>
-          </div>
+          <UserAvatar username={api.user?.username ?? ''} />
 
           <span className='hidden sm:inline'>{api.user?.username ?? '--'}</span>
         </div>
