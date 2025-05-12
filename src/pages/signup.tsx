@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react'
 import classNames from 'classnames'
 import { useRouter } from 'next/router'
 import Joi from 'joi'
+import { FiInfo } from 'react-icons/fi'
 
 import { geistMono, geistSans } from '@/styles/fonts'
 import Input from '@/components/form/Input'
@@ -10,7 +11,6 @@ import SubmitButton from '@/components/form/SubmitButton'
 import { PageWithLayout } from '@/data/types/layout'
 import { SignUpError, SignUpErrorType, useSignUp } from '@/hooks/useSignUp'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
-import { isDev } from '@/utils/frontend/env'
 
 const formSchema = Joi.object({
   username: Joi.string()
@@ -166,42 +166,55 @@ const SignUp: PageWithLayout = () => {
           Sign Up
         </h1>
 
-        <form onSubmit={handleSubmit} className='w-full space-y-4'>
+        <form
+          className='w-full space-y-4'
+          autoComplete='off'
+          onSubmit={handleSubmit}
+        >
           <Input
             type='text'
             name='username'
             label='Username'
-            autoComplete='off'
+            autoComplete='username'
             error={formErrors.username}
             required
           />
-
-          <Input
-            type='text'
-            name='licenseKey'
-            label='License Key'
-            autoComplete={isDev ? undefined : 'off'}
-            error={formErrors.licenseKey}
-            placeholder='XXXX-XXXX-XXXX-XXXX'
-            pattern='(?:[A-HJ-NP-Z2-9]{4}-){3}[A-HJ-NP-Z2-9]{4}'
-            required
-          />
-
           <Input
             type='password'
             name='password'
             label='Password'
-            autoComplete={isDev ? undefined : 'new-password'}
+            autoComplete='new-password'
             error={formErrors.password}
             required
           />
-
           <Input
             type='password'
             name='confirmPassword'
             label='Confirm Password'
-            autoComplete={isDev ? undefined : ''}
+            autoComplete='new-password'
             error={formErrors.confirmPassword}
+            required
+          />
+
+          <hr className='mx-2 border-foreground-light/50 pb-2' />
+
+          <Input
+            type='text'
+            name='licenseKey'
+            label={
+              <>
+                License Key
+                <FiInfo
+                  className='ml-1 inline-block size-4 cursor-pointer text-foreground-light'
+                  title='You need a valid Jade Trail license key'
+                />
+              </>
+            }
+            autoComplete='off'
+            inputMode='text'
+            error={formErrors.licenseKey}
+            placeholder='XXXX-XXXX-XXXX-XXXX'
+            pattern='(?:[A-HJ-NP-Z2-9]{4}-){3}[A-HJ-NP-Z2-9]{4}'
             required
           />
 
@@ -210,7 +223,6 @@ const SignUp: PageWithLayout = () => {
               {formErrors.general}
             </p>
           )}
-
           <div className='pt-4'>
             <SubmitButton
               look='primary'
