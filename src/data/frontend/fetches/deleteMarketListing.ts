@@ -8,7 +8,7 @@ export async function deleteMarketListing(
 		method: 'DELETE',
 	})
 	if (!response.ok) {
-		throw new Error(`Failed to fetch market listings ${response.statusText}`)
+		throw new Error(`Failed to delete market listing: ${response.statusText}`)
 	}
 	const body = await response.json()
 	return body.success
