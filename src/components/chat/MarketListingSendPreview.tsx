@@ -46,7 +46,9 @@ const MarketListingSendPreview: React.FC<MarketListingSendPreviewProps> = ({
               {listing.description}
             </p>
           </div>
-          <p className='text-right md:font-bold'>{formatCurrency(1000)}</p>
+          <p className='text-right md:font-bold'>
+            {formatCurrency(listing.priceInCents)}
+          </p>
         </div>
 
         <div className='group:md:block hidden space-x-4 text-xs text-foreground-light'>
