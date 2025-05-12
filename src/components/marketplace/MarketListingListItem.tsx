@@ -1,11 +1,6 @@
 import React, { useMemo } from 'react'
 import Image from 'next/image'
-import {
-  FiEdit,
-  FiMessageCircle,
-  FiShoppingCart,
-  FiTrash2,
-} from 'react-icons/fi'
+import { FiEdit, FiMessageCircle, FiTrash2 } from 'react-icons/fi'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
@@ -29,13 +24,9 @@ export interface MarketListingListItemProps {
 
 const MarketListingListItem: React.FC<MarketListingListItemProps> = ({
   listing,
-  // isFavorite = false,
   isMine = false,
   onClick,
-  // onFavorite,
-  // onUnfavorite,
   onChat,
-  onBuy,
   onEdit,
   onDelete,
 }) => {
@@ -115,29 +106,16 @@ const MarketListingListItem: React.FC<MarketListingListItemProps> = ({
           <div className='flex-1'></div>
 
           {!isMine ? (
-            <>
-              <button
-                className='button flex h-auto items-center justify-center gap-1 px-3 py-1.5'
-                onClick={(e) => {
-                  e.stopPropagation() // Prevent triggering parent onClick
-                  onChat?.()
-                }}
-              >
-                <FiMessageCircle size={14} />
-                <span>Chat</span>
-              </button>
-
-              <button
-                className='button-primary flex h-auto items-center justify-center gap-1 px-3 py-1.5'
-                onClick={(e) => {
-                  e.stopPropagation() // Prevent triggering parent onClick
-                  onBuy?.()
-                }}
-              >
-                <FiShoppingCart size={14} />
-                <span>Buy</span>
-              </button>
-            </>
+            <button
+              className='button-primary flex h-auto items-center justify-center gap-1 px-3 py-1.5'
+              onClick={(e) => {
+                e.stopPropagation() // Prevent triggering parent onClick
+                onChat?.()
+              }}
+            >
+              <FiMessageCircle size={14} />
+              <span>Chat</span>
+            </button>
           ) : (
             <>
               <button
