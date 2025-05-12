@@ -4,7 +4,6 @@ import type { PaginatedResult, PaginationOptions } from '@/data/types/common'
 import dbConnect from '@/data/db/mongo'
 import Chat from '@/data/db/mongo/models/chat'
 import ChatMessage from '@/data/db/mongo/models/chat-message'
-import User from '@/data/db/mongo/models/user'
 import { ChatWithPopulatedFields } from '@/data/types/chats'
 import { mergeObjects } from '@/utils'
 import { makeChatClientFriendly } from '.'
@@ -20,7 +19,7 @@ export const getRecentChats = async (
       $match: mergeObjects(
         options.id && { _id: options.id },
         {
-          participants: userId,
+          'participants.id': userId,
           deleteRequesters: { $ne: userId },
         }
       ),
@@ -37,15 +36,15 @@ export const getRecentChats = async (
     {
       $facet: {
         data: [
-          {
-            $lookup: {
-              from: User.collection.name,
-              localField: 'participants',
-              foreignField: '_id',
-              as: 'participantLookups',
-              pipeline: [{ $project: { _id: 1, username: 1, publicKey: 1 } }],
-            },
-          },
+          // {
+          //   $lookup: {
+          //     from: User.collection.name,
+          //     localField: 'participants',
+          //     foreignField: '_id',
+          //     as: 'participantLookups',
+          //     pipeline: [{ $project: { _id: 1, username: 1, publicKey: 1 } }],
+          //   },
+          // },
           {
             $lookup: {
               from: ChatMessage.collection.name,

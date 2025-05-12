@@ -6,13 +6,13 @@ import mongoose from 'mongoose'
 import dbConnect from '@/data/db/mongo'
 import Chat from '@/data/db/mongo/models/chat'
 import User from '@/data/db/mongo/models/user'
-import { PaginatedResult, Error } from '@/data/types/common'
 import { getRecentChats } from '@/data/db/mongo/queries/chats/getRecentChats'
+import { getChatByRecipient } from '@/data/db/mongo/queries/chats/getChatByRecipient'
 import { sessionStore } from '@/data/session'
+import { PaginatedResult, Error } from '@/data/types/common'
 import { ChatWithPopulatedFields } from '@/data/types/chats'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
 import { assertIsObjectId } from '@/utils/api'
-import { getChatByRecipient } from '@/data/db/mongo/queries/chats/getChatByRecipient'
 
 type GetData = PaginatedResult<ChatWithPopulatedFields> | ChatWithPopulatedFields
 type PostData = { id: string }
@@ -82,31 +82,36 @@ async function POST(
       .json({ code: 'INVALID_REQUEST', message: 'Cannot create chat with self' })
   }
 
-  let recipientId: mongoose.Types.ObjectId
+  // FIXME: Type this properly
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let users: any[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let recipient: any
   if (body.recipientUsername) {
-    const userDoc = await User.findOne({ username: body.recipientUsername })
-    if (!userDoc) {
-      return res.status(404)
-        .json({ code: 'NOT_FOUND', message: 'Recipient not found' })
-    }
-
-    if (userDoc._id.equals(auth.data.userId)) {
-      return res.status(400)
-        .json({
-          code: 'INVALID_REQUEST',
-          message: 'Cannot create chat with self',
-        })
-    }
-
-    recipientId = userDoc._id
+    users = await User.find({
+      $or: [
+        { username: body.recipientUsername },
+        { _id: auth.data.userId }
+      ]
+    })
+    recipient = users.find((user) => user.username === body.recipientUsername)
   } else {
-    recipientId = body.recipient as mongoose.Types.ObjectId
+    users = await User.find({
+      _id: { $in: [auth.data.userId, body.recipient] }
+    })
+    recipient = users.find((user) => user._id.equals(body.recipient))
+  }
+
+  const me = users.find((user) => user._id.equals(auth.data.userId))
+
+  if (!me || !recipient) {
+    return res.status(404).json({ code: 'NOT_FOUND', message: 'Users not found' })
   }
 
   await dbConnect()
-
   const chatExists = await Chat.exists({
-    participants: { $all: [auth.data.userId, recipientId], $size: 2 }
+    'participants.id': { $all: [auth.data.userId, recipient._id] },
+    $expr: { $eq: [{ $size: "$participants" }, 2] }
   })
   if (chatExists) {
     return res.status(409).json({
@@ -117,15 +122,12 @@ async function POST(
       },
     } as Error<{ id: string }>)
   }
-
-  const recipientExists = await User.exists({ _id: recipientId })
-  if (!recipientExists) {
-    return res.status(404)
-      .json({ code: 'NOT_FOUND', message: 'Recipient not found' })
-  }
-
   const chat = await Chat.create({
-    participants: [auth.data.userId, recipientId]
+    participants: users.map((user) => ({
+      id: user._id,
+      username: user.username,
+      publicKey: user.publicKey,
+    })),
   })
 
   res.status(200).json({ id: chat.id })

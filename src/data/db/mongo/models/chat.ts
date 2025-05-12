@@ -5,10 +5,20 @@ import { isDev } from "@/env"
 
 const ChatSchema = new mongoose.Schema({
 	participants: [{
-		type: mongoose.Types.ObjectId,
-		ref: 'User',
-		required: true,
-		index: true,
+		id: {
+			type: mongoose.Types.ObjectId,
+			ref: 'User',
+			required: true,
+			index: true,
+		},
+		username: {
+			type: String,
+			index: true,
+		},
+		publicKey: { // JSON Web Key (JWK) format
+			type: Object,
+			required: true,
+		}
 	}],
 
 	// If one party deletes the chat, the chat will still be available until

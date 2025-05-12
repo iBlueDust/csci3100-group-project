@@ -18,7 +18,7 @@ export const deleteAllChatsByUserId = async (
 ): Promise<void> => {
 	await dbConnect()
 	const chats = await Chat.find({
-		participants: userId,
+		'participants.id': userId,
 		deleteRequesters: { $nin: [userId] }
 	})
 

@@ -3,7 +3,6 @@ import mongoose from 'mongoose'
 import dbConnect from '@/data/db/mongo'
 import Chat from '@/data/db/mongo/models/chat'
 import ChatMessage from '@/data/db/mongo/models/chat-message'
-import User from '@/data/db/mongo/models/user'
 import { ChatWithPopulatedFields } from '@/data/types/chats'
 import { makeChatClientFriendly } from '.'
 
@@ -16,31 +15,21 @@ export const getChatByRecipient = async (
   const [result] = await Chat.aggregate([
     {
       $match: {
-        participants: {
-          $all: [userId, recipientId],
-        },
+        // both IDs must appear in the nested `participants.id` array
+        'participants.id': { $all: [userId, recipientId] },
+        // still exclude chats the user has requested to delete
         deleteRequesters: { $ne: userId },
       },
     },
     { $limit: 1 },
     {
       $addFields: {
-        // Check if deleteRequesters is not empty or an empty array
         wasRequestedToDelete: {
           $gt: [{ $size: '$deleteRequesters' }, 0],
         },
       },
     },
     { $project: { _id: 1, participants: 1, wasRequestedToDelete: 1 } },
-    {
-      $lookup: {
-        from: User.collection.name,
-        localField: 'participants',
-        foreignField: '_id',
-        as: 'participantLookups',
-        pipeline: [{ $project: { _id: 1, username: 1, publicKey: 1 } }],
-      },
-    },
     {
       $lookup: {
         from: ChatMessage.collection.name,
