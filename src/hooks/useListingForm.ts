@@ -103,12 +103,15 @@ export const useListingForm = ({
 
     if (listingId) {
       const payload: PatchMarketListingPayload = {}
+
       if (formData.title.trim() !== initialData?.title)
         payload.title = formData.title.trim()
+
       if (formData.description.trim() !== initialData?.description)
         payload.description = formData.description.trim()
-      if (formData.priceInCents !== initialData?.priceInCents)
-        payload.priceInCents = formData.priceInCents
+
+      payload.priceInCents = formData.priceInCents
+
       if (formData.pictures.length > 0) {
         const originalPictureIndices = Object.fromEntries(
           initialData!.pictures.map((p, i) => [p, i])
