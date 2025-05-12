@@ -23,7 +23,8 @@ const MarketplaceListingPage: PageWithLayout = () => {
 
   const hoveringChatBox = useHoveringChatBox({ api })
 
-  useEffect(hoveringChatBox.hide, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => hoveringChatBox.hide(), [])
 
   const queryClient = useQueryClient()
   const { data: listing } = useQuery({

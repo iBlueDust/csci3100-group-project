@@ -83,7 +83,7 @@ export const useHoveringChatBox = ({ api }: { api: Api }) => {
       const sharedKey = await deriveKey(theirPublicKey, myPrivateKey)
       context.setSharedKey(sharedKey)
     },
-    [context],
+    [context, api.uek],
   )
 
   return {

@@ -29,7 +29,7 @@ const WarningConfirmModal: React.FC<WarningConfirmModalProps> = ({
           <SubmitButton onClick={onCancel}>Cancel</SubmitButton>
           <SubmitButton
             onClick={onConfirm}
-            className='bg-text-white bg-red-500 hover:border-red-800 hover:bg-red-600'
+            className='bg-red-500 text-white hover:border-red-800 hover:bg-red-600'
           >
             Delete Listing
           </SubmitButton>

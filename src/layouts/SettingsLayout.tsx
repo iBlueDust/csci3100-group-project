@@ -30,7 +30,7 @@ const SettingsLayout: PageWithLayout<SettingsLayoutProps> = ({ children }) => {
       <h2 className='mb-6 text-3xl font-bold'>Settings</h2>
 
       {/* Tabs Navigation - removed the notifications tab */}
-      <div className='hide-scrollbar mb-6 flex overflow-x-auto border-b-2 border-foreground/10'>
+      <div className='mb-6 flex overflow-x-auto border-b-2 border-foreground/10'>
         <Link
           href='/dashboard/settings'
           replace
