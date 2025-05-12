@@ -2,27 +2,85 @@ import Link from 'next/link'
 import { useCallback, useState } from 'react'
 import classNames from 'classnames'
 import { useRouter } from 'next/router'
+import Joi from 'joi'
+import { FiInfo } from 'react-icons/fi'
 
 import { geistMono, geistSans } from '@/styles/fonts'
 import Input from '@/components/form/Input'
 import SubmitButton from '@/components/form/SubmitButton'
-import { toPasskey } from '@/utils/frontend/e2e/auth'
-import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { PageWithLayout } from '@/data/types/layout'
-import {
-  encryptUserEncryptionKey,
-  exportKey,
-  generateRandomKeyPair,
-} from '@/utils/frontend/e2e'
-import { isDev } from '@/utils/frontend/env'
-import { generateDeterministicSymmetricKey } from '@/utils/frontend/e2e/kdf'
-import { ab2base64 } from '@/utils'
+import { SignUpError, SignUpErrorType, useSignUp } from '@/hooks/useSignUp'
+import { ApiProvider, useApi } from '@/utils/frontend/api'
+
+const formSchema = Joi.object({
+  username: Joi.string()
+    .pattern(/^[a-zA-Z0-9.-]+$/)
+    .min(1)
+    .max(64)
+    .required()
+    .messages({
+      'string.min': 'Username must be at least 1 character long',
+      'string.max': 'Username must be at most 64 characters long',
+      'string.pattern.name': 'Username must be alphanumeric',
+      'string.empty': 'Username is required',
+      'any.required': 'Username is required',
+    }),
+  licenseKey: Joi.string()
+    .pattern(/^(?:[A-HJ-NP-Z2-9]{4}-){3}[A-HJ-NP-Z2-9]{4}$/)
+    .required()
+    .messages({
+      'string.pattern.name':
+        'License key must be in the format XXXX-XXXX-XXXX-XXXX',
+      'string.empty': 'License key is required',
+      'any.required': 'License key is required',
+    }),
+  password: Joi.string()
+    .pattern(/^[!-~]+$/) // ascii readable
+    .min(12)
+    .max(64)
+    .custom((value, helpers) => {
+      if (!/[A-Z]/.test(value)) {
+        // no uppercase letters
+        throw helpers.error('password.uppercase')
+      } else if (!/[a-z]/.test(value)) {
+        // no lowercase letters
+        throw helpers.error('password.lowercase')
+      } else if (!/[0-9]/.test(value)) {
+        // no digits
+        throw helpers.error('password.digit')
+      } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
+        // no special characters
+        throw helpers.error('password.special')
+      }
+      return value
+    })
+    .required()
+    .messages({
+      'string.pattern.name':
+        'Password must be composed of English letters, numbers, and symbols',
+      'string.min': 'Password must be at least 12 characters long',
+      'string.max': 'Password must be at most 64 characters long',
+      'string.empty': 'Password is required',
+      'any.required': 'Password is required',
+      'password.uppercase':
+        'Password must contain a lowercase letter, uppercase letter, digit, and symbol',
+      'password.lowercase':
+        'Password must contain a lowercase letter, uppercase letter, digit, and symbol',
+      'password.digit':
+        'Password must contain a lowercase letter, uppercase letter, digit, and symbol',
+      'password.special':
+        'Password must contain a lowercase letter, uppercase letter, digit, and symbol',
+    }),
+  confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({
+    'any.only': 'Passwords do not match',
+    'string.empty': 'Confirm password is required',
+    'any.required': 'Confirm password is required',
+  }),
+})
 
 const SignUp: PageWithLayout = () => {
   const router = useRouter()
   const api = useApi()
-
-  const [isLoading, setIsLoading] = useState(false)
 
   const [formErrors, setFormErrors] = useState<{
     general?: string
@@ -33,6 +91,31 @@ const SignUp: PageWithLayout = () => {
     confirmPassword?: string
   }>({})
 
+  const { signUp, isLoading } = useSignUp({
+    api,
+    onSuccess: () => {
+      router.push('/dashboard')
+    },
+    onError: (error) => {
+      if (
+        error instanceof SignUpError &&
+        error.type === SignUpErrorType.UsernameTaken
+      ) {
+        setFormErrors((prev) => ({
+          ...prev,
+          username: 'Username is already taken',
+        }))
+        return
+      }
+
+      console.error('Error signing up:', error)
+      setFormErrors((prev) => ({
+        ...prev,
+        general: 'An unexpected error occurred',
+      }))
+    },
+  })
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
@@ -41,155 +124,33 @@ const SignUp: PageWithLayout = () => {
 
       const formData = new FormData(e.target as HTMLFormElement)
 
-      const data = {
+      const unvalidatedData = {
         username: formData.get('username') as string,
         licenseKey: formData.get('licenseKey') as string,
         password: formData.get('password') as string,
         confirmPassword: formData.get('confirmPassword') as string,
       }
 
-      let isValid = true
+      const { value: data, error } = formSchema.validate(unvalidatedData, {
+        abortEarly: false,
+      })
 
-      if (!/^[a-zA-Z0-9.-]{1,64}$/.test(data.username)) {
-        setFormErrors((prev) => ({
-          ...prev,
-          username: 'Username must be alphanumeric and between 1-64 characters',
-        }))
-        isValid = false
-      }
+      if (error) {
+        error.details.forEach((detail) => {
+          const field = detail.path[0]
+          const message = detail.message
 
-      if (
-        !/^(?:[A-HJ-NP-Z2-9]{4}-){3}[A-HJ-NP-Z2-9]{4}$/.test(data.licenseKey)
-      ) {
-        setFormErrors((prev) => ({
-          ...prev,
-          licenseKey: 'License key must be in the format XXXX-XXXX-XXXX-XXXX',
-        }))
-        isValid = false
-      }
-
-      // password must be ascii readable
-      if (!/^[!-~]+$/.test(data.password)) {
-        setFormErrors((prev) => ({
-          ...prev,
-          password:
-            'Password must compose of English letters, numbers, and symbols',
-        }))
-        isValid = false
-      } else if (data.password.length < 12 || data.password.length > 64) {
-        setFormErrors((prev) => ({
-          ...prev,
-          password:
-            'Password must be 12-64 characters long and contain an uppercase letter, a lowercase letter, a number, and a symbol',
-        }))
-        isValid = false
-      } else if (!/[A-Z]/.test(data.password)) {
-        setFormErrors((prev) => ({
-          ...prev,
-          password: 'Password must contain at least one uppercase letter',
-        }))
-        isValid = false
-      } else if (!/[a-z]/.test(data.password)) {
-        setFormErrors((prev) => ({
-          ...prev,
-          password: 'Password must contain at least one lowercase letter',
-        }))
-        isValid = false
-      } else if (!/[0-9]/.test(data.password)) {
-        setFormErrors((prev) => ({
-          ...prev,
-          password: 'Password must contain at least one number',
-        }))
-        isValid = false
-      } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(data.password)) {
-        setFormErrors((prev) => ({
-          ...prev,
-          password: 'Password must contain at least one special character',
-        }))
-        isValid = false
-      }
-
-      if (data.password !== data.confirmPassword) {
-        setFormErrors((prev) => ({
-          ...prev,
-          confirmPassword: 'Passwords do not match',
-        }))
-        isValid = false
-      }
-
-      if (!isValid) {
-        setIsLoading(false)
+          setFormErrors((prev) => ({
+            ...prev,
+            [field]: message,
+          }))
+        })
         return
       }
 
-      setIsLoading(true)
-
-      try {
-        const uek = await generateRandomKeyPair()
-        const jwk = await exportKey(uek.publicKey)
-        const uekEncryptionKey = await generateDeterministicSymmetricKey(
-          `${data.username}:${data.password}`,
-          process.env.NEXT_PUBLIC_UEK_DERIVATION_SALT ?? data.username,
-          ['encrypt'],
-        )
-        const encryptedUek = await encryptUserEncryptionKey(
-          uek.privateKey,
-          uekEncryptionKey,
-        )
-
-        const payload = {
-          username: data.username,
-          passkey: await toPasskey(data.username, data.password),
-          publicKey: jwk,
-          encryptedUserEncryptionKey: ab2base64(encryptedUek),
-          licenseKey: data.licenseKey,
-        }
-
-        const response = await api.fetch('/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-
-        if (response.status === 409) {
-          // 409 Conflict
-          setFormErrors((prev) => ({
-            ...prev,
-            username: 'Username is already taken',
-          }))
-          return
-        }
-
-        if (!response.ok) {
-          setFormErrors((prev) => ({
-            ...prev,
-            general: 'An unexpected error occurred',
-          }))
-          return
-        }
-
-        const body = await response.json()
-        console.log('Logged in as user', body.id)
-
-        api.setUser({
-          id: body.id,
-          username: data.username,
-        })
-        api.setUek(uek)
-        api.setTokenExpiresAt(new Date(body.expiresAt))
-
-        router.push('/dashboard')
-      } catch (error) {
-        console.error('Error signing up:', error)
-        setFormErrors((prev) => ({
-          ...prev,
-          general: 'An unexpected error occurred',
-        }))
-      } finally {
-        setIsLoading(false)
-      }
+      await signUp(data).catch(() => {}) // error handled in useSignUp
     },
-    [router, api],
+    [signUp],
   )
 
   return (
@@ -205,42 +166,55 @@ const SignUp: PageWithLayout = () => {
           Sign Up
         </h1>
 
-        <form onSubmit={handleSubmit} className='w-full space-y-4'>
+        <form
+          className='w-full space-y-4'
+          autoComplete='off'
+          onSubmit={handleSubmit}
+        >
           <Input
             type='text'
             name='username'
             label='Username'
-            autoComplete='off'
+            autoComplete='username'
             error={formErrors.username}
             required
           />
-
-          <Input
-            type='text'
-            name='licenseKey'
-            label='License Key'
-            autoComplete={isDev ? undefined : 'off'}
-            error={formErrors.licenseKey}
-            placeholder='XXXX-XXXX-XXXX-XXXX'
-            pattern='(?:[A-HJ-NP-Z2-9]{4}-){3}[A-HJ-NP-Z2-9]{4}'
-            required
-          />
-
           <Input
             type='password'
             name='password'
             label='Password'
-            autoComplete={isDev ? undefined : 'new-password'}
+            autoComplete='new-password'
             error={formErrors.password}
             required
           />
-
           <Input
             type='password'
             name='confirmPassword'
             label='Confirm Password'
-            autoComplete={isDev ? undefined : ''}
+            autoComplete='new-password'
             error={formErrors.confirmPassword}
+            required
+          />
+
+          <hr className='mx-2 border-foreground-light/50 pb-2' />
+
+          <Input
+            type='text'
+            name='licenseKey'
+            label={
+              <>
+                License Key
+                <FiInfo
+                  className='ml-1 inline-block size-4 cursor-pointer text-foreground-light'
+                  title='You need a valid Jade Trail license key'
+                />
+              </>
+            }
+            autoComplete='off'
+            inputMode='text'
+            error={formErrors.licenseKey}
+            placeholder='XXXX-XXXX-XXXX-XXXX'
+            pattern='(?:[A-HJ-NP-Z2-9]{4}-){3}[A-HJ-NP-Z2-9]{4}'
             required
           />
 
@@ -249,7 +223,6 @@ const SignUp: PageWithLayout = () => {
               {formErrors.general}
             </p>
           )}
-
           <div className='pt-4'>
             <SubmitButton
               look='primary'
