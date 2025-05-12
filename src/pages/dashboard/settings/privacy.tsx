@@ -35,19 +35,21 @@ const SettingsPrivacyPage: PageWithLayout = () => {
   }, [api, router])
 
   return (
-    <section className='space-y-6'>
-      <button className='button mb-2 w-full justify-start text-left'>
-        View Privacy Policy
-      </button>
-      <button className='button mb-2 w-full justify-start text-left'>
-        Manage Cookies
-      </button>
-      <button
-        onClick={() => setShowDeleteModal(true)}
-        className='button text-red-500 w-full justify-start text-left'
-      >
-        Delete Account
-      </button>
+    <section>
+      <div className='space-y-6'>
+        <button className='button mb-2 w-full justify-start text-left'>
+          View Privacy Policy
+        </button>
+        <button className='button mb-2 w-full justify-start text-left'>
+          Manage Cookies
+        </button>
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          className='button w-full justify-start text-left text-red-500'
+        >
+          Delete Account
+        </button>
+      </div>
 
       {/* Delete Account Confirmation Modal */}
       {showDeleteModal && api.user && (

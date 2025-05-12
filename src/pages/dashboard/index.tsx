@@ -79,21 +79,21 @@ const StatsPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const stats = calculateMarketStats()
 
   return (
-    <div className='fixed inset-0 bg-foreground/30 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-      <div className='bg-background rounded-lg p-6 w-full max-w-screen-sm md:max-w-2xl max-h-[80vh] overflow-y-auto mx-4 md:mx-auto'>
-        <div className='flex justify-between items-center mb-4'>
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 p-4 backdrop-blur-sm'>
+      <div className='mx-4 max-h-[80vh] w-full max-w-screen-sm overflow-y-auto rounded-lg bg-background p-6 md:mx-auto md:max-w-2xl'>
+        <div className='mb-4 flex items-center justify-between'>
           <h2 className='text-2xl font-bold'>Market Statistics</h2>
           <button
             onClick={onClose}
-            className='p-1 hover:bg-background-dark rounded-full'
+            className='rounded-full p-1 hover:bg-background-dark'
           >
             <FiX size={24} className='text-foreground' />
           </button>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
-          <div className='border-2 border-foreground/10 rounded-lg p-4'>
-            <h3 className='font-bold mb-3'>Market Activity</h3>
+        <div className='mb-6 grid grid-cols-1 gap-6 md:grid-cols-2'>
+          <div className='rounded-lg border-2 border-foreground/10 p-4'>
+            <h3 className='mb-3 font-bold'>Market Activity</h3>
             <div className='space-y-3'>
               <div className='flex justify-between'>
                 <span>Active Listings</span>
@@ -122,8 +122,8 @@ const StatsPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
           </div>
 
-          <div className='border-2 border-foreground/10 rounded-lg p-4'>
-            <h3 className='font-bold mb-3'>Top Categories</h3>
+          <div className='rounded-lg border-2 border-foreground/10 p-4'>
+            <h3 className='mb-3 font-bold'>Top Categories</h3>
             <div className='space-y-3'>
               {stats.topCategories.map(([category, percentage], index) => (
                 <div key={index} className='flex justify-between'>
@@ -135,7 +135,7 @@ const StatsPopup: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           </div>
         </div>
 
-        <button onClick={onClose} className='button-primary w-full mt-6'>
+        <button onClick={onClose} className='button-primary mt-6 w-full'>
           Close
         </button>
       </div>
@@ -166,16 +166,16 @@ const Home: PageWithLayout<HomeProps> = ({
   return (
     <div className='pb-16'>
       <div className='mb-6'>
-        <h2 className='text-3xl font-bold mb-2'>Welcome back!</h2>
+        <h2 className='mb-2 text-3xl font-bold'>Welcome back!</h2>
         <p className='text-foreground/70'>
           Here&apos;s what&apos;s happening on your Jade Trail today.
         </p>
       </div>
 
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
+      <div className='mb-8 grid grid-cols-1 gap-6 md:grid-cols-2'>
         {/* Market Summary Card */}
-        <div className='bg-background-light p-6 rounded-lg border-2 border-foreground/10 shadow-sm'>
-          <h3 className='text-xl font-bold mb-4'>Market Summary</h3>
+        <section className='rounded-lg border-2 border-foreground/10 bg-background-light p-6 shadow-sm'>
+          <h3 className='mb-4 text-xl font-bold'>Market Summary</h3>
           <div className='space-y-2'>
             {/* Using useMemo to avoid recalculating on every render */}
             {useMemo(() => {
@@ -205,15 +205,15 @@ const Home: PageWithLayout<HomeProps> = ({
             }, [listings])}
           </div>
           <button
-            className='mt-4 button w-full'
+            className='button mt-4 w-full'
             onClick={() => setShowStatsPopup(true)}
           >
             View More Stats
           </button>
-        </div>
+        </section>
 
-        <div className='bg-background-light p-6 rounded-lg border-2 border-foreground/10 shadow-sm'>
-          <h3 className='text-xl font-bold mb-4'>Your Activity</h3>
+        <section className='rounded-lg border-2 border-foreground/10 bg-background-light p-6 shadow-sm'>
+          <h3 className='mb-4 text-xl font-bold'>Your Activity</h3>
           <div className='space-y-2'>
             <div className='flex justify-between'>
               <span>Current Listings</span>
@@ -229,21 +229,21 @@ const Home: PageWithLayout<HomeProps> = ({
             </div>
           </div>
           <Link
-            className='mt-4 button-primary w-full flex items-center justify-center gap-2'
+            className='button-primary mt-4 flex w-full items-center justify-center gap-2'
             href='/dashboard/marketplace/create'
           >
             <FiPlus /> Create New Listing
           </Link>
-        </div>
+        </section>
       </div>
 
-      <div className='bg-background-light p-6 rounded-lg border-2 border-foreground/10 shadow-sm'>
+      <section className='rounded-lg border-2 border-foreground/10 bg-background-light p-6 shadow-sm'>
         <div className='mb-4'>
           <h3 className='text-xl font-bold'>Recent Listings</h3>
         </div>
         <div className='overflow-x-auto'>
           <table className='min-w-full'>
-            <thead className='border-b-2 border-foreground/10'>
+            <thead className='border-b-2 border-foreground/10 [&_th:first-child]:pl-0 [&_th:last-child]:pr-0 [&_th]:px-2'>
               <tr>
                 <th className='py-3 text-left'>Item</th>
                 <th className='py-3 text-left'>Price</th>
@@ -251,13 +251,18 @@ const Home: PageWithLayout<HomeProps> = ({
                 <th className='py-3 text-left'>Listed</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className='[&_td:first-child]:pl-0 [&_td:last-child]:pr-0 [&_td]:px-2'>
               {listings?.data.slice(0, LIMIT).map((listing) => (
                 <tr
                   key={listing.id.toString()}
-                  className='border-b border-foreground/5 hover:bg-background-dark/30 [&>td]:py-3'
+                  className='border-b border-foreground/5 hover:bg-background-dark/30 [&>td]:py-2'
                 >
-                  <td>{listing.title}</td>
+                  <td>
+                    <p className='line-clamp-1 max-w-max'>{listing.title}</p>
+                    <p className='line-clamp-1 max-w-max text-sm text-foreground-light/75'>
+                      {listing.description.split('\n')[0]}
+                    </p>
+                  </td>
                   <td className='font-mono'>
                     {formatCurrency(listing.priceInCents)}
                   </td>
@@ -268,16 +273,19 @@ const Home: PageWithLayout<HomeProps> = ({
                     {dayjs(listing.listedAt).fromNow()}
                   </td>
                   <td className='text-right'>
-                    <button className='button py-1 mx-auto px-3 h-auto'>
+                    <Link
+                      className='button mx-auto h-auto'
+                      href={`/dashboard/marketplace/${listing.id}`}
+                    >
                       View
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
       {/* Create Listing Form Modal */}
       {showCreateForm && (

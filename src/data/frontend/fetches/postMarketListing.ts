@@ -17,16 +17,12 @@ export async function postMarketListing(
 	payload: PostMarketListingPayload,
 ): Promise<PostMarketListingResponse> {
 	const formData = new FormData()
-	if (payload.title) formData.append('title', payload.title)
-	if (payload.description) formData.append('description', payload.description)
-	if (payload.pictures) {
-		for (const picture of payload.pictures) {
-			formData.append('pictures', picture)
-		}
+	formData.append('title', payload.title)
+	formData.append('description', payload.description)
+	for (const picture of payload.pictures) {
+		formData.append('pictures', picture)
 	}
-	if (payload.priceInCents) {
-		formData.append('priceInCents', payload.priceInCents.toString())
-	}
+	formData.append('priceInCents', payload.priceInCents.toString())
 	payload.countries.forEach(country => {
 		formData.append('countries', country.toLowerCase())
 	})

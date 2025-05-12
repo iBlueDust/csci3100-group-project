@@ -30,7 +30,7 @@ export async function patchMarketListing(
 			typeof picture === 'number' ? picture.toString() : picture,
 		)
 	})
-	if (payload.priceInCents) {
+	if (payload.priceInCents != null) {
 		formData.append('priceInCents', payload.priceInCents.toString())
 	}
 	payload.countries?.forEach(country => {

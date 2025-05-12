@@ -285,10 +285,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
           <div className='flex flex-wrap items-center justify-between'>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={classNames(
-                'flex items-center gap-1 rounded-md px-3 py-2 transition-colors hover:bg-foreground/10',
-                showFilters && 'bg-foreground/10',
-              )}
+              className='flex items-center gap-1 rounded-md border border-foreground-light/50 px-3 py-2 transition-colors hover:bg-foreground/10'
               title={
                 !activeFilterCount
                   ? 'Filters'
@@ -308,6 +305,13 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                   </span>
                 </div>
               )}
+
+              <FiChevronDown
+                className={classNames(
+                  'ml-1 transition-transform',
+                  showFilters && 'rotate-180',
+                )}
+              />
             </button>
 
             <div className='flex items-center gap-2'>
