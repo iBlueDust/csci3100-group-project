@@ -37,7 +37,12 @@ async function POST(
 
 	await dbConnect()
 	const user = await User.findOne({ username: body.username })
-	if (!user || !user.verifyPasskey(Buffer.from(body.passkey, 'base64'))) {
+	if (!user) {
+		await sleep(Math.random() * 2000)
+		res.status(404).json({ code: 'USER_NOT_FOUND' })
+		return
+	}
+	if (!user.verifyPasskey(Buffer.from(body.passkey, 'base64'))) {
 		// delay response to prevent timing attacks
 		await sleep(Math.random() * 2000)
 		res.status(401).json({ code: 'INVALID_CREDENTIALS' })
