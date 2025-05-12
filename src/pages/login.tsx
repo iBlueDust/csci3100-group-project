@@ -11,8 +11,9 @@ import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { PageWithLayout } from '@/data/types/layout'
 import { decryptUserEncryptionKey, importKey } from '@/utils/frontend/e2e'
 import { generateDeterministicSymmetricKey } from '@/utils/frontend/e2e/kdf'
-import env from '@/utils/frontend/env'
+import { isDev } from '@/utils/frontend/env'
 import { base642ab } from '@/utils'
+import { useMutation } from '@tanstack/react-query'
 
 const Login: PageWithLayout = () => {
   const router = useRouter()
@@ -25,6 +26,87 @@ const Login: PageWithLayout = () => {
     username?: string
     password?: string
   }>({})
+
+  const mutation = useMutation({
+    mutationFn: async (data: { username: string; password: string }) => {
+      const payload = {
+        username: data.username,
+        passkey: await toPasskey(data.username, data.password),
+      }
+
+      const response = await api.fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (response.status === 401) {
+        // 401 Unauthorized
+        setFormErrors((prev) => ({
+          ...prev,
+          general: 'Invalid username or password',
+        }))
+        return
+      }
+
+      if (!response.ok) {
+        setFormErrors((prev) => ({
+          ...prev,
+          general: 'An unexpected error occurred',
+        }))
+        return
+      }
+
+      const body = await response.json()
+      console.log('Logged in as user', body.id)
+
+      let uekDecryptionKey: CryptoKey
+      try {
+        uekDecryptionKey = await generateDeterministicSymmetricKey(
+          `${data.username}:${data.password}`,
+          process.env.NEXT_PUBLIC_UEK_DERIVATION_SALT ?? data.username,
+          ['decrypt'],
+        )
+      } catch (error) {
+        console.error('Login: Cannot generate uek decryption key')
+        throw error
+      }
+
+      const encryptedUekBuffer = base642ab(body.encryptedUserEncryptionKey)
+
+      let uekPrivate: CryptoKey
+      try {
+        uekPrivate = await decryptUserEncryptionKey(
+          encryptedUekBuffer,
+          uekDecryptionKey,
+        )
+      } catch (error) {
+        console.error('Login: Cannot decrypt uek')
+        throw error
+      }
+      const uekPublic = await importKey(body.publicKey, 'jwk', [])
+
+      api.setUek({ privateKey: uekPrivate, publicKey: uekPublic })
+      api.setUser({
+        id: body.id,
+        username: data.username,
+      })
+      api.setTokenExpiresAt(new Date(body.expiresAt))
+
+      router.push('/dashboard')
+    },
+    throwOnError: isDev,
+    onSuccess: () => {
+      setIsLoading(false)
+    },
+    onError: (error) => {
+      console.error('Login error:', error)
+      setFormErrors((prev) => ({
+        ...prev,
+        general: 'Invalid username or password',
+      }))
+    },
+  })
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -63,70 +145,9 @@ const Login: PageWithLayout = () => {
 
       setIsLoading(true)
 
-      try {
-        const payload = {
-          username: data.username,
-          passkey: await toPasskey(data.username, data.password),
-        }
-
-        const response = await api.fetch('/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-
-        if (response.status === 401) {
-          // 401 Unauthorized
-          setFormErrors((prev) => ({
-            ...prev,
-            general: 'Invalid username or password',
-          }))
-          return
-        }
-
-        if (!response.ok) {
-          setFormErrors((prev) => ({
-            ...prev,
-            general: 'An unexpected error occurred',
-          }))
-          return
-        }
-
-        const body = await response.json()
-        console.log('Logged in as user', body.id)
-
-        const uekDecryptionKey = await generateDeterministicSymmetricKey(
-          `${data.username}:${data.password}`,
-          env.NEXT_PUBLIC_UEK_DERIVATION_SALT,
-          ['decrypt'],
-        )
-
-        const encryptedUekBuffer = base642ab(body.encryptedUserEncryptionKey)
-        const uekPrivate = await decryptUserEncryptionKey(
-          encryptedUekBuffer,
-          uekDecryptionKey,
-        )
-        const uekPublic = await importKey(body.publicKey, 'jwk', [])
-
-        api.setUek({ privateKey: uekPrivate, publicKey: uekPublic })
-        api.setUser({
-          id: body.id,
-          username: data.username,
-        })
-        api.setTokenExpiresAt(new Date(body.expiresAt))
-
-        router.push('/dashboard')
-      } catch (error) {
-        console.error('Login error:', error)
-        setFormErrors((prev) => ({
-          ...prev,
-          general: 'Invalid username or password',
-        }))
-      } finally {
-        setIsLoading(false)
-      }
+      await mutation.mutate(data)
     },
-    [router, api],
+    [mutation],
   )
 
   return (
