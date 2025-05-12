@@ -35,7 +35,7 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
       <div className='flex max-h-[90vh] w-full max-w-5xl flex-col rounded-lg border-2 border-foreground/10 bg-background shadow-xl'>
         {/* Modal Header */}
         <div className='flex shrink-0 items-center justify-between border-b border-foreground/10 p-4'>
-          <h2 className='truncate text-xl font-bold'>Listing Details</h2>
+          <h1 className='truncate text-xl font-bold'>Listing Details</h1>
           <button
             onClick={onClose}
             className='rounded-full p-1 hover:bg-background-dark'
@@ -51,13 +51,21 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
             <div className='space-y-3 md:col-span-2'>
               {/* Main Image */}
               <div className='rounded-lg bg-foreground/5'>
-                <Image
-                  className='aspect-[4/3] w-full rounded-md object-cover'
-                  width={650}
-                  height={480}
-                  src={listing.pictures[selectedImageIndex]}
-                  alt={`Listing Image #${selectedImageIndex + 1}`}
-                />
+                {listing.pictures.length > 0 ? (
+                  <Image
+                    className='aspect-[4/3] w-full rounded-md object-cover'
+                    width={650}
+                    height={480}
+                    src={listing.pictures[selectedImageIndex]}
+                    alt={`Listing Image #${selectedImageIndex + 1}`}
+                  />
+                ) : (
+                  <div className='flex aspect-[4/3] w-full items-center justify-center rounded-md'>
+                    <span className='text-2xl text-foreground/30'>
+                      No pictures
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Thumbnail Row */}
@@ -95,7 +103,7 @@ const MarketListingModal: React.FC<MarketListingModalProps> = ({
             <div className='flex flex-col md:col-span-1'>
               {/* Price and Actions */}
               <div className='mb-2'>
-                <h1 className='mb-2 text-xl'>{listing.title}</h1>
+                <h2 className='mb-2 text-xl'>{listing.title}</h2>
 
                 <div className='mb-3 flex items-center justify-between'>
                   <p className='mr-4 font-mono text-2xl font-bold'>
