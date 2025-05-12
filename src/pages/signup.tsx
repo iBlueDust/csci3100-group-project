@@ -6,23 +6,14 @@ import { useRouter } from 'next/router'
 import { geistMono, geistSans } from '@/styles/fonts'
 import Input from '@/components/form/Input'
 import SubmitButton from '@/components/form/SubmitButton'
-import { toPasskey } from '@/utils/frontend/e2e/auth'
-import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { PageWithLayout } from '@/data/types/layout'
-import {
-  encryptUserEncryptionKey,
-  exportKey,
-  generateRandomKeyPair,
-} from '@/utils/frontend/e2e'
+import { SignUpError, SignUpErrorType, useSignUp } from '@/hooks/useSignUp'
+import { ApiProvider, useApi } from '@/utils/frontend/api'
 import { isDev } from '@/utils/frontend/env'
-import { generateDeterministicSymmetricKey } from '@/utils/frontend/e2e/kdf'
-import { ab2base64 } from '@/utils'
 
 const SignUp: PageWithLayout = () => {
   const router = useRouter()
   const api = useApi()
-
-  const [isLoading, setIsLoading] = useState(false)
 
   const [formErrors, setFormErrors] = useState<{
     general?: string
@@ -32,6 +23,32 @@ const SignUp: PageWithLayout = () => {
     password?: string
     confirmPassword?: string
   }>({})
+
+  const { signUp, isLoading } = useSignUp({
+    api,
+    onSuccess: () => {
+      router.push('/dashboard')
+    },
+    onError: (error) => {
+      if (
+        error instanceof SignUpError &&
+        error.type === SignUpErrorType.UsernameTaken
+      ) {
+        setFormErrors((prev) => ({
+          ...prev,
+          username: 'Username is already taken',
+        }))
+        return
+      }
+
+      console.error('Error signing up:', error)
+      setFormErrors((prev) => ({
+        ...prev,
+        general: 'An unexpected error occurred',
+      }))
+    },
+    throwOnError: isDev && ((error: Error) => !(error instanceof SignUpError)),
+  })
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -118,78 +135,12 @@ const SignUp: PageWithLayout = () => {
       }
 
       if (!isValid) {
-        setIsLoading(false)
         return
       }
 
-      setIsLoading(true)
-
-      try {
-        const uek = await generateRandomKeyPair()
-        const jwk = await exportKey(uek.publicKey)
-        const uekEncryptionKey = await generateDeterministicSymmetricKey(
-          `${data.username}:${data.password}`,
-          process.env.NEXT_PUBLIC_UEK_DERIVATION_SALT ?? data.username,
-          ['encrypt'],
-        )
-        const encryptedUek = await encryptUserEncryptionKey(
-          uek.privateKey,
-          uekEncryptionKey,
-        )
-
-        const payload = {
-          username: data.username,
-          passkey: await toPasskey(data.username, data.password),
-          publicKey: jwk,
-          encryptedUserEncryptionKey: ab2base64(encryptedUek),
-          licenseKey: data.licenseKey,
-        }
-
-        const response = await api.fetch('/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-
-        if (response.status === 409) {
-          // 409 Conflict
-          setFormErrors((prev) => ({
-            ...prev,
-            username: 'Username is already taken',
-          }))
-          return
-        }
-
-        if (!response.ok) {
-          setFormErrors((prev) => ({
-            ...prev,
-            general: 'An unexpected error occurred',
-          }))
-          return
-        }
-
-        const body = await response.json()
-        console.log('Logged in as user', body.id)
-
-        api.setUser({
-          id: body.id,
-          username: data.username,
-        })
-        api.setUek(uek)
-        api.setTokenExpiresAt(new Date(body.expiresAt))
-
-        router.push('/dashboard')
-      } catch (error) {
-        console.error('Error signing up:', error)
-        setFormErrors((prev) => ({
-          ...prev,
-          general: 'An unexpected error occurred',
-        }))
-      } finally {
-        setIsLoading(false)
-      }
+      await signUp(data).catch()
     },
-    [router, api],
+    [signUp],
   )
 
   return (
