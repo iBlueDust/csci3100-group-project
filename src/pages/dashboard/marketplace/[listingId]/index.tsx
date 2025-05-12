@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/router'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -14,6 +14,7 @@ import { PaginatedResult } from '@/data/types/common'
 import { queryMarketListingById } from '@/data/frontend/queries/queryMarketListingById'
 import { useHoveringChatBox } from '@/hooks/useHoveringChatBox'
 import { useEffect } from 'react'
+import { deleteMarketListing } from '@/data/frontend/mutations/deleteMarketListing'
 
 const MarketplaceListingPage: PageWithLayout = () => {
   const api = useApi()
@@ -45,13 +46,43 @@ const MarketplaceListingPage: PageWithLayout = () => {
     },
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: async (listing: MarketListingSearchResult) => {
+      if (!api.user) {
+        throw new Error('User not logged in')
+      }
+
+      if (!confirm(`Are you sure you want to delete "${listing.title}"?`)) {
+        return false
+      }
+
+      await deleteMarketListing(api, listing.id.toString())
+      return listing
+    },
+    onSuccess: (listing: MarketListingSearchResult | false) => {
+      if (!listing) {
+        return
+      }
+
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.MARKET_LISTINGS] })
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.MARKET_LISTINGS, listing.id.toString()],
+      })
+      router.replace('/dashboard/marketplace')
+    },
+    onError: (error) => {
+      console.error('Error deleting listing:', error)
+    },
+  })
+
   return (
     listing && (
       <MarketListingModal
         listing={listing}
         isMine={listing.author.id.toString() === api.user?.id}
         onChat={() => hoveringChatBox.show(listing)}
-        onClose={() => router.push('/dashboard/marketplace')}
+        onDeleteListing={() => deleteMutation.mutate(listing)}
+        onClose={() => router.back()}
       />
     )
   )

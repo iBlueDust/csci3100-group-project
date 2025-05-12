@@ -55,7 +55,7 @@ const MarketplaceEditListingPage: PageWithLayout = () => {
         listingId={listing.id.toString()}
         initialData={listing}
         onSuccess={handleSuccess}
-        onClose={() => router.push('/dashboard/marketplace')}
+        onClose={() => router.back()}
       />
     )
   )
