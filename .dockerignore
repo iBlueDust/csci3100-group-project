@@ -1,2 +1,21 @@
 # https://stackoverflow.com/a/62235581
 data/db
+# .env*
+
+mongo-init.sh
+minio-init.sh
+docker-compose*.yaml
+Dockerfile*
+
+README.md
+
+.git
+.gitattributes
+
+.github
+.vscode
+*.pem
+/cert
+/data
+/data-old
+/logs

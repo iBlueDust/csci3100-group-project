@@ -19,7 +19,15 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY \
+	.dockerignore \
+	.env* \
+	eslint.config.mjs next.config.ts postcss.config.mjs tailwind.config.ts \
+	tsconfig.json \
+	package.json package-lock.json \
+	./
+COPY public ./public
+COPY src ./src
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
@@ -46,7 +54,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-COPY .licenses ./
+COPY .licenses ./.next/
 
 USER nextjs
 

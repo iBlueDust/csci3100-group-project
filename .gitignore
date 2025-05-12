@@ -45,6 +45,11 @@ next-env.d.ts
 
 # Databases' data
 /data
+/data-old
 
 # Logs
 /logs
+
+# SSL Certificates
+/certs
+*.pem
