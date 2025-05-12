@@ -12,6 +12,7 @@ import { PageWithLayout } from '@/data/types/layout'
 import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
 import { queryChats } from '@/data/frontend/queries/queryChats'
 import { ApiProvider, useApi } from '@/utils/frontend/api'
+import MobileBottomNav from '@/components/MobileBottomNav'
 
 enum Page {
   HOME = 'home',
@@ -131,31 +132,15 @@ const DashboardLayout: PageWithLayout<DashboardLayoutProps> = ({
         {/* Fixed Sidebar (hidden on mobile) */}
         <div className='fixed bottom-0 left-0 top-16 hidden sm:block'>
           {/* Sidebar */}
-          <Sidebar
-            key={activePage}
-            navItems={navItems}
-            value={activePage ?? ''}
-          />
+          <Sidebar navItems={navItems} value={activePage ?? ''} />
         </div>
         {/* Main content */}
         <main className='flex-1 p-6 pb-16 sm:ml-64 sm:pb-0'>{children}</main>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className='fixed inset-x-0 bottom-0 z-10 mx-auto flex w-full max-w-screen-sm justify-around border-t-2 border-foreground/10 bg-background p-2 sm:hidden'>
-        {navItems.map((item) => (
-          <button
-            key={item.key}
-            className={classNames(
-              'p-2 rounded-md transition-colors',
-              item.key === activePage
-                ? 'text-foreground'
-                : 'text-foreground/50 hover:text-foreground',
-            )}
-          >
-            {item.icon}
-          </button>
-        ))}
+      <div className='fixed inset-x-0 bottom-0 z-10 sm:hidden'>
+        <MobileBottomNav navItems={navItems} value={activePage ?? ''} />
       </div>
     </div>
   )
