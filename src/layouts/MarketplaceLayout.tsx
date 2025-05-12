@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useCallback, useState, useEffect, useMemo } from 'react'
 import {
   FiSearch,
@@ -38,6 +38,7 @@ import MarketListingGridItem from '@/components/marketplace/MarketListingGridIte
 import Input from '@/components/form/Input'
 import Select from '@/components/form/Select'
 import SubmitButton from '@/components/form/SubmitButton'
+import { deleteMarketListing } from '@/data/frontend/mutations/deleteMarketListing'
 const MarketListingListItem = dynamic(
   () => import('@/components/marketplace/MarketListingListItem'),
 )
@@ -220,6 +221,27 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
     },
     [handleSearch],
   )
+
+  const deleteMutation = useMutation({
+    mutationFn: async (listing: MarketListingSearchResult) => {
+      if (!api.user) {
+        throw new Error('User not logged in')
+      }
+
+      if (!confirm(`Are you sure you want to delete "${listing.title}"?`)) {
+        return
+      }
+
+      await deleteMarketListing(api, listing.id.toString())
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.MARKET_LISTINGS] })
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.MARKET_LISTINGS, listing.id.toString()],
+      })
+    },
+    onError: (error) => {
+      console.error('Error deleting listing:', error)
+    },
+  })
 
   return (
     <div className='flex h-full flex-col pb-16'>
@@ -490,14 +512,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
                 )
                 router.push(`/dashboard/marketplace/${item.id}/edit`)
               }}
-              onDelete={() => {
-                if (
-                  !confirm(`Are you sure you want to delete "${item.title}"?`)
-                ) {
-                  return
-                }
-                // TODO: Delete listing API call
-              }}
+              onDelete={() => deleteMutation.mutate(item)}
             />
           ))}
         </div>
@@ -526,15 +541,7 @@ const MarketplaceLayout: PageWithLayout<MarketplaceLayoutProps> = ({
               onEdit={() =>
                 router.push(`/dashboard/marketplace/${item.id}/edit`)
               }
-              onDelete={() => {
-                if (
-                  !confirm(`Are you sure you want to delete "${item.title}"?`)
-                ) {
-                  return
-                }
-
-                // TODO: Delete listing API call
-              }}
+              onDelete={() => deleteMutation.mutate(item)}
             />
           ))}
         </div>
