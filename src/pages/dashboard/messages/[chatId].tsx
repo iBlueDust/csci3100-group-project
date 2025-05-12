@@ -73,7 +73,7 @@ const MessagesHome: PageWithLayout = () => {
   }, [api, chatId, router, queryClient])
 
   return isLoading || !chat ? (
-    <div className='flex-1 flex items-center justify-center text-foreground/50'>
+    <div className='flex flex-1 items-center justify-center text-foreground/50'>
       <div className='text-center'>
         <p>Loading...</p>
       </div>

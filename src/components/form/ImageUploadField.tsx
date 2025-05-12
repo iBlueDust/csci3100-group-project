@@ -45,7 +45,7 @@ const ImageUploadField: React.FC<ImageUploadProps> = ({
 
   return (
     <div className='mb-6'>
-      <label className='block text-sm font-medium mb-1'>
+      <label className='mb-1 block text-sm font-medium'>
         Images (up to {maxImages})
       </label>
 
@@ -75,7 +75,7 @@ const ImageUploadField: React.FC<ImageUploadProps> = ({
             ref={dragDrop.dropAreaRef}
             type='file'
             name={name}
-            className='inset-0 w-full h-full absolute opacity-0 cursor-pointer'
+            className='absolute inset-0 size-full cursor-pointer opacity-0'
             accept='image/*'
             onChange={onChange}
             multiple
@@ -84,27 +84,27 @@ const ImageUploadField: React.FC<ImageUploadProps> = ({
       )}
 
       {imageUrls.length > 0 && (
-        <div className='grid grid-cols-2 sm:grid-cols-5 gap-2 mt-2'>
+        <div className='mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5'>
           {images.map((image, index) => (
             <div
               key={index}
-              className='relative group overflow-hidden rounded'
+              className='group relative overflow-hidden rounded'
               title={typeof image !== 'string' ? image.name : ''}
             >
-              <div className='aspect-square bg-background-dark border border-foreground/10'>
+              <div className='aspect-square border border-foreground/10 bg-background-dark'>
                 <Image
                   width={100}
                   height={100}
                   src={imageUrls[index]}
                   alt={typeof image !== 'string' ? image.name : 'Listing image'}
-                  className='object-cover rounded h-full w-full'
+                  className='size-full rounded object-cover'
                 />
               </div>
               <button
                 type='button'
                 onClick={() => onRemove(index)}
                 title='Delete'
-                className='absolute top-0 right-0 bg-foreground/75 text-background rounded-bl p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-foreground'
+                className='absolute right-0 top-0 rounded-bl bg-foreground/75 p-1 text-background opacity-0 transition-opacity hover:bg-foreground group-hover:opacity-100'
               >
                 <FiTrash2 size={20} />
               </button>

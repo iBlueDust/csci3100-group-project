@@ -14,13 +14,13 @@ const Input: React.FC<InputProps> = (props) => {
         <span>{props.label}</span>
 
         <input
-          className='mt-1 block w-full rounded-md border bg-background-light border-foreground-light/75 px-3 py-2'
+          className='mt-1 block w-full rounded-md border border-foreground-light/75 bg-background-light px-3 py-2'
           {...props}
         />
       </label>
 
       {!props.hideError && (
-        <div className='mx-1 text-red-500 min-h-5'>{props.error}</div>
+        <div className='mx-1 min-h-5 text-red-500'>{props.error}</div>
       )}
     </div>
   )

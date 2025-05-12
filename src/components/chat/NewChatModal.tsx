@@ -63,12 +63,12 @@ const NewChatModal: React.FC<NewChatModalProps> = ({
   )
 
   return (
-    <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'>
       <form
-        className='bg-background border-2 border-foreground/10 rounded-lg p-6 max-w-md w-full mx-4'
+        className='mx-4 w-full max-w-md rounded-lg border-2 border-foreground/10 bg-background p-6'
         onSubmit={handleSubmit}
       >
-        <h3 className='text-xl font-bold mb-4'>Start a New Conversation</h3>
+        <h3 className='mb-4 text-xl font-bold'>Start a New Conversation</h3>
 
         <div className='mb-2'>
           <Input
@@ -84,7 +84,7 @@ const NewChatModal: React.FC<NewChatModalProps> = ({
 
         <div className='flex justify-end gap-2'>
           <SubmitButton
-            className='px-4 py-2 border-2 border-foreground/10 rounded-md hover:bg-foreground/5'
+            className='rounded-md border-2 border-foreground/10 px-4 py-2 hover:bg-foreground/5'
             type='reset'
             disabled={isLoading}
             onClick={onCancel}

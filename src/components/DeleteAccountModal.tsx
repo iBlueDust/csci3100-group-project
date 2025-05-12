@@ -23,10 +23,10 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
   )
 
   return (
-    <div className='fixed inset-0 bg-foreground/50 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-      <form className='bg-background rounded-lg max-w-md w-full p-6 border-2 border-foreground/10'>
-        <h3 className='text-xl font-bold text-red-500 mb-2'>Delete Account</h3>
-        <p className='text-foreground/70 mb-4'>
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 p-4 backdrop-blur-sm'>
+      <form className='w-full max-w-md rounded-lg border-2 border-foreground/10 bg-background p-6'>
+        <h3 className='mb-2 text-xl font-bold text-red-500'>Delete Account</h3>
+        <p className='mb-4 text-foreground/70'>
           This action cannot be undone. All of your data, including profile
           information, listings, and messages will be permanently deleted.
         </p>
@@ -44,9 +44,9 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
           onChange={(e) => setDeleteConfirmation(e.target.value)}
         />
 
-        {true && <p className='text-red-500 text-center'>{error}</p>}
+        {true && <p className='text-center text-red-500'>{error}</p>}
 
-        <div className='flex gap-3 justify-end'>
+        <div className='flex justify-end gap-3'>
           <SubmitButton
             type='button'
             className='button px-4 py-2'
@@ -56,7 +56,7 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
           </SubmitButton>
           <SubmitButton
             look='error'
-            className='button bg-red-500 text-white px-4 py-2 disabled:opacity-50'
+            className='button bg-red-500 px-4 py-2 text-white disabled:opacity-50'
             disabled={deleteConfirmation !== username}
             onClick={() => {
               if (deleteConfirmation !== username) {

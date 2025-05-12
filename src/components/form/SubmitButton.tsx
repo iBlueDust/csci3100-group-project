@@ -33,7 +33,7 @@ const SubmitButton: React.FC<SubmitButtonProps> = (props) => {
       )}
     >
       <span className='flex flex-row flex-nowrap items-center gap-2'>
-        {props.loading && <BasicSpinner className='w-6 h-6' />}
+        {props.loading && <BasicSpinner className='size-6' />}
 
         <span className='mt-0.5'>{props.children}</span>
       </span>

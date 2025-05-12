@@ -12,27 +12,27 @@ export default function Home() {
         'grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-4 pb-10 gap-8 sm:p-8 md:p-20 md:pb-20 md:gap-16 font-body',
       )}
     >
-      <main className='flex flex-col gap-6 sm:gap-8 row-start-2 items-center w-full max-w-3xl'>
-        <h1 className='text-4xl sm:text-5xl md:text-6xl font-bold border-b-2 border-foreground font-mono text-center w-full'>
+      <main className='row-start-2 flex w-full max-w-3xl flex-col items-center gap-6 sm:gap-8'>
+        <h1 className='w-full border-b-2 border-foreground text-center font-mono text-4xl font-bold sm:text-5xl md:text-6xl'>
           The Jade Trail
         </h1>
-        <p className='text-sm sm:text-base text-center font-mono mb-4 sm:mb-8'>
+        <p className='mb-4 text-center font-mono text-sm sm:mb-8 sm:text-base'>
           Security. Privacy. Trade.
         </p>
 
-        <div className='flex gap-4 items-center flex-col sm:flex-row w-full max-w-xs sm:max-w-none justify-center'>
+        <div className='flex w-full max-w-xs flex-col items-center justify-center gap-4 sm:max-w-none sm:flex-row'>
           <Link
-            className='button-primary w-full sm:w-auto px-6 py-3'
+            className='button-primary w-full px-6 py-3 sm:w-auto'
             href='/signup'
           >
             Sign up
           </Link>
-          <Link className='button w-full sm:w-auto px-6 py-3' href='/login'>
+          <Link className='button w-full px-6 py-3 sm:w-auto' href='/login'>
             Log in
           </Link>
         </div>
       </main>
-      <footer className='row-start-3 text-foreground/50 text-xs sm:text-sm px-4 sm:px-0 mt-8 sm:mt-0'>
+      <footer className='row-start-3 mt-8 px-4 text-xs text-foreground/50 sm:mt-0 sm:px-0 sm:text-sm'>
         <p>
           This website was created to fulfill the requirements of the course{' '}
           <code>CSCI 3100 Software Engineering</code>

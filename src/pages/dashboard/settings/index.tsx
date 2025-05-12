@@ -12,28 +12,28 @@ const SettingsProfilePage: PageWithLayout = () => {
 
   return (
     <section className='space-y-6'>
-      <div className='flex flex-col md:flex-row gap-8 items-start'>
-        <div className='w-32 h-32 rounded-full bg-foreground/10 flex items-center justify-center text-4xl'>
+      <div className='flex flex-col items-start gap-8 md:flex-row'>
+        <div className='flex size-32 items-center justify-center rounded-full bg-foreground/10 text-4xl'>
           {api.user?.username.charAt(0).toUpperCase()}
         </div>
 
         <div className='flex-1'>
-          <h3 className='text-xl font-bold mb-1'>Profile Picture</h3>
-          <p className='text-foreground/70 mb-4'>
+          <h3 className='mb-1 text-xl font-bold'>Profile Picture</h3>
+          <p className='mb-4 text-foreground/70'>
             Upload a photo to personalize your account
           </p>
 
           <div className='flex gap-3'>
-            <button className='button-primary py-1 px-4'>Upload</button>
-            <button className='button py-1 px-4'>Remove</button>
+            <button className='button-primary px-4 py-1'>Upload</button>
+            <button className='button px-4 py-1'>Remove</button>
           </div>
         </div>
       </div>
 
       <div>
-        <h3 className='text-xl font-bold mb-4'>Personal Information</h3>
+        <h3 className='mb-4 text-xl font-bold'>Personal Information</h3>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+        <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
           <Input type='email' name='email' label='Email' />
 
           <Input type='text' name='username' label='Username' />
@@ -47,7 +47,7 @@ const SettingsProfilePage: PageWithLayout = () => {
           </div>
         </div>
 
-        <SubmitButton look='primary' className='mt-6 ml-auto block px-4 py-2'>
+        <SubmitButton look='primary' className='ml-auto mt-6 block px-4 py-2'>
           Save Changes
         </SubmitButton>
       </div>
