@@ -14,7 +14,7 @@
 //   // Setup files to be run after the test framework is installed
 //   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 
-  
+
 //   testEnvironment: "node",
 
 //   // Automatically clear mock calls, instances, contexts, and results before every test
@@ -51,7 +51,7 @@ const createJestConfig = nextJest({
 
 const config: Config = {
   // run this before any of your tests to polyfill window.crypto, etc.
-  setupFiles: ['<rootDir>/jest.polyfills.js'],
+  setupFiles: ['<rootDir>/jest.polyfills.ts'],
 
   // run this after Jest's env is set up (for custom matchers, etc.)
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
@@ -70,7 +70,7 @@ const config: Config = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   moduleFileExtensions: [
-    'ts','tsx','js','jsx','json','node'
+    'ts', 'tsx', 'js', 'jsx', 'json', 'node'
   ],
 }
 
