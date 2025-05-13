@@ -3,11 +3,11 @@ import type { NextApiRequest, NextApiResponse } from "next"
 import Joi from 'joi'
 import { MongoServerError } from "mongodb"
 
-import dbConnect from "@/data/db/mongo"
-import User, { UserPublicKeyJWK } from "@/data/db/mongo/models/user"
-import { sessionStore, sessionToCookie } from "@/data/session"
-import { UserRole } from "@/data/types/auth"
-import { isLicenseKey, isValidLicenseKey } from "@/data/licenses"
+import dbConnect from "@/data/api/mongo"
+import User, { UserPublicKeyJWK } from "@/data/api/mongo/models/user"
+import { sessionStore, sessionToCookie } from "@/data/api/session"
+import { UserRole } from "@/types/auth"
+import { isLicenseKey, isValidLicenseKey } from "@/data/api/licenses"
 import { sleep } from "@/utils"
 
 type Data = {

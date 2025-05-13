@@ -1,6 +1,6 @@
 import React from 'react'
 import ChatMessage from './ChatMessage'
-import type { ClientTextChatMessage } from '@/data/types/chats'
+import type { ClientTextChatMessage } from '@/types/chats'
 
 export interface ChatTextMessageProps {
   message: ClientTextChatMessage

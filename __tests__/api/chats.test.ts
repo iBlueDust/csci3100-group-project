@@ -4,12 +4,13 @@
  */
 
 // Silence all console.error calls:
-jest.spyOn(console, 'error').mockImplementation(() => {});
+jest.spyOn(console, 'error').mockImplementation(() => { })
 
 
 // Stub out auth wrapper *before* anything else
 jest.mock('@/utils/api/auth', () => ({
   // protectedRoute simply returns the handler, injecting a fake session
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protectedRoute: (fn: any) => (req: any, res: any) =>
     fn(req, res, {
       data: { userId: 'test-user', roles: ['user'] },
@@ -17,8 +18,8 @@ jest.mock('@/utils/api/auth', () => ({
 }))
 
 // Stub the session store so protectedRoute won't try real Redis/Mongo
-jest.mock('@/data/session', () => {
-  const { InMemorySessionStore } = jest.requireActual('@/data/session')
+jest.mock('@/data/api/session', () => {
+  const { InMemorySessionStore } = jest.requireActual('@/data/api/session')
   return { sessionStore: new InMemorySessionStore() }
 })
 
@@ -33,17 +34,17 @@ jest.mock('next-auth', () => ({
 // Now import everything else
 import { testApiHandler } from 'next-test-api-route-handler'
 import handler from '@/pages/api/chats/index'
-import * as chatQueries from '@/data/db/mongo/queries/chats/getRecentChats'
+import * as chatQueries from '@/data/api/mongo/queries/chats/getRecentChats'
 
 // mock only the DB query
-jest.mock('@/data/db/mongo/queries/chats/getRecentChats')
+jest.mock('@/data/api/mongo/queries/chats/getRecentChats')
 
 describe('GET /api/chats (integration-style)', () => {
   beforeEach(() => jest.resetAllMocks())
 
   it('200 + returns stubbed chats', async () => {
-    const fake = [{ id:'1' }, { id:'2' }]
-    ;(chatQueries.getRecentChats as jest.Mock).mockResolvedValue({ data: fake, meta: {} })
+    const fake = [{ id: '1' }, { id: '2' }]
+      ; (chatQueries.getRecentChats as jest.Mock).mockResolvedValue({ data: fake, meta: {} })
 
     await testApiHandler({
       pagesHandler: handler,   // <-- pagesHandler, not handler
@@ -55,14 +56,14 @@ describe('GET /api/chats (integration-style)', () => {
         expect(body.data).toEqual(fake)
         expect(chatQueries.getRecentChats).toHaveBeenCalledWith(
           'test-user',
-          expect.objectContaining({ skip:0, limit:10 })
+          expect.objectContaining({ skip: 0, limit: 10 })
         )
       },
     })
   })
 
   it('500 on DB error', async () => {
-    ;(chatQueries.getRecentChats as jest.Mock).mockRejectedValue(new Error('boom'))
+    ; (chatQueries.getRecentChats as jest.Mock).mockRejectedValue(new Error('boom'))
 
     await testApiHandler({
       pagesHandler: handler,

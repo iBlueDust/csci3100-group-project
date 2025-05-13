@@ -1,8 +1,8 @@
 import { createClient as createRedisClient } from "redis"
 
-import { UserRole } from "./types/auth"
+import { UserRole } from "@/types/auth"
 import { generateRefreshToken, generateToken, verifyRefreshToken, verifyToken } from "@/utils/api/auth"
-import env from "@/env"
+import env from "@/utils/api/env"
 
 export interface TokenData<TId = string> {
 	userId: TId
@@ -372,6 +372,6 @@ export function sessionToCookie(session: Session): readonly string[] {
 
 // Use InMemorySessionStore in test, RedisSessionStore otherwise
 export const sessionStore =
-  process.env.NODE_ENV === "test"
-    ? new InMemorySessionStore()
-    : new RedisSessionStore()
+	process.env.NODE_ENV === "test"
+		? new InMemorySessionStore()
+		: new RedisSessionStore()

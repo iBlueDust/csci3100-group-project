@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { FiUser, FiShield } from 'react-icons/fi'
 
-import type { PageWithLayout } from '@/data/types/layout'
+import type { PageWithLayout } from '@/types/layout'
 import classNames from 'classnames'
 import DashboardLayout from '@/layouts/DashboardLayout'
 import { useRouter } from 'next/router'

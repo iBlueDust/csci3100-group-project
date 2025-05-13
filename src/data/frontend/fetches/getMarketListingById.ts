@@ -1,5 +1,5 @@
-import type { MarketListingSearchResult } from "@/data/db/mongo/queries/market"
-import type { Api } from "@/utils/frontend/api"
+import type { MarketListingSearchResult } from "@/data/api/mongo/queries/market"
+import type { Api } from "@/hooks/useApi"
 
 export async function getMarketListingById(
 	api: Api,

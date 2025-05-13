@@ -1,6 +1,6 @@
-import { EncryptedClientChatMessage } from "@/data/types/chats"
-import { PaginatedResult, PaginationOptions } from "@/data/types/common"
-import { Api } from "@/utils/frontend/api"
+import { EncryptedClientChatMessage } from "@/types/chats"
+import { PaginatedResult, PaginationOptions } from "@/types/common"
+import { Api } from "@/hooks/useApi"
 
 export async function getChatMessages(
 	api: Api,

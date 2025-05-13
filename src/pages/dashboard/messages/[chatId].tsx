@@ -7,12 +7,12 @@ dayjs.extend(relativeTime)
 
 import MessagesLayout from '@/layouts/MessagesLayout'
 import ChatBox from '@/components/chat/ChatBox'
-import { QueryKeys } from '@/data/types/queries'
+import { QueryKeys } from '@/types/queries'
 import { queryChatById } from '@/data/frontend/queries/queryChatById'
-import type { PageWithLayout } from '@/data/types/layout'
-import { PaginatedResult } from '@/data/types/common'
-import { ClientChat } from '@/data/types/chats'
-import { useApi } from '@/utils/frontend/api'
+import type { PageWithLayout } from '@/types/layout'
+import { PaginatedResult } from '@/types/common'
+import { ClientChat } from '@/types/chats'
+import { useApi } from '@/hooks/useApi'
 import { deleteChat } from '@/data/frontend/mutations/deleteChat'
 
 const MessagesHome: PageWithLayout = () => {

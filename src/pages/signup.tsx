@@ -8,9 +8,9 @@ import { FiInfo } from 'react-icons/fi'
 import { geistMono, geistSans } from '@/styles/fonts'
 import Input from '@/components/form/Input'
 import SubmitButton from '@/components/form/SubmitButton'
-import { PageWithLayout } from '@/data/types/layout'
+import { PageWithLayout } from '@/types/layout'
 import { SignUpError, SignUpErrorType, useSignUp } from '@/hooks/useSignUp'
-import { ApiProvider, useApi } from '@/utils/frontend/api'
+import { ApiProvider, useApi } from '@/hooks/useApi'
 
 const formSchema = Joi.object({
   username: Joi.string()

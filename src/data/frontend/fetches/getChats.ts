@@ -1,6 +1,6 @@
-import type { EncryptedClientChat } from "@/data/types/chats"
-import type { PaginatedResult } from "@/data/types/common"
-import type { Api } from "@/utils/frontend/api"
+import type { EncryptedClientChat } from "@/types/chats"
+import type { PaginatedResult } from "@/types/common"
+import type { Api } from "@/hooks/useApi"
 
 export async function getChats(
 	api: Api,

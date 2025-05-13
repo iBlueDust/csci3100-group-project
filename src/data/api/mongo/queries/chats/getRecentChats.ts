@@ -1,10 +1,10 @@
 import mongoose from 'mongoose'
 
-import type { PaginatedResult, PaginationOptions } from '@/data/types/common'
-import dbConnect from '@/data/db/mongo'
-import Chat from '@/data/db/mongo/models/chat'
-import ChatMessage from '@/data/db/mongo/models/chat-message'
-import { ChatWithPopulatedFields } from '@/data/types/chats'
+import type { PaginatedResult, PaginationOptions } from '@/types/common'
+import dbConnect from '@/data/api/mongo'
+import Chat from '@/data/api/mongo/models/chat'
+import ChatMessage from '@/data/api/mongo/models/chat-message'
+import { ChatWithPopulatedFields } from '@/types/chats'
 import { mergeObjects } from '@/utils'
 import { makeChatClientFriendly } from '.'
 

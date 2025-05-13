@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query"
 
-import { ab2base64 } from "@/utils"
-import type { Api } from "@/utils/frontend/api"
+import { ab2base64 } from "@/utils/frontend"
+import type { Api } from "@/hooks/useApi"
 import {
 	exportKey,
 	encryptUserEncryptionKey,

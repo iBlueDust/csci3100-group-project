@@ -1,4 +1,4 @@
-import type { Api } from "@/utils/frontend/api"
+import type { Api } from "@/hooks/useApi"
 
 type PostChatPayload =
 	{ recipient: string, recipientUsername?: never }

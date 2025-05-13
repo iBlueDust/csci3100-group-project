@@ -1,4 +1,4 @@
-import type { Api } from "@/utils/frontend/api"
+import type { Api } from "@/hooks/useApi"
 
 export interface PatchMarketListingPayload {
 	title?: string

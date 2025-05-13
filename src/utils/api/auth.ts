@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import mongoose from 'mongoose'
 import type { NextApiRequest, NextApiResponse } from "next"
 
-import type { SessionStore, TokenData } from '@/data/session'
+import type { SessionStore, TokenData } from '@/data/api/session'
 
 const TOKEN_SECRET = process.env.AUTH_TOKEN_SECRET ?? crypto.randomBytes(32)
 const REFRESH_TOKEN_SECRET = process.env.AUTH_REFRESH_TOKEN_SECRET ?? crypto.randomBytes(32)

@@ -6,7 +6,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
+import type { MarketListingSearchResult } from '@/data/api/mongo/queries/market'
 import { formatCurrency } from '@/utils/format'
 
 export interface MarketListingGridListItemProps {

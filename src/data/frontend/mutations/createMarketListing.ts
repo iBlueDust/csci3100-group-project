@@ -1,5 +1,5 @@
-import type { Api } from "@/utils/frontend/api"
 import { postMarketListing, PostMarketListingPayload } from "@/data/frontend/fetches/postMarketListing"
+import type { Api } from "@/hooks/useApi"
 
 export async function createMarketListing(
 	api: Api,

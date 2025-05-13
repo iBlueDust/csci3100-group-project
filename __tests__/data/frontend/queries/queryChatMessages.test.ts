@@ -1,8 +1,8 @@
 import { queryChatMessages } from "@/data/frontend/queries/queryChatMessages"
 import { decryptChatMessages } from "@/utils/frontend/e2e/chat"
-import type { Api } from "@/utils/frontend/api"
-import type { EncryptedClientChatMessage, ClientChatMessage } from "@/data/types/chats"
-import type { PaginatedResult, PaginationOptions } from "@/data/types/common"
+import type { Api } from "@/hooks/useApi"
+import type { EncryptedClientChatMessage, ClientChatMessage } from "@/types/chats"
+import type { PaginatedResult, PaginationOptions } from "@/types/common"
 
 jest.mock("@/utils/frontend/e2e/chat")
 

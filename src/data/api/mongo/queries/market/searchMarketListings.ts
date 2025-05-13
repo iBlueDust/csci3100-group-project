@@ -1,8 +1,8 @@
 import type { PipelineStage } from 'mongoose'
 
-import MarketListing from '@/data/db/mongo/models/market-listing'
-import User from '@/data/db/mongo/models/user'
-import type { PaginatedResult } from '@/data/types/common'
+import MarketListing from '@/data/api/mongo/models/market-listing'
+import User from '@/data/api/mongo/models/user'
+import type { PaginatedResult } from '@/types/common'
 import {
 	type MarketListingSearchResult,
 	makeMarketListingClientFriendly,

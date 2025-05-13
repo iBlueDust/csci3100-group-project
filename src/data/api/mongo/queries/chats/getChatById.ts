@@ -1,8 +1,8 @@
 import mongoose from 'mongoose'
 
-import Chat from '@/data/db/mongo/models/chat'
-import ChatMessage from '@/data/db/mongo/models/chat-message'
-import { ChatWithPopulatedFields } from '@/data/types/chats'
+import Chat from '@/data/api/mongo/models/chat'
+import ChatMessage from '@/data/api/mongo/models/chat-message'
+import { ChatWithPopulatedFields } from '@/types/chats'
 import { makeChatClientFriendly } from '.'
 
 

@@ -1,17 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import Joi from 'joi'
 
-import MarketListing from '@/data/db/mongo/models/market-listing'
-import dbConnect from '@/data/db/mongo'
-import { Error as ApiError, PaginatedResult } from '@/data/types/common'
-import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
-import { searchMarketListings } from '@/data/db/mongo/queries/market/searchMarketListings'
-import { sessionStore } from '@/data/session'
-import minioClient, { putManyObjects } from '@/data/db/minio'
-import { isSupportedImageMimeType } from '@/utils'
+import MarketListing from '@/data/api/mongo/models/market-listing'
+import dbConnect from '@/data/api/mongo'
+import { Error as ApiError, PaginatedResult } from '@/types/common'
+import type { MarketListingSearchResult } from '@/data/api/mongo/queries/market'
+import { searchMarketListings } from '@/data/api/mongo/queries/market/searchMarketListings'
+import { sessionStore } from '@/data/api/session'
+import minioClient, { putManyObjects } from '@/data/api/minio'
+import { isSupportedImageMimeType } from '@/utils/frontend'
 import { parseFormDataBody, File, generateMinioObjectName, assertIsObjectId } from '@/utils/api'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
-import env from '@/env'
+import env from '@/utils/api/env'
 
 type GetData = PaginatedResult<MarketListingSearchResult>
 

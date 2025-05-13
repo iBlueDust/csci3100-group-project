@@ -5,7 +5,7 @@ import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 dayjs.extend(customParseFormat)
 
-import { exportKey, importKey } from './e2e'
+import { exportKey, importKey } from '../utils/frontend/e2e'
 
 const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || 'http://localhost:3000/api'

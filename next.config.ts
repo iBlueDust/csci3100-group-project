@@ -1,4 +1,4 @@
-import env from "@/env"
+import env from "@/utils/api/env"
 import type { NextConfig } from "next"
 
 const minioPublicUrl = new URL(env.MINIO_PUBLIC_ENDPOINT)

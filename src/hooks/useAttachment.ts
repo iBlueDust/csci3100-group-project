@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import type { ClientAttachmentChatMessage } from "@/data/types/chats"
-import { str2ab, getExtension, extensionToMimeType } from '@/utils'
+import type { ClientAttachmentChatMessage } from "@/types/chats"
+import { str2ab, getExtension, extensionToMimeType } from '@/utils/frontend'
 import { decryptMessage } from '@/utils/frontend/e2e'
 
 

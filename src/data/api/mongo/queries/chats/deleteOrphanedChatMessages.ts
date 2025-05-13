@@ -1,8 +1,8 @@
-import Chat from '@/data/db/mongo/models/chat'
-import ChatMessage from '@/data/db/mongo/models/chat-message'
-import { ChatMessageType } from "@/data/types/chats"
-import env from "@/env"
-import minioClient from "@/data/db/minio"
+import Chat from '@/data/api/mongo/models/chat'
+import ChatMessage from '@/data/api/mongo/models/chat-message'
+import { ChatMessageType } from "@/types/chats"
+import env from "@/utils/api/env"
+import minioClient from "@/data/api/minio"
 
 export const deleteOrphanedChatMessages = async () => {
 	const messages = await ChatMessage.aggregate([

@@ -5,10 +5,10 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import { ClientChat } from '@/data/types/chats'
+import { ClientChat } from '@/types/chats'
 import BasicSpinner from '@/components/BasicSpinner'
 import ChatThread from '@/components/chat/ChatThread'
-import { useApi } from '@/utils/frontend/api'
+import { useApi } from '@/hooks/useApi'
 import { useChatMessages } from '@/hooks/useChatMessages'
 
 export interface ChatBoxProps {

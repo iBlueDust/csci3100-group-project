@@ -1,11 +1,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next"
 
-import dbConnect from "@/data/db/mongo"
-import User from "@/data/db/mongo/models/user"
-import { sessionStore, sessionToCookie } from "@/data/session"
-import { UserRole } from "@/data/types/auth"
-import env from "@/env"
+import dbConnect from "@/data/api/mongo"
+import User from "@/data/api/mongo/models/user"
+import { sessionStore, sessionToCookie } from "@/data/api/session"
+import { UserRole } from "@/types/auth"
+import env from "@/utils/api/env"
 
 type Data = {
 	id: string

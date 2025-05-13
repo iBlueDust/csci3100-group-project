@@ -10,7 +10,7 @@ import dynamic from 'next/dynamic'
 import classNames from 'classnames'
 import TextareaAutosize from 'react-textarea-autosize'
 
-import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
+import type { MarketListingSearchResult } from '@/data/api/mongo/queries/market'
 const AttachmentSendPreview = dynamic(
   () => import('@/components/chat/AttachmentSendPreview'),
   { ssr: false },

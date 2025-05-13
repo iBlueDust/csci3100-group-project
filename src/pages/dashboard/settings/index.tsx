@@ -3,9 +3,9 @@ import React from 'react'
 import SubmitButton from '@/components/form/SubmitButton'
 import Input from '@/components/form/Input'
 import TextArea from '@/components/form/TextArea'
-import { PageWithLayout } from '@/data/types/layout'
+import { PageWithLayout } from '@/types/layout'
 import SettingsLayout from '@/layouts/SettingsLayout'
-import { useApi } from '@/utils/frontend/api'
+import { useApi } from '@/hooks/useApi'
 
 const SettingsProfilePage: PageWithLayout = () => {
   const api = useApi()

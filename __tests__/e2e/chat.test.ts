@@ -1,5 +1,5 @@
 import { PostChatAttachmentMessagePayload, PostChatMarketListingMessagePayload, PostChatTextMessagePayload } from "@/data/frontend/fetches/postChatMessage"
-import { ChatMessageType, EncryptedClientAttachmentChatMessage, EncryptedClientChat, EncryptedClientTextChatMessage } from "@/data/types/chats"
+import { ChatMessageType, EncryptedClientAttachmentChatMessage, EncryptedClientChat, EncryptedClientTextChatMessage } from "@/types/chats"
 import { decryptMessage, deriveKey } from "@/utils/frontend/e2e"
 import { decryptChat, decryptChats, encryptChatMessage } from "@/utils/frontend/e2e/chat"
 

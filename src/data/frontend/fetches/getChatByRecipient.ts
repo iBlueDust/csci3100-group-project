@@ -1,5 +1,5 @@
-import type { EncryptedClientChat } from "@/data/types/chats"
-import type { Api } from "@/utils/frontend/api"
+import type { EncryptedClientChat } from "@/types/chats"
+import type { Api } from "@/hooks/useApi"
 
 export async function getChatByRecipient(
 	api: Api,

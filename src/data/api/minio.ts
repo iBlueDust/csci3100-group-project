@@ -1,5 +1,6 @@
-import { zip } from '@/utils'
 import * as Minio from 'minio'
+
+import { zip } from '@/utils'
 
 const minioClient = new Minio.Client({
 	endPoint: process.env.MINIO_HOST ?? 'localhost',

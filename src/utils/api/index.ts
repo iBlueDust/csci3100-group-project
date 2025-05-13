@@ -3,7 +3,7 @@ import type { NextApiRequest } from "next"
 import Busboy from "@fastify/busboy"
 import { v4 as uuid } from "uuid"
 
-import { getExtension } from ".."
+import { getExtension } from "../frontend"
 
 export async function parseJsonBody<T>(
 	req: NextApiRequest

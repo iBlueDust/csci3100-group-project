@@ -1,5 +1,5 @@
 import { queryMarketListings } from "@/data/frontend/queries/queryMarketListings"
-import type { Api } from "@/utils/frontend/api"
+import type { Api } from "@/hooks/useApi"
 
 describe("queryMarketListings / getMarketListings", () => {
 	it("calls api.fetch", () => {

@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 
-import { isDev } from "@/env"
+import { isDev } from "@/utils/api/env"
 
 
 const ChatSchema = new mongoose.Schema({

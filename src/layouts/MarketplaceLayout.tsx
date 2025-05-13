@@ -19,13 +19,13 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import { PageWithLayout } from '@/data/types/layout'
-import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
-import type { SearchMarketListingsOptions } from '@/data/db/mongo/queries/market/searchMarketListings'
+import { PageWithLayout } from '@/types/layout'
+import type { MarketListingSearchResult } from '@/data/api/mongo/queries/market'
+import type { SearchMarketListingsOptions } from '@/data/api/mongo/queries/market/searchMarketListings'
 import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
-import { QueryKeys } from '@/data/types/queries'
+import { QueryKeys } from '@/types/queries'
 import { countries, getFeaturedCountries } from '@/utils/countries'
-import { queryClient, useApi } from '@/utils/frontend/api'
+import { queryClient, useApi } from '@/hooks/useApi'
 import {
   HoveringChatBoxProvider,
   useHoveringChatBox,

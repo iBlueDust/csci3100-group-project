@@ -1,6 +1,6 @@
 import Head from 'next/head'
 
-import type { ExtendedAppProps } from '@/data/types/layout'
+import type { ExtendedAppProps } from '@/types/layout'
 import '@/styles/globals.css'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
