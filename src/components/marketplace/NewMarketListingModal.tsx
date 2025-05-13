@@ -40,6 +40,7 @@ const NewMarketListingModal: React.FC<NewMarketListingModalProps> = ({
     isSubmitting,
     error,
     handleChange,
+    handleCategoryChange,
     handleCountryChange,
     handlePriceInCentsChange,
     handleImageChange,
@@ -125,10 +126,10 @@ const NewMarketListingModal: React.FC<NewMarketListingModalProps> = ({
           </div>
 
           <Select
-            name='category'
+            name='categories'
             label='Category'
             value={formData.categories?.[0]}
-            onChange={handleChange}
+            onChange={handleCategoryChange}
             options={categories}
             required
           />

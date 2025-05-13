@@ -52,20 +52,31 @@ export const useListingForm = ({
   }
 
   // Handle form field changes
-  const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value.split(',').map(c => c.trim().toLowerCase())
+      categories: value.split(',').map(c => c.trim().toLowerCase())
+    }))
+  }
+
+  // Handle form field changes
+  const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      countries: value.split(',').map(c => c.trim().toLowerCase())
     }))
   }
 
   // Handle form field changes
   const handlePriceInCentsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { value } = e.target
+    const EPSILON = 1e-6 // Floating point arithmetic error happens here
+    const priceInCents = Math.floor(parseFloat(value) * 100 + EPSILON)
     setFormData(prev => ({
       ...prev,
-      priceInCents: Math.floor(parseFloat(value) * 100)
+      priceInCents
     }))
   }
 
@@ -170,6 +181,7 @@ export const useListingForm = ({
     isSubmitting,
     error,
     handleChange,
+    handleCategoryChange,
     handleCountryChange,
     handlePriceInCentsChange,
     handleImageChange,
