@@ -1,9 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 
-
 const licenseFileContents = fs.readFileSync(
-	path.join(__dirname, '../../../../.licenses'),
+	path.join(__dirname, '../../../../../.licenses'),
 	{ encoding: 'utf-8' },
 )
 
