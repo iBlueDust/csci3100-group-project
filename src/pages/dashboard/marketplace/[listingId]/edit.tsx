@@ -46,8 +46,14 @@ const MarketplaceEditListingPage: PageWithLayout = () => {
   })
 
   const handleSuccess = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: [QueryKeys.MARKET_LISTINGS],
+    })
+    queryClient.invalidateQueries({
+      queryKey: [QueryKeys.MARKET_LISTINGS, listingId],
+    })
     router.back()
-  }, [router])
+  }, [router, queryClient, listingId])
 
   return (
     listing && (
