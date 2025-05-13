@@ -1,9 +1,9 @@
 // import { testApiHandler } from 'next-test-api-route-handler'
 // import handler from '@/pages/api/market/listings'
 // import { parseFormDataBody } from '@/utils/api'
-// import { putManyObjects } from '@/data/db/minio'
-// import dbConnect from '@/data/db/mongo'
-// import MarketListing from '@/data/db/mongo/models/market-listing'
+// import { putManyObjects } from '@/data/api/minio'
+// import dbConnect from '@/data/api/mongo'
+// import MarketListing from '@/data/api/mongo/models/market-listing'
 
 // // 1) Mock everything under utils/api
 // jest.mock('@/utils/api', () => ({
@@ -13,9 +13,9 @@
 // }))
 
 // // 2) Mock Minio + Mongo + Mongoose model
-// jest.mock('@/data/db/minio',        () => ({ putManyObjects: jest.fn() }))
-// jest.mock('@/data/db/mongo',        () => jest.fn())
-// jest.mock('@/data/db/mongo/models/market-listing', () => {
+// jest.mock('@/data/api/minio',        () => ({ putManyObjects: jest.fn() }))
+// jest.mock('@/data/api/mongo',        () => jest.fn())
+// jest.mock('@/data/api/mongo/models/market-listing', () => {
 //   function ML(this: any) { /* pretend it got _id from Mongo */ }
 //   ML.prototype.save = jest.fn().mockResolvedValue(undefined)
 //   // ensure listing.id exists
@@ -102,9 +102,8 @@
 import { testApiHandler } from 'next-test-api-route-handler'
 import handler from '@/pages/api/market/listings'
 import { parseFormDataBody } from '@/utils/api'
-import { putManyObjects } from '@/data/db/minio'
-import dbConnect from '@/data/db/mongo'
-import MarketListing from '@/data/db/mongo/models/market-listing'
+import { putManyObjects } from '@/data/api/minio'
+import dbConnect from '@/data/api/mongo'
 
 // 1) Mock utils/api + helpers
 jest.mock('@/utils/api', () => ({
@@ -114,10 +113,11 @@ jest.mock('@/utils/api', () => ({
 }))
 
 // 2) Mock Minio + Mongo + Mongoose model
-jest.mock('@/data/db/minio',        () => ({ putManyObjects: jest.fn() }))
-jest.mock('@/data/db/mongo',        () => jest.fn())
-jest.mock('@/data/db/mongo/models/market-listing', () => {
-  function ML(this: any) {}
+jest.mock('@/data/api/minio', () => ({ putManyObjects: jest.fn() }))
+jest.mock('@/data/api/mongo', () => jest.fn())
+jest.mock('@/data/api/mongo/models/market-listing', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function ML(this: any) { }
   ML.prototype.save = jest.fn().mockResolvedValue(undefined)
   Object.defineProperty(ML.prototype, 'id', { get: () => 'FAKE_ID' })
   return ML
@@ -125,29 +125,30 @@ jest.mock('@/data/db/mongo/models/market-listing', () => {
 
 // 3) Bypass auth
 jest.mock('@/utils/api/auth', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protectedRoute: (fn: any) => (req: any, res: any) =>
     fn(req, res, { data: { userId: 'u1', roles: ['user'] } }),
 }))
 
 describe('POST /api/market/listings', () => {
-    beforeAll(() => {
+  beforeAll(() => {
     // suppress console output during tests
-    jest.spyOn(console, 'warn').mockImplementation(() => {});
-    jest.spyOn(console, 'log' ).mockImplementation(() => {});
-  });
+    jest.spyOn(console, 'warn').mockImplementation(() => { })
+    jest.spyOn(console, 'log').mockImplementation(() => { })
+  })
 
   afterAll(() => {
     // restore the original implementations
     (console.warn as jest.Mock).mockRestore();
-    (console.log  as jest.Mock).mockRestore();
-  });
+    (console.log as jest.Mock).mockRestore()
+  })
 
   beforeEach(() => {
     jest.resetAllMocks()
   })
 
   it('returns 400 on invalid form', async () => {
-    ;(parseFormDataBody as jest.Mock).mockResolvedValueOnce({
+    ; (parseFormDataBody as jest.Mock).mockResolvedValueOnce({
       fields: {},
       error: new Error('parse failed'),
     })
@@ -169,27 +170,27 @@ describe('POST /api/market/listings', () => {
 
   it('returns 200 + new id when successful', async () => {
     // a) parsing succeeds
-    ;(parseFormDataBody as jest.Mock).mockResolvedValueOnce({
+    ; (parseFormDataBody as jest.Mock).mockResolvedValueOnce({
       fields: {
-        title:       ['My item'],
+        title: ['My item'],
         description: ['Desc'],
         pictures: [{
-          data:     Buffer.from(''),
-          size:     123,
+          data: Buffer.from(''),
+          size: 123,
           filename: 'a.png',
           mimetype: 'image/png',
           encoding: '7bit',
         }],
         priceInCents: ['500'],
-        countries:    ['us'],
-        categories:   ['books'],
+        countries: ['us'],
+        categories: ['books'],
       },
       error: null,
     })
 
-    // b) Minio + DB connect succeed
-    ;(putManyObjects as jest.Mock).mockResolvedValueOnce({ success: true })
-    ;(dbConnect      as jest.Mock).mockResolvedValueOnce(undefined)
+      // b) Minio + DB connect succeed
+      ; (putManyObjects as jest.Mock).mockResolvedValueOnce({ success: true })
+      ; (dbConnect as jest.Mock).mockResolvedValueOnce(undefined)
 
     // c) save() stub and id is always "FAKE_ID"
 

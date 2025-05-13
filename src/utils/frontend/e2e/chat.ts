@@ -4,7 +4,7 @@ import {
 	ClientChatMessage,
 	EncryptedClientChat,
 	EncryptedClientChatMessage,
-} from "@/data/types/chats"
+} from "@/types/chats"
 import {
 	EncryptedPostChatMessagePayload,
 	PostChatAttachmentMessagePayload,
@@ -12,7 +12,7 @@ import {
 	PostChatMessagePayload,
 	PostChatTextMessagePayload,
 } from "@/data/frontend/fetches/postChatMessage"
-import { ab2base64, str2ab } from "@/utils"
+import { ab2base64, str2ab } from "@/utils/frontend"
 import { decryptMessage, deriveKey, encryptMessage, importKey } from "."
 
 

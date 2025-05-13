@@ -1,8 +1,8 @@
 import crypto from "crypto"
 import mongoose from "mongoose"
 
-import { UserRole } from "@/data/types/auth"
-import { isDev } from "@/env"
+import { UserRole } from "@/types/auth"
+import { isDev } from "@/utils/api/env"
 
 function hash(value: string | Buffer, secret: string | Buffer) {
 	return crypto.createHmac('sha256', secret).update(value).digest()

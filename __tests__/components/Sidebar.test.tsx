@@ -17,7 +17,7 @@ const api = {
   setTokenExpiresAt: jest.fn(),
   setUek: jest.fn(),
 }
-jest.mock('@/utils/frontend/api', () => ({
+jest.mock('@/hooks/useApi', () => ({
   useApi: () => api,
 }))
 

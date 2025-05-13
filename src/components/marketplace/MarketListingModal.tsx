@@ -3,7 +3,7 @@ import { FiEdit, FiHeart, FiMessageCircle, FiTrash2, FiX } from 'react-icons/fi'
 import dayjs from 'dayjs'
 import Link from 'next/link'
 
-import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
+import type { MarketListingSearchResult } from '@/data/api/mongo/queries/market'
 import { formatCurrency } from '@/utils/format'
 import Image from 'next/image'
 import SubmitButton from '../form/SubmitButton'

@@ -1,6 +1,6 @@
 import type mongoose from 'mongoose'
 
-import MarketListing from '@/data/db/mongo/models/market-listing'
+import MarketListing from '@/data/api/mongo/models/market-listing'
 import {
 	type MarketListingSearchResult,
 	makeMarketListingClientFriendly,

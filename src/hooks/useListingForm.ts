@@ -1,18 +1,18 @@
 import { useCallback, useState } from 'react'
 
-import { ListingFormData } from '@/types/marketplace'
+import type { MarketListingFormData } from '@/components/marketplace/NewMarketListingModal'
 import { createMarketListing } from '@/data/frontend/mutations/createMarketListing'
-import env from '@/utils/frontend/env'
-import { useApi } from '@/utils/frontend/api'
 import { PostMarketListingPayload } from '@/data/frontend/fetches/postMarketListing'
 import { updateMarketListing } from '@/data/frontend/mutations/updateMarketListing'
 import { PatchMarketListingPayload } from '@/data/frontend/fetches/patchMarketListing'
+import { useApi } from '@/hooks/useApi'
+import env from '@/utils/frontend/env'
 
 type UseListingFormProps = {
   onSuccess?: (id: string) => void
 } & (
     {
-      initialData?: ListingFormData
+      initialData?: MarketListingFormData
       listingId?: string
     }
     |
@@ -30,12 +30,12 @@ export const useListingForm = ({
   const api = useApi()
 
   // Initialize with default values or provided initialData
-  const [formData, setFormData] = useState<ListingFormData>(() => ({
+  const [formData, setFormData] = useState<MarketListingFormData>(() => ({
     title: initialData?.title || '',
     description: initialData?.description || '',
     priceInCents: initialData?.priceInCents || 0,
     pictures: initialData?.pictures || [],
-    category: initialData?.category || 'jade',
+    categories: initialData?.categories || ['jade'],
     countries: initialData?.countries || ['hk'],
   }))
 
@@ -127,7 +127,7 @@ export const useListingForm = ({
       if (!initialData || !setEqual(formData.countries, initialData.countries))
         payload.countries = formData.countries
 
-      payload.categories = formData.category ? [formData.category] : []
+      payload.categories = formData.categories
 
       try {
         result = await updateMarketListing(api, listingId, payload)
@@ -141,7 +141,7 @@ export const useListingForm = ({
     } else {
       const payload: PostMarketListingPayload = {
         ...formData,
-        categories: formData.category ? [formData.category] : [],
+        categories: formData.categories,
         pictures: formData.pictures as unknown as File[],
       }
 

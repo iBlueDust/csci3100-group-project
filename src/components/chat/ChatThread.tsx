@@ -1,11 +1,11 @@
 import React, { useCallback, useLayoutEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 
-import { ChatMessageType, ClientChatMessage } from '@/data/types/chats'
-import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
+import { ChatMessageType, ClientChatMessage } from '@/types/chats'
+import { MarketListingSearchResult } from '@/data/api/mongo/queries/market'
 import { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
-import { isSupportedImage } from '@/utils'
-import { useApi } from '@/utils/frontend/api'
+import { isSupportedImage } from '@/utils/frontend'
+import { useApi } from '@/hooks/useApi'
 
 import ChatInput from './ChatInput'
 import ChatTextMessage from './ChatTextMessage'

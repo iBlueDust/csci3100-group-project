@@ -1,7 +1,7 @@
 // From https://nextjs.org/docs/app/building-your-application/routing/middleware
 
 import { NextRequest, NextResponse } from 'next/server'
-import { isDev } from './env'
+import { isDev } from './utils/api/env'
 
 const allowedOrigins = isDev ? ['http://localhost:3000'] : []
 

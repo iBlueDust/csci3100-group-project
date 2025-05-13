@@ -3,7 +3,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
 import MarketplaceLayout from '@/layouts/MarketplaceLayout'
-import { PageWithLayout } from '@/data/types/layout'
+import { PageWithLayout } from '@/types/layout'
 
 const MarketplaceHome: PageWithLayout = () => {
   return ''

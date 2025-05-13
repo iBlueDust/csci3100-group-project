@@ -1,6 +1,6 @@
-import type { ClientChat } from "@/data/types/chats"
+import type { ClientChat } from "@/types/chats"
 import { getChatById } from "@/data/frontend/fetches/getChatById"
-import type { Api } from "@/utils/frontend/api"
+import type { Api } from "@/hooks/useApi"
 import { decryptChat } from "@/utils/frontend/e2e/chat"
 
 export async function queryChatById(

@@ -7,11 +7,11 @@ dayjs.extend(relativeTime)
 
 import MarketplaceLayout from '@/layouts/MarketplaceLayout'
 import EditMarketListingModal from '@/components/marketplace/EditMarketListingModal'
-import { PageWithLayout } from '@/data/types/layout'
-import { QueryKeys } from '@/data/types/queries'
-import { useApi } from '@/utils/frontend/api'
-import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
-import { PaginatedResult } from '@/data/types/common'
+import { PageWithLayout } from '@/types/layout'
+import { QueryKeys } from '@/types/queries'
+import { useApi } from '@/hooks/useApi'
+import { MarketListingSearchResult } from '@/data/api/mongo/queries/market'
+import { PaginatedResult } from '@/types/common'
 import { queryMarketListingById } from '@/data/frontend/queries/queryMarketListingById'
 
 const MarketplaceEditListingPage: PageWithLayout = () => {

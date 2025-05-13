@@ -3,8 +3,8 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 
 import SettingsLayout from '@/layouts/SettingsLayout'
-import { PageWithLayout } from '@/data/types/layout'
-import { useApi } from '@/utils/frontend/api'
+import { PageWithLayout } from '@/types/layout'
+import { useApi } from '@/hooks/useApi'
 import { deleteMyAccount } from '@/data/frontend/mutations/deleteMyAccount'
 
 const DeleteAccountModal = dynamic(

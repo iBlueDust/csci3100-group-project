@@ -1,6 +1,6 @@
 import { queryChatById } from "@/data/frontend/queries/queryChatById"
-import type { Api } from "@/utils/frontend/api"
-import type { ClientChat, EncryptedClientChat } from "@/data/types/chats"
+import type { Api } from "@/hooks/useApi"
+import type { ClientChat, EncryptedClientChat } from "@/types/chats"
 
 jest.mock("@/data/frontend/fetches/getChatById")
 jest.mock("@/utils/frontend/e2e/chat")

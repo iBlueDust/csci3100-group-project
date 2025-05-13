@@ -1,5 +1,5 @@
 import { queryMarketListingById } from "@/data/frontend/queries/queryMarketListingById"
-import { Api } from "@/utils/frontend/api"
+import type { Api } from "@/hooks/useApi"
 
 describe("queryMarketListingById", () => {
 	const TEST_ID = "abc123"

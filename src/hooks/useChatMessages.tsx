@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { ClientChatMessage } from '@/data/types/chats'
+import { ClientChatMessage } from '@/types/chats'
 import { PostChatMessagePayload } from '@/data/frontend/fetches/postChatMessage'
-import { QueryKeys } from '@/data/types/queries'
+import { QueryKeys } from '@/types/queries'
 import { sendChatMessage } from '@/data/frontend/mutations/sendChatMessage'
 import { isDev } from '@/utils/frontend/env'
 import { queryChatMessages } from '@/data/frontend/queries/queryChatMessages'
-import { PaginatedResult } from '@/data/types/common'
-import { Api } from '@/utils/frontend/api'
+import { PaginatedResult } from '@/types/common'
+import { Api } from '@/hooks/useApi'
 import { useCallback } from 'react'
 
 export const useChatMessages = (

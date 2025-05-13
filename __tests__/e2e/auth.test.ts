@@ -1,16 +1,14 @@
-import { toPasskey } from '@/utils/frontend/e2e/auth'
+import { ab2base64 } from '@/utils/frontend'
 import { hash } from '@/utils/frontend/e2e'
-import { ab2base64 } from '@/utils'
+import { toPasskey } from '@/utils/frontend/e2e/auth'
 
 // src/utils/frontend/e2e/auth.test.ts
 
 
+jest.mock('@/utils/frontend', () => ({ ab2base64: jest.fn() }))
+
 jest.mock('@/utils/frontend/e2e/hash', () => ({
 	hash: jest.fn(),
-}))
-
-jest.mock('@/utils', () => ({
-	ab2base64: jest.fn(),
 }))
 
 describe('toPasskey', () => {

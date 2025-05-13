@@ -3,7 +3,7 @@ import React, { useCallback, useState } from 'react'
 import SubmitButton from '@/components/form/SubmitButton'
 import Input from '@/components/form/Input'
 import { createNewChatByUsername } from '@/data/frontend/mutations/createNewChatByUsername'
-import { useApi } from '@/utils/frontend/api'
+import { useApi } from '@/hooks/useApi'
 
 export interface NewChatModalProps {
   onSubmit?: (recipient: string) => void

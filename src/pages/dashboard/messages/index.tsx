@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import type { PageWithLayout } from '@/data/types/layout'
+import type { PageWithLayout } from '@/types/layout'
 import MessagesLayout from '@/layouts/MessagesLayout'
 
 const MessagesHome: PageWithLayout = () => {

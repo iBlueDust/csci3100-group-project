@@ -1,8 +1,8 @@
 import { decryptChatMessages } from "@/utils/frontend/e2e/chat"
 import { getChatMessages } from "@/data/frontend/fetches/getChatMessages"
-import type { ClientChatMessage } from "@/data/types/chats"
-import type { PaginatedResult, PaginationOptions } from "@/data/types/common"
-import type { Api } from "@/utils/frontend/api"
+import type { ClientChatMessage } from "@/types/chats"
+import type { PaginatedResult, PaginationOptions } from "@/types/common"
+import type { Api } from "@/hooks/useApi"
 
 export async function queryChatMessages(
 	api: Api,

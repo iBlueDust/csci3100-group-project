@@ -1,7 +1,7 @@
 import mongoose from "mongoose"
 
-import { ChatMessageType } from "@/data/types/chats"
-import { isDev } from "@/env"
+import { ChatMessageType } from "@/types/chats"
+import { isDev } from "@/utils/api/env"
 
 const ChatMessageSchema = new mongoose.Schema({
 	chatId: {

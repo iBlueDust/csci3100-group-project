@@ -1,6 +1,6 @@
 import React from 'react'
 
-import type { ClientMarketListingChatMessage } from '@/data/types/chats'
+import type { ClientMarketListingChatMessage } from '@/types/chats'
 import ChatMessage from './ChatMessage'
 
 export interface ShimmerChatMarketListingMessageProps {

@@ -2,7 +2,7 @@ import React from 'react'
 import { FiDownload, FiFile } from 'react-icons/fi'
 import classNames from 'classnames'
 
-import type { ClientAttachmentChatMessage } from '@/data/types/chats'
+import type { ClientAttachmentChatMessage } from '@/types/chats'
 import BasicSpinner from '@/components/BasicSpinner'
 import ChatMessage from '@/components/chat/ChatMessage'
 import { useAttachment } from '@/hooks/useAttachment'

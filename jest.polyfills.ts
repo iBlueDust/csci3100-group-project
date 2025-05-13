@@ -13,6 +13,7 @@ Object.defineProperty(globalThis.crypto, 'subtle', { value: webcrypto.subtle })
 if (window) {
 	Object.defineProperty(window, 'crypto', { value: webcrypto })
 	Object.defineProperty(window.crypto, 'subtle', { value: webcrypto.subtle })
+	Object.defineProperty(window, 'alert', { value: () => { } })
 }
 
 globalThis.fetch = fetch

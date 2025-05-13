@@ -1,7 +1,7 @@
 import { queryChats } from "@/data/frontend/queries/queryChats"
-import type { Api } from "@/utils/frontend/api"
-import type { ClientChat, EncryptedClientChat } from "@/data/types/chats"
-import type { PaginatedResult } from "@/data/types/common"
+import type { Api } from "@/hooks/useApi"
+import type { ClientChat, EncryptedClientChat } from "@/types/chats"
+import type { PaginatedResult } from "@/types/common"
 
 jest.mock("@/data/frontend/fetches/getChats")
 jest.mock("@/utils/frontend/e2e/chat")

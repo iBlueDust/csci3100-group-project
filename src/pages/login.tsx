@@ -7,8 +7,8 @@ import { geistMono, geistSans } from '@/styles/fonts'
 import Input from '@/components/form/Input'
 import SubmitButton from '@/components/form/SubmitButton'
 import { LoginError, LoginErrorType, useLogin } from '@/hooks/useLogin'
-import { PageWithLayout } from '@/data/types/layout'
-import { ApiProvider, useApi } from '@/utils/frontend/api'
+import { PageWithLayout } from '@/types/layout'
+import { ApiProvider, useApi } from '@/hooks/useApi'
 
 const Login: PageWithLayout = () => {
   const router = useRouter()

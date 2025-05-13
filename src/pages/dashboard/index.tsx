@@ -1,19 +1,19 @@
 import React, { useState, useMemo } from 'react'
 import { FiPlus, FiX } from 'react-icons/fi'
 import { useQuery } from '@tanstack/react-query'
+import Link from 'next/link'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 dayjs.extend(relativeTime)
 
-import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
-import { QueryKeys } from '@/data/types/queries'
-import { mockListings } from '@/data/mock/listings'
-import { useApi } from '@/utils/frontend/api'
-import { formatCurrency, formatNumber } from '@/utils/format'
-import NewMarketListingModal from '../../components/marketplace/NewMarketListingModal'
-import { PageWithLayout } from '@/data/types/layout'
 import DashboardLayout from '@/layouts/DashboardLayout'
-import Link from 'next/link'
+import NewMarketListingModal from '@/components/marketplace/NewMarketListingModal'
+import { queryMarketListings } from '@/data/frontend/queries/queryMarketListings'
+import { mockListings } from '@/data/mock/listings'
+import { useApi } from '@/hooks/useApi'
+import { formatCurrency, formatNumber } from '@/utils/format'
+import { PageWithLayout } from '@/types/layout'
+import { QueryKeys } from '@/types/queries'
 
 // Get recent listings (first 4)
 // const recentListings = getRecentListings(4)

@@ -5,8 +5,8 @@ dayjs.extend(relativeTime)
 
 import MarketplaceLayout from '@/layouts/MarketplaceLayout'
 import NewMarketListingModal from '@/components/marketplace/NewMarketListingModal'
-import { PageWithLayout } from '@/data/types/layout'
-import { QueryKeys } from '@/data/types/queries'
+import { PageWithLayout } from '@/types/layout'
+import { QueryKeys } from '@/types/queries'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 

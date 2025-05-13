@@ -1,10 +1,10 @@
 import classNames from 'classnames'
 import React, { useCallback } from 'react'
 import { FiLogOut } from 'react-icons/fi'
-
 import { useRouter } from 'next/router'
-import { useApi } from '@/utils/frontend/api'
 import Link from 'next/link'
+
+import { useApi } from '@/hooks/useApi'
 
 export interface SidebarProps {
   navItems: {

@@ -1,7 +1,7 @@
-import { MarketListingSearchResult } from "@/data/db/mongo/queries/market"
-import { SearchMarketListingsOptions } from "@/data/db/mongo/queries/market/searchMarketListings"
-import { PaginatedResult } from "@/data/types/common"
-import type { Api } from "@/utils/frontend/api"
+import { MarketListingSearchResult } from "@/data/api/mongo/queries/market"
+import { SearchMarketListingsOptions } from "@/data/api/mongo/queries/market/searchMarketListings"
+import { PaginatedResult } from "@/types/common"
+import type { Api } from "@/hooks/useApi"
 
 export async function getMarketListings(
 	api: Api,

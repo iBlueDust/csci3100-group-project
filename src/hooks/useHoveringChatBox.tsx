@@ -1,5 +1,5 @@
-import { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
-import { Api } from '@/utils/frontend/api'
+import { MarketListingSearchResult } from '@/data/api/mongo/queries/market'
+import { Api } from '@/hooks/useApi'
 import { deriveKey, importKey } from '@/utils/frontend/e2e'
 import dynamic from 'next/dynamic'
 import React, { useCallback, useContext, useState } from 'react'

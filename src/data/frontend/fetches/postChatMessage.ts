@@ -1,6 +1,6 @@
-import { ChatMessageType } from "@/data/types/chats"
-import { ab2base64, toBinaryBlob } from "@/utils"
-import type { Api } from "@/utils/frontend/api"
+import { ChatMessageType } from "@/types/chats"
+import { ab2base64, toBinaryBlob } from "@/utils/frontend"
+import type { Api } from "@/hooks/useApi"
 
 
 interface BasePostChatMessagePayload {

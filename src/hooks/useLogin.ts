@@ -1,5 +1,5 @@
-import { base642ab } from "@/utils"
-import type { Api } from "@/utils/frontend/api"
+import { base642ab } from "@/utils/frontend"
+import type { Api } from "@/hooks/useApi"
 import { decryptUserEncryptionKey, importKey } from "@/utils/frontend/e2e"
 import { toPasskey } from "@/utils/frontend/e2e/auth"
 import { generateDeterministicSymmetricKey } from "@/utils/frontend/e2e/kdf"

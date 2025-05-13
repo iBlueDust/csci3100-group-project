@@ -1,4 +1,4 @@
-import { ab2base64 } from '@/utils'
+import { ab2base64 } from '@/utils/frontend'
 import { hash } from '.'
 
 export type Passkey = string

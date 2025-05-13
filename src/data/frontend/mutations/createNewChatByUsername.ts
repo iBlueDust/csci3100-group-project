@@ -1,5 +1,5 @@
-import type { Api } from "@/utils/frontend/api"
 import { postChat } from "@/data/frontend/fetches/postChat"
+import type { Api } from "@/hooks/useApi"
 
 export async function createNewChatByUsername(
 	api: Api,

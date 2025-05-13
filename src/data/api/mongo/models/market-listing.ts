@@ -1,4 +1,4 @@
-import { isDev } from "@/env"
+import { isDev } from "@/utils/api/env"
 import mongoose from "mongoose"
 
 const MarketListingSchema = new mongoose.Schema({

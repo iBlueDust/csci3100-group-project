@@ -1,14 +1,14 @@
 import React from 'react'
 import Image from 'next/image'
 
-import type { ClientMarketListingChatMessage } from '@/data/types/chats'
-import type { MarketListingSearchResult } from '@/data/db/mongo/queries/market'
+import type { ClientMarketListingChatMessage } from '@/types/chats'
+import type { MarketListingSearchResult } from '@/data/api/mongo/queries/market'
 import { formatCurrency } from '@/utils/format'
 import ChatMessage from './ChatMessage'
 import dynamic from 'next/dynamic'
 import { useQuery } from '@tanstack/react-query'
-import { QueryKeys } from '@/data/types/queries'
-import { useApi } from '@/utils/frontend/api'
+import { QueryKeys } from '@/types/queries'
+import { useApi } from '@/hooks/useApi'
 import { queryMarketListingById } from '@/data/frontend/queries/queryMarketListingById'
 import Link from 'next/link'
 

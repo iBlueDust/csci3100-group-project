@@ -2,13 +2,13 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import Joi from 'joi'
 import mongoose from 'mongoose'
 
-import dbConnect from '@/data/db/mongo'
-import type { Error as ApiError } from '@/data/types/common'
-import { sessionStore } from '@/data/session'
+import dbConnect from '@/data/api/mongo'
+import type { Error as ApiError } from '@/types/common'
+import { sessionStore } from '@/data/api/session'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
-import { getChatById } from '@/data/db/mongo/queries/chats/getChatById'
-import { deleteChat } from '@/data/db/mongo/queries/chats/deleteChat'
-import type { ChatWithPopulatedFields } from '@/data/types/chats'
+import { getChatById } from '@/data/api/mongo/queries/chats/getChatById'
+import { deleteChat } from '@/data/api/mongo/queries/chats/deleteChat'
+import type { ChatWithPopulatedFields } from '@/types/chats'
 
 type GetData = ChatWithPopulatedFields
 type DeleteData = { success: boolean }

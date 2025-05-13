@@ -1,12 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-import User from '@/data/db/mongo/models/user'
-import dbConnect from '@/data/db/mongo'
-import { sessionStore } from '@/data/session'
-import { Error as ApiError } from '@/data/types/common'
+import User from '@/data/api/mongo/models/user'
+import dbConnect from '@/data/api/mongo'
+import { sessionStore } from '@/data/api/session'
+import { Error as ApiError } from '@/types/common'
 import { AuthData, protectedRoute } from '@/utils/api/auth'
-import { deleteAllChatsByUserId } from '@/data/db/mongo/queries/chats/deleteAllChatsByUserId'
-import { deleteAllMarketListingsByUserId } from '@/data/db/mongo/queries/market/deleteMarketListingsByUserId'
+import { deleteAllChatsByUserId } from '@/data/api/mongo/queries/chats/deleteAllChatsByUserId'
+import { deleteAllMarketListingsByUserId } from '@/data/api/mongo/queries/market/deleteMarketListingsByUserId'
 
 type Data = { success: boolean }
 

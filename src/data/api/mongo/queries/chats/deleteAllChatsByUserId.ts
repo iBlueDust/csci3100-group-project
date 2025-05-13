@@ -1,7 +1,7 @@
 import type mongoose from "mongoose"
 
-import dbConnect from '@/data/db/mongo'
-import Chat from '@/data/db/mongo/models/chat'
+import dbConnect from '@/data/api/mongo'
+import Chat from '@/data/api/mongo/models/chat'
 import { deleteOrphanedChatMessages } from "./deleteOrphanedChatMessages"
 
 

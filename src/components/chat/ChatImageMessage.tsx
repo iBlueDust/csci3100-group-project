@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import Image from 'next/image'
 
-import type { ClientAttachmentChatMessage } from '@/data/types/chats'
+import type { ClientAttachmentChatMessage } from '@/types/chats'
 import ChatMessage from './ChatMessage'
 import { useAttachment } from '@/hooks/useAttachment'
 

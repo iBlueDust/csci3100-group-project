@@ -7,23 +7,23 @@ import TextArea from '@/components/form/TextArea'
 import ImageUploadField from '@/components/form/ImageUploadField'
 import SubmitButton from '@/components/form/SubmitButton'
 import { useListingForm } from '@/hooks/useListingForm'
-import { CategoryOption, ListingFormData } from '@/types/marketplace'
 import { countries } from '@/utils/countries'
+import { categories } from '@/utils/categories'
 import env from '@/utils/frontend/env'
 
-// The same categories from the marketplace component
-const categories: CategoryOption[] = [
-  { id: 'jade', name: 'Jade Items' },
-  { id: 'antiques', name: 'Antiques' },
-  { id: 'collectibles', name: 'Collectibles' },
-  { id: 'art', name: 'Artwork' },
-  { id: 'gems', name: 'Precious Gems' },
-]
+export interface MarketListingFormData {
+  title: string
+  description: string
+  pictures: (string | File)[]
+  priceInCents: number
+  countries: string[]
+  categories?: string[]
+}
 
 export interface NewMarketListingModalProps {
   onClose: () => void
   onSuccess?: (listingId: string) => void
-  initialData?: Partial<ListingFormData>
+  initialData?: Partial<MarketListingFormData>
   listingId?: string
   isEditing?: boolean
 }
@@ -51,7 +51,7 @@ const NewMarketListingModal: React.FC<NewMarketListingModalProps> = ({
       description: initialData?.description || '',
       pictures: initialData?.pictures || [],
       priceInCents: initialData?.priceInCents || 0,
-      category: initialData?.category || 'jade',
+      categories: initialData?.categories || ['jade'],
       countries: initialData?.countries || ['hk'],
     },
     listingId,
@@ -127,7 +127,7 @@ const NewMarketListingModal: React.FC<NewMarketListingModalProps> = ({
           <Select
             name='category'
             label='Category'
-            value={formData.category}
+            value={formData.categories?.[0]}
             onChange={handleChange}
             options={categories}
             required

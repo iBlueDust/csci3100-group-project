@@ -1,8 +1,8 @@
 import type mongoose from 'mongoose'
 
-import env from '@/env'
-import MarketListing from '@/data/db/mongo/models/market-listing'
-import minioClient from '@/data/db/minio'
+import env from '@/utils/api/env'
+import MarketListing from '@/data/api/mongo/models/market-listing'
+import minioClient from '@/data/api/minio'
 
 /**
  * Deletes all market listings by authored by a given user
