@@ -63,9 +63,12 @@ export const useListingForm = ({
   // Handle form field changes
   const handlePriceInCentsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { value } = e.target
+    const EPSILON = 1e-6 // Floating point arithmetic error happens here
+    const priceInCents = Math.floor(parseFloat(value) * 100 + EPSILON)
+    console.log({ value, priceInCents })
     setFormData(prev => ({
       ...prev,
-      priceInCents: Math.floor(parseFloat(value) * 100)
+      priceInCents
     }))
   }
 
