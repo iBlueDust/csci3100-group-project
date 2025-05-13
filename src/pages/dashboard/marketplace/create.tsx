@@ -16,7 +16,7 @@ const MarketplaceCreateListingPage: PageWithLayout = () => {
 
   const handleSuccess = useCallback(
     (listingId: string) => {
-      router.push(`/dashboard/marketplace/${listingId}`)
+      router.replace(`/dashboard/marketplace/${listingId}`)
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.MARKET_LISTINGS],
       })
