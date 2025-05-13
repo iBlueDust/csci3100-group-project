@@ -20,7 +20,7 @@ export const deleteChat = async (
 	await dbConnect()
 	const chat = await Chat.findOne({
 		_id: chatId,
-		participants: userId,
+		'participants.id': userId,
 		deleteRequesters: { $nin: [userId] }
 	})
 

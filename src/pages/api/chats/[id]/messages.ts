@@ -47,7 +47,7 @@ async function GET(
 	await dbConnect()
 	const isAuthorized = await Chat.exists({
 		_id: chatId,
-		participants: auth.data.userId,
+		'participants.id': auth.data.userId,
 	})
 	if (!isAuthorized) {
 		return res.status(403).json({ code: 'FORBIDDEN', message: 'You are not authorized to view this chat' })

@@ -1,23 +1,21 @@
-import type mongoose from 'mongoose'
-
 import { ChatMessageType, ChatWithPopulatedFields } from '@/data/types/chats'
-
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const makeChatClientFriendly = (chat: any): ChatWithPopulatedFields => {
 	return {
 		id: chat._id ?? chat.id,
 		wasRequestedToDelete: chat.wasRequestedToDelete ?? false,
-		participants: chat.participants.map((participant: mongoose.Types.ObjectId) => {
-			const participantDoc = chat.participantLookups.find(
-				(p: { _id: mongoose.Types.ObjectId }) => p._id.equals(participant)
-			)
-			return {
-				id: participant,
-				username: participantDoc.username,
-				publicKey: participantDoc.publicKey,
-			}
-		}),
+		participants: chat.participants,
+		// 	participants: chat.participants.map((participant: mongoose.Types.ObjectId) => {
+		// 		const participantDoc = chat.participantLookups.find(
+		// 			(p: { _id: mongoose.Types.ObjectId }) => p._id.equals(participant)
+		// 		)
+		// 		return {
+		// 			id: participant,
+		// 			username: participantDoc?.username,
+		// 			publicKey: participantDoc?.publicKey,
+		// 		}
+		// 	}),
 		lastMessage: chat.lastMessage
 			? makeChatMessageClientFriendly(chat.lastMessage)
 			: undefined,

@@ -2,7 +2,6 @@ import mongoose from 'mongoose'
 
 import Chat from '@/data/db/mongo/models/chat'
 import ChatMessage from '@/data/db/mongo/models/chat-message'
-import User from '@/data/db/mongo/models/user'
 import { ChatWithPopulatedFields } from '@/data/types/chats'
 import { makeChatClientFriendly } from '.'
 
@@ -15,7 +14,7 @@ export const getChatById = async (
 		{
 			$match: {
 				_id: chatId,
-				participants: userId,
+				'participants.id': userId,
 				deleteRequesters: { $ne: userId },
 			}
 		},
@@ -28,15 +27,15 @@ export const getChatById = async (
 			},
 		},
 		{ $project: { _id: 1, participants: 1, wasRequestedToDelete: 1 } },
-		{
-			$lookup: {
-				from: User.collection.name,
-				localField: 'participants',
-				foreignField: '_id',
-				as: 'participantLookups',
-				pipeline: [{ $project: { _id: 1, username: 1, publicKey: 1 } }],
-			},
-		},
+		// {
+		// 	$lookup: {
+		// 		from: User.collection.name,
+		// 		localField: 'participants',
+		// 		foreignField: '_id',
+		// 		as: 'participantLookups',
+		// 		pipeline: [{ $project: { _id: 1, username: 1, publicKey: 1 } }],
+		// 	},
+		// },
 		{
 			$lookup: {
 				from: ChatMessage.collection.name,
