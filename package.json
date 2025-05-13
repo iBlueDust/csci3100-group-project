@@ -1,7 +1,8 @@
 {
   "name": "jade-trail",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "license": "CC-BY-NC-ND-4.0",
+  "description": "Welcome to Jade Trail, a privacy-first, secure marketplace and messaging platform with minimal data retention and end-to-end encrypted messaging",
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:full": "bash dev.sh",
