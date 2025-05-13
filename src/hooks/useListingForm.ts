@@ -52,11 +52,20 @@ export const useListingForm = ({
   }
 
   // Handle form field changes
-  const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value.split(',').map(c => c.trim().toLowerCase())
+      categories: value.split(',').map(c => c.trim().toLowerCase())
+    }))
+  }
+
+  // Handle form field changes
+  const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      countries: value.split(',').map(c => c.trim().toLowerCase())
     }))
   }
 
@@ -173,6 +182,7 @@ export const useListingForm = ({
     isSubmitting,
     error,
     handleChange,
+    handleCategoryChange,
     handleCountryChange,
     handlePriceInCentsChange,
     handleImageChange,
