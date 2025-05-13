@@ -1,24 +1,4 @@
 services:
-  api-server:
-    container_name: api-server
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    depends_on:
-      - mongo
-      - minio
-      - redis
-    restart: always
-    ports:
-      - "${APP_PORT:-3000}:3000"
-    env_file:
-      - .env
-      - .env.local
-    expose:
-      - 3000
-    networks:
-      - default
-
   mongo:
     container_name: mongo
     image: mongo:latest
@@ -89,24 +69,3 @@ services:
       - "./data/redis:/data"
     # Disable appendonly mode since this is only for session storage
     command: redis-server --appendonly no --requirepass $REDIS_PASSWORD
-
-  nginx:
-    container_name: nginx
-    image: nginx:latest
-    restart: always
-    ports:
-      - "${NGINX_PORT:-8000}:80"
-      - "${NGINX_SSL_PORT:-443}:443"
-    volumes:
-      - "./nginx.dev.conf:/etc/nginx/nginx.conf:ro"
-      - "./certs:/etc/ssl/certs:ro"
-      - "./logs/nginx:/var/log/nginx" # For logging
-    environment:
-      - NGINX_PORT=${NGINX_PORT:-8000}
-      - NGINX_SSL_PORT=${NGINX_SSL_PORT:-443}
-      - BACKEND_HOST=${BACKEND_HOST:-host.docker.internal}
-    expose:
-      - ${NGINX_PORT:-8000}
-    depends_on:
-      - minio
-      - api-server
